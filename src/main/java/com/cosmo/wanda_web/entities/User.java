@@ -2,9 +2,7 @@ package com.cosmo.wanda_web.entities;
 
 import jakarta.persistence.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @Entity
 @Table(name = "tb_user")
@@ -21,6 +19,17 @@ public class User {
 
     @OneToMany(mappedBy = "player")
     private List<Function> functions = new ArrayList<>();
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private Player player;
+
+    // Relacionamento com partidas onde o usuário é player1
+    @OneToMany(mappedBy = "id.player1")
+    private Set<Match> matchesAsPlayer1 = new HashSet<>();
+
+    // Relacionamento com partidas onde o usuário é player2
+    @OneToMany(mappedBy = "id.player2")
+    private Set<Match> matchesAsPlayer2 = new HashSet<>();
 
     public User() {
     }
@@ -62,6 +71,22 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public Player getPlayer() {
+        return player;
+    }
+
+    public void setPlayer(Player player) {
+        this.player = player;
+    }
+
+    public List<Function> getFunctions() {
+        return functions;
+    }
+
+    public void setFunctions(List<Function> functions) {
+        this.functions = functions;
     }
 
     @Override
