@@ -16,6 +16,10 @@ public class Function {
     @Column(columnDefinition = "TEXT")
     private String function;
 
+    @ManyToOne
+    @JoinColumn(name = "player_id")
+    private User player;
+
     public Function() {
     }
 

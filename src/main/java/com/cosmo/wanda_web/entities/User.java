@@ -2,6 +2,8 @@ package com.cosmo.wanda_web.entities;
 
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 @Entity
@@ -16,6 +18,9 @@ public class User {
     @Column(unique = true)
     private String email;
     private String password;
+
+    @OneToMany(mappedBy = "player")
+    private List<Function> functions = new ArrayList<>();
 
     public User() {
     }
