@@ -5,26 +5,24 @@ import jakarta.persistence.*;
 import java.util.Objects;
 
 @Entity
-@Table(name = "tb_user")
-public class User {
+@Table(name = "tb_function")
+public class Function {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
 
-    @Column(unique = true)
-    private String email;
-    private String password;
+    @Column(columnDefinition = "TEXT")
+    private String function;
 
-    public User() {
+    public Function() {
     }
 
-    public User(Long id, String name, String email, String password) {
+    public Function(Long id, String name, String function) {
         this.id = id;
         this.name = name;
-        this.email = email;
-        this.password = password;
+        this.function = function;
     }
 
     public Long getId() {
@@ -43,20 +41,12 @@ public class User {
         this.name = name;
     }
 
-    public String getEmail() {
-        return email;
+    public String getFunction() {
+        return function;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
+    public void setFunction(String function) {
+        this.function = function;
     }
 
     @Override
@@ -64,9 +54,9 @@ public class User {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        User user = (User) o;
+        Function function = (Function) o;
 
-        return Objects.equals(id, user.id);
+        return Objects.equals(id, function.id);
     }
 
     @Override
