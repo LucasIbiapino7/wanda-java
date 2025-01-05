@@ -29,6 +29,12 @@ public class Function {
         this.function = function;
     }
 
+    public Function(String name, String function, User player) {
+        this.name = name;
+        this.function = function;
+        this.player = player;
+    }
+
     public Long getId() {
         return id;
     }
