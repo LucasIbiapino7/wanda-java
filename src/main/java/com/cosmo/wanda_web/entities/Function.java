@@ -73,4 +73,14 @@ public class Function {
     public int hashCode() {
         return id != null ? id.hashCode() : 0;
     }
+
+    @Override
+    public String toString() {
+        return "Function{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", function='" + function + '\'' +
+                ", player=" + player +
+                '}';
+    }
 }

@@ -1,6 +1,8 @@
 package com.cosmo.wanda_web.services.client;
 
 import com.cosmo.wanda_web.dto.function.FunctionRequestDTO;
+import com.cosmo.wanda_web.dto.python.RoundRequestDTO;
+import com.cosmo.wanda_web.dto.python.RoundResponseDTO;
 import com.cosmo.wanda_web.dto.python.ValidateResponseDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,4 +14,7 @@ public interface PythonClient {
 
     @PostMapping("/validate")
     ValidateResponseDTO validate(@RequestBody FunctionRequestDTO dto);
+
+    @PostMapping("/round")
+    RoundResponseDTO round(@RequestBody RoundRequestDTO dto);
 }
