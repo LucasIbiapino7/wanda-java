@@ -1,4 +1,4 @@
-package com.cosmo.wanda_web.services;
+package com.cosmo.wanda_web.services.client;
 
 public class TurnInformation {
 

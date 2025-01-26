@@ -1,21 +1,19 @@
 package com.cosmo.wanda_web.services;
 
-import com.cosmo.wanda_web.dto.function.FunctionRequestDTO;
 import com.cosmo.wanda_web.dto.match.PlayedMatchDTO;
 import com.cosmo.wanda_web.dto.python.RoundRequestDTO;
 import com.cosmo.wanda_web.dto.python.RoundResponseDTO;
-import com.cosmo.wanda_web.dto.python.ValidateResponseDTO;
 import com.cosmo.wanda_web.entities.Function;
 import com.cosmo.wanda_web.entities.User;
 import com.cosmo.wanda_web.repositories.FunctionRepository;
 import com.cosmo.wanda_web.repositories.UserRepository;
 import com.cosmo.wanda_web.services.client.PythonClient;
+import com.cosmo.wanda_web.services.client.TurnInformation;
 import com.cosmo.wanda_web.services.exceptions.ResourceNotFoundException;
+import com.cosmo.wanda_web.services.utils.Matches;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 public class MatchService {
