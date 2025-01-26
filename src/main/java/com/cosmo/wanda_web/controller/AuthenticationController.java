@@ -1,5 +1,6 @@
 package com.cosmo.wanda_web.controller;
 
+import com.cosmo.wanda_web.dto.auth.AccessTokenDTO;
 import com.cosmo.wanda_web.dto.auth.AuthenticationDTO;
 import com.cosmo.wanda_web.dto.auth.RegisterDTO;
 import com.cosmo.wanda_web.services.UserService;
@@ -18,9 +19,9 @@ public class AuthenticationController {
     private UserService userService;
 
     @PostMapping("/login")
-    public ResponseEntity<Void> login(@RequestBody AuthenticationDTO dto){
-        userService.login(dto);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<AccessTokenDTO> login(@RequestBody AuthenticationDTO dto){
+        AccessTokenDTO result = userService.login(dto);
+        return ResponseEntity.ok(result);
     }
 
     @PostMapping("/register")

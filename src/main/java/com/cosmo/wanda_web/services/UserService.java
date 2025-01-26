@@ -1,9 +1,11 @@
 package com.cosmo.wanda_web.services;
 
+import com.cosmo.wanda_web.dto.auth.AccessTokenDTO;
 import com.cosmo.wanda_web.dto.auth.AuthenticationDTO;
 import com.cosmo.wanda_web.dto.auth.RegisterDTO;
 import com.cosmo.wanda_web.entities.Role;
 import com.cosmo.wanda_web.entities.User;
+import com.cosmo.wanda_web.infra.TokenService;
 import com.cosmo.wanda_web.repositories.RoleRepository;
 import com.cosmo.wanda_web.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,10 +31,16 @@ public class UserService {
     @Autowired
     private RoleRepository roleRepository;
 
+    @Autowired
+    private TokenService tokenService;
+
     @Transactional(readOnly = true)
-    public void login(AuthenticationDTO dto) {
+    public AccessTokenDTO login(AuthenticationDTO dto) {
         UsernamePasswordAuthenticationToken usernamePassword = new UsernamePasswordAuthenticationToken(dto.getEmail(), dto.getPassword());
         Authentication auth = authenticationManager.authenticate(usernamePassword);
+
+        String token = tokenService.generateToken((User) auth.getPrincipal());
+        return new AccessTokenDTO(token);
     }
 
     @Transactional
