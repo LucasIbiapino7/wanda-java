@@ -1,20 +1,28 @@
 package com.cosmo.wanda_web.services;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.interfaces.DecodedJWT;
+import com.cosmo.wanda_web.dto.users.UserDTO;
 import com.cosmo.wanda_web.dto.auth.AccessTokenDTO;
 import com.cosmo.wanda_web.dto.auth.AuthenticationDTO;
 import com.cosmo.wanda_web.dto.auth.RegisterDTO;
 import com.cosmo.wanda_web.entities.Role;
 import com.cosmo.wanda_web.entities.User;
 import com.cosmo.wanda_web.infra.TokenService;
+import com.cosmo.wanda_web.projections.UserDetailsProjection;
 import com.cosmo.wanda_web.repositories.RoleRepository;
 import com.cosmo.wanda_web.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 public class UserService {
@@ -46,7 +54,7 @@ public class UserService {
     @Transactional
     public void register(RegisterDTO dto) {
         User result = userRepository.findByEmail(dto.getEmail().toLowerCase());
-        if (result != null){
+        if (result != null) {
             throw new RuntimeException("Esse email já está sendo usado");
         }
         User newUser = new User();
@@ -57,5 +65,30 @@ public class UserService {
         Role roleUser = roleRepository.getReferenceById(1L);
         newUser.addRole(roleUser);
         userRepository.save(newUser);
+    }
+
+    @Transactional
+    public UserDTO getMe() {
+        User user = authenticated();
+        return new UserDTO(user);
+    }
+
+    protected User authenticated() {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String token = authentication.getCredentials().toString(); // Aqui pega o token que setei lá no filter no conntexto
+
+            DecodedJWT decodedJWT = JWT.decode(token);
+
+            String username = decodedJWT.getClaim("username").asString();
+
+            User user = userRepository.findByEmail(username.toLowerCase());
+            if (user == null) {
+                throw new UsernameNotFoundException("User not found");
+            }
+            return user;
+        } catch (Exception e) {
+            throw new RuntimeException("Algum outro erro");
+        }
     }
 }

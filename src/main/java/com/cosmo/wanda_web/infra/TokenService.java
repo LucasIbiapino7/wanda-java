@@ -33,6 +33,8 @@ public class TokenService {
                     .withIssuer("wanda-web") // quem criou o token (aplicação)
                     .withSubject(user.getEmail()) // Usuário que está recebendo esse token, ou seja, quem está fazendo login
                     .withExpiresAt(generateExpirationDate()) // Tempo de experição do token
+                    .withClaim("userId", user.getId())
+                    .withClaim("username", user.getUsername())
                     .withArrayClaim("roles", authorities) // Roles
                     .sign(algorithm); // assinatura (algoritmo de criptografia)
             return token;
