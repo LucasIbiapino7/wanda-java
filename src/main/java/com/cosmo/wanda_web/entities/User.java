@@ -31,6 +31,12 @@ public class User {
     @OneToMany(mappedBy = "id.player2")
     private Set<Match> matchesAsPlayer2 = new HashSet<>();
 
+    @ManyToMany
+    @JoinTable(name = "tb_user_role",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id"))
+    private Set<Role> roles = new HashSet<>();
+
     public User() {
     }
 
@@ -87,6 +93,19 @@ public class User {
 
     public void setFunctions(List<Function> functions) {
         this.functions = functions;
+    }
+
+    public void addRole(Role role){
+        roles.add(role);
+    }
+
+    public boolean hasRole(String roleName){
+        for (Role role : roles) {
+            if (role.getAuthority().equals(roleName)){
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
