@@ -3,6 +3,7 @@ package com.cosmo.wanda_web.infra;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
+import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.cosmo.wanda_web.entities.User;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
@@ -25,13 +26,14 @@ public class TokenService {
             int cont = 0;
             for (GrantedAuthority authority : user.getAuthorities()) {
                 authorities[cont] = authority.getAuthority();
+                cont++;
             }
             Algorithm algorithm = Algorithm.HMAC256(secret);
             String token = JWT.create()
-                    .withIssuer("my-auth-service") // quem criou o token (aplicação)
+                    .withIssuer("wanda-web") // quem criou o token (aplicação)
                     .withSubject(user.getEmail()) // Usuário que está recebendo esse token, ou seja, quem está fazendo login
                     .withExpiresAt(generateExpirationDate()) // Tempo de experição do token
-                    .withArrayClaim("roles", authorities)
+                    .withArrayClaim("roles", authorities) // Roles
                     .sign(algorithm); // assinatura (algoritmo de criptografia)
             return token;
         }catch (JWTCreationException exception){
@@ -39,6 +41,18 @@ public class TokenService {
         }
     }
 
+    public String validateToken(String token){
+        try{
+            Algorithm algorithm = Algorithm.HMAC256(secret);
+            return JWT.require(algorithm)
+                    .withIssuer("wanda-web")
+                    .build()
+                    .verify(token)
+                    .getSubject();
+        }catch (JWTVerificationException exception){
+            return "";
+        }
+    }
 
 
     private Instant generateExpirationDate(){
