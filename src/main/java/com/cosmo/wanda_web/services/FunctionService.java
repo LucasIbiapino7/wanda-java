@@ -7,10 +7,13 @@ import com.cosmo.wanda_web.entities.User;
 import com.cosmo.wanda_web.repositories.FunctionRepository;
 import com.cosmo.wanda_web.repositories.UserRepository;
 import com.cosmo.wanda_web.services.client.PythonClient;
+import com.cosmo.wanda_web.services.exceptions.DatabaseException;
 import com.cosmo.wanda_web.services.exceptions.InvalidFunctionException;
 import com.cosmo.wanda_web.services.exceptions.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -49,7 +52,7 @@ public class FunctionService {
     }
 
     @Transactional(readOnly = true)
-    public FunctionRequestDTO getFunctionByUser() {
+    public FunctionRequestDTO findByUser() {
         User user = userService.authenticated();
 
         Function function = functionRepository.findByPlayerId(user.getId()).orElseThrow(
@@ -59,9 +62,31 @@ public class FunctionService {
     }
 
     @Transactional(readOnly = true)
-    public FunctionRequestDTO getFunctionById(Long id) {
+    public FunctionRequestDTO findById(Long id) {
         Function function = functionRepository.findById(id).orElseThrow(
                 () -> new ResourceNotFoundException("Function Not Found"));
         return new FunctionRequestDTO(function.getFunction());
+    }
+
+    @Transactional
+    public FunctionRequestDTO update(FunctionRequestDTO dto) {
+        User user = userService.authenticated();
+        Function function = functionRepository.findByPlayerId(user.getId()).orElseThrow(
+                () -> new ResourceNotFoundException("Function Not Found"));
+        function.setFunction(dto.getCode());
+        function = functionRepository.save(function);
+        return new FunctionRequestDTO(function.getFunction());
+    }
+
+    @Transactional(propagation = Propagation.SUPPORTS)
+    public void delete() {
+        User user = userService.authenticated();
+        Function function = functionRepository.findByPlayerId(user.getId()).orElseThrow(
+                () -> new ResourceNotFoundException("Function Not Found"));
+        try {
+            functionRepository.delete(function);
+        }catch (DataIntegrityViolationException e){
+            throw new DatabaseException("Falha de integridade referencial");
+        }
     }
 }
