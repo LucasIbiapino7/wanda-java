@@ -25,6 +25,9 @@ public class FunctionService {
     @Autowired
     private FunctionRepository functionRepository;
 
+    @Autowired
+    private UserService userService;
+
     @Transactional
     public FunctionRequestDTO insert(FunctionRequestDTO dto){
         // Validar a função com o microservice Python
@@ -35,14 +38,13 @@ public class FunctionService {
             throw new InvalidFunctionException(response.getErrors().get(0));
         }
 
-        // Verifica se usuário existe
-        User user = userRepository.findById(dto.getId().longValue()).orElseThrow(
-                () -> new ResourceNotFoundException("Usuário não encontrado"));
+        // Verifica se usuário existe pelo contexto
+        User user = userService.authenticated();
 
         // Adiciona no Banco de dados a função aprovada
         Function function = new Function("jokenpo", dto.getCode(), user);
         function = functionRepository.save(function);
 
-        return new FunctionRequestDTO(dto.getId(), function.getFunction());
+        return new FunctionRequestDTO(function.getFunction());
     }
 }
