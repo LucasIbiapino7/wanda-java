@@ -47,4 +47,21 @@ public class FunctionService {
 
         return new FunctionRequestDTO(function.getFunction());
     }
+
+    @Transactional(readOnly = true)
+    public FunctionRequestDTO getFunctionByUser() {
+        User user = userService.authenticated();
+
+        Function function = functionRepository.findByPlayerId(user.getId()).orElseThrow(
+                () -> new ResourceNotFoundException("Function Not Found"));
+
+        return new FunctionRequestDTO(function.getFunction());
+    }
+
+    @Transactional(readOnly = true)
+    public FunctionRequestDTO getFunctionById(Long id) {
+        Function function = functionRepository.findById(id).orElseThrow(
+                () -> new ResourceNotFoundException("Function Not Found"));
+        return new FunctionRequestDTO(function.getFunction());
+    }
 }
