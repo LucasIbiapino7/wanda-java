@@ -4,6 +4,7 @@ import com.cosmo.wanda_web.dto.function.FunctionRequestDTO;
 import com.cosmo.wanda_web.services.FunctionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -13,6 +14,7 @@ public class FunctionController {
     @Autowired
     private FunctionService functionService;
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
     @PostMapping()
     public ResponseEntity<FunctionRequestDTO> insert(@RequestBody FunctionRequestDTO dto){
         FunctionRequestDTO result = functionService.insert(dto);
