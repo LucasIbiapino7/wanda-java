@@ -1,6 +1,7 @@
 package com.cosmo.wanda_web.controller;
 
 import com.cosmo.wanda_web.dto.auth.AuthenticationDTO;
+import com.cosmo.wanda_web.dto.auth.RegisterDTO;
 import com.cosmo.wanda_web.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,12 @@ public class AuthenticationController {
     @PostMapping("/login")
     public ResponseEntity<Void> login(@RequestBody AuthenticationDTO dto){
         userService.login(dto);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<Void> register(@RequestBody RegisterDTO dto){
+        userService.register(dto);
         return ResponseEntity.ok().build();
     }
 }

@@ -123,10 +123,6 @@ public class User implements UserDetails {
         return functions;
     }
 
-    public void setFunctions(List<Function> functions) {
-        this.functions = functions;
-    }
-
     public void addRole(Role role){
         roles.add(role);
     }
