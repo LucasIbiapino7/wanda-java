@@ -12,6 +12,7 @@ public class Player {
     private Long id;
     private Integer numberOfMatches;
     private Integer numberOfWinners;
+    private String nickname;
 
     @OneToOne
     @MapsId
@@ -20,10 +21,19 @@ public class Player {
     public Player() {
     }
 
-    public Player(Long id, Integer numberOfMatches, Integer numberOfWinners) {
+    public Player(User user){
+        numberOfMatches = 0;
+        numberOfWinners = 0;
+        nickname = "";
+        this.user = user;
+    }
+
+    public Player(Long id, Integer numberOfMatches, Integer numberOfWinners, String nickname, User user) {
         this.id = id;
         this.numberOfMatches = numberOfMatches;
         this.numberOfWinners = numberOfWinners;
+        this.nickname = nickname;
+        this.user = user;
     }
 
     public Long getId() {
@@ -48,6 +58,22 @@ public class Player {
 
     public void setNumberOfWinners(Integer numberOfWinners) {
         this.numberOfWinners = numberOfWinners;
+    }
+
+    public String getNickname() {
+        return nickname;
+    }
+
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 
     @Override

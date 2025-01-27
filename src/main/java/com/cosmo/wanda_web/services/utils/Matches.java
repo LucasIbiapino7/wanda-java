@@ -1,7 +1,5 @@
 package com.cosmo.wanda_web.services.utils;
 
-import com.cosmo.wanda_web.services.client.TurnInformation;
-
 import java.util.ArrayList;
 import java.util.List;
 
