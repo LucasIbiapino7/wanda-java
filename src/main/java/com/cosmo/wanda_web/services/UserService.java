@@ -6,10 +6,12 @@ import com.cosmo.wanda_web.dto.users.UserDTO;
 import com.cosmo.wanda_web.dto.auth.AccessTokenDTO;
 import com.cosmo.wanda_web.dto.auth.AuthenticationDTO;
 import com.cosmo.wanda_web.dto.auth.RegisterDTO;
+import com.cosmo.wanda_web.entities.Player;
 import com.cosmo.wanda_web.entities.Role;
 import com.cosmo.wanda_web.entities.User;
 import com.cosmo.wanda_web.infra.TokenService;
 import com.cosmo.wanda_web.projections.UserDetailsProjection;
+import com.cosmo.wanda_web.repositories.PlayerRepository;
 import com.cosmo.wanda_web.repositories.RoleRepository;
 import com.cosmo.wanda_web.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +42,9 @@ public class UserService {
     private RoleRepository roleRepository;
 
     @Autowired
+    private PlayerRepository playerRepository;
+
+    @Autowired
     private TokenService tokenService;
 
     @Transactional(readOnly = true)
@@ -64,7 +69,11 @@ public class UserService {
         newUser.setPassword(passwordEncode);
         Role roleUser = roleRepository.getReferenceById(1L);
         newUser.addRole(roleUser);
-        userRepository.save(newUser);
+        newUser = userRepository.save(newUser);
+
+        Player player = new Player(newUser);
+
+        playerRepository.save(player);
     }
 
     @Transactional
