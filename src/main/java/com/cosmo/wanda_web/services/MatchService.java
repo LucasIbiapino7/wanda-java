@@ -1,8 +1,11 @@
 package com.cosmo.wanda_web.services;
 
+import com.cosmo.wanda_web.dto.match.MatchResponseDTO;
 import com.cosmo.wanda_web.dto.match.PlayedMatchDTO;
+import com.cosmo.wanda_web.dto.match.TurnInformationDTO;
 import com.cosmo.wanda_web.dto.python.RoundRequestDTO;
 import com.cosmo.wanda_web.dto.python.RoundResponseDTO;
+import com.cosmo.wanda_web.dto.users.UserDTO;
 import com.cosmo.wanda_web.entities.Function;
 import com.cosmo.wanda_web.entities.User;
 import com.cosmo.wanda_web.repositories.FunctionRepository;
@@ -28,15 +31,21 @@ public class MatchService {
     private PythonClient pythonClient;
 
     @Transactional
-    public void RunMatch(PlayedMatchDTO dto){
+    public MatchResponseDTO RunMatch(PlayedMatchDTO dto){
+
+        MatchResponseDTO matchResponseDTO = new MatchResponseDTO();
 
         // Verifica se o Id do primeiro aluno é válido
         User player1 = userRepository.findById(dto.getPlayerId1()).orElseThrow(
                 () -> new ResourceNotFoundException("Aluno não encontrado"));
 
+        matchResponseDTO.setPlayer1(new UserDTO(player1)); // Coloca o player 1 na resposta
+
         // Verifica se o Id do segundo aluno é válido
         User player2 = userRepository.findById(dto.getPlayerId2()).orElseThrow(
                 () -> new ResourceNotFoundException("Aluno não encontrado"));
+
+        matchResponseDTO.setPlayer2(new UserDTO(player2)); // Coloca o player 2 na resposta
 
         // Pegar a função do primeiro aluno
         Function functionPlayer1 = functionRepository.findByPlayerId(dto.getPlayerId1()).orElseThrow(
@@ -82,10 +91,12 @@ public class MatchService {
                         functionPlayer2.getFunction(),
                         matches.getParametersPlayer2());
 
-                System.out.println("Payload");
-                System.out.println(roundRequestDTO);
+                System.out.println("Payload:"); // aqui, também é enviada a função, mas não estou
+                // printando para melhor visualizaçaõ
+                System.out.println(roundRequestDTO.getPlayer1Parameters());
+                System.out.println(roundRequestDTO.getPlayer2Parameters());
 
-                // Faz a chamada da requisição - simulando por enquanto
+                // Faz a chamada da requisição
                 RoundResponseDTO response = pythonClient.round(roundRequestDTO);
 
                 System.out.println("RESPOSTA DA REQUISIÇÃO");
@@ -126,6 +137,9 @@ public class MatchService {
 
             matches.roundWinner(turnInfo);
 
+            TurnInformationDTO turnInformationDTO = new TurnInformationDTO(turnInfo);
+            matchResponseDTO.getTurns().add(turnInformationDTO);
+
             turnInfo.restart();
 
             countRound++;
@@ -135,5 +149,15 @@ public class MatchService {
         System.out.println("player 1: " + matches.getPlayer1RoundsVictories());
         System.out.println("player 2: " + matches.getPlayer2RoundsVictories());
         System.out.println("empates: " + matches.getTie());
+
+        if (matches.getPlayer1RoundsVictories() > matches.getPlayer2RoundsVictories()){
+            matchResponseDTO.setPlayerWinner(new UserDTO(player1));
+        } else if (matches.getPlayer2RoundsVictories() > matches.getPlayer1RoundsVictories()) {
+            matchResponseDTO.setPlayerWinner(new UserDTO(player2));
+        } else {
+            matchResponseDTO.setPlayerWinner(null);
+        }
+
+        return matchResponseDTO;
     }
 }
