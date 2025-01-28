@@ -7,8 +7,10 @@ import com.cosmo.wanda_web.dto.python.RoundRequestDTO;
 import com.cosmo.wanda_web.dto.python.RoundResponseDTO;
 import com.cosmo.wanda_web.dto.users.UserDTO;
 import com.cosmo.wanda_web.entities.Function;
+import com.cosmo.wanda_web.entities.Match;
 import com.cosmo.wanda_web.entities.User;
 import com.cosmo.wanda_web.repositories.FunctionRepository;
+import com.cosmo.wanda_web.repositories.MatchRepository;
 import com.cosmo.wanda_web.repositories.UserRepository;
 import com.cosmo.wanda_web.services.client.PythonClient;
 import com.cosmo.wanda_web.services.utils.TurnInformation;
@@ -18,6 +20,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+
 @Service
 public class MatchService {
 
@@ -26,6 +30,12 @@ public class MatchService {
 
     @Autowired
     private FunctionRepository functionRepository;
+
+    @Autowired
+    private MatchRepository matchRepository;
+
+    @Autowired
+    private PlayerService playerService;
 
     @Autowired
     private PythonClient pythonClient;
@@ -150,13 +160,20 @@ public class MatchService {
         System.out.println("player 2: " + matches.getPlayer2RoundsVictories());
         System.out.println("empates: " + matches.getTie());
 
+        User winner = null;
+
         if (matches.getPlayer1RoundsVictories() > matches.getPlayer2RoundsVictories()){
-            matchResponseDTO.setPlayerWinner(new UserDTO(player1));
+            winner = player1;
         } else if (matches.getPlayer2RoundsVictories() > matches.getPlayer1RoundsVictories()) {
-            matchResponseDTO.setPlayerWinner(new UserDTO(player2));
-        } else {
-            matchResponseDTO.setPlayerWinner(null);
+            winner = player2;
         }
+
+        matchResponseDTO.setPlayerWinner((winner == null) ? null : new UserDTO(winner));
+
+        Match match = new Match(player1, player2, Instant.now(), winner);
+        matchRepository.save(match);
+
+        playerService.updateWinners(player1, player2, match);
 
         return matchResponseDTO;
     }

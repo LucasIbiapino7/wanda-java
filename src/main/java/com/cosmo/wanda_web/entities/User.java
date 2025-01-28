@@ -26,11 +26,11 @@ public class User implements UserDetails {
     private Player player;
 
     // Relacionamento com partidas onde o usuário é player1
-    @OneToMany(mappedBy = "id.player1")
+    @OneToMany(mappedBy = "player1")
     private Set<Match> matchesAsPlayer1 = new HashSet<>();
 
     // Relacionamento com partidas onde o usuário é player2
-    @OneToMany(mappedBy = "id.player2")
+    @OneToMany(mappedBy = "player2")
     private Set<Match> matchesAsPlayer2 = new HashSet<>();
 
     @ManyToMany

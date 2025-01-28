@@ -219,7 +219,7 @@ public class Matches {
 
     public boolean victory() {
         int minVictories = rounds / 2;
-        return player1RoundsVictories > minVictories || player2RoundsVictories > minVictories;
+        return player1RoundsVictories > minVictories || player2RoundsVictories > minVictories || tie == rounds;
     }
 
     @Override
