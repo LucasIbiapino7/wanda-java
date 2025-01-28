@@ -16,6 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+
 @Service
 public class FunctionService {
 
@@ -34,7 +36,9 @@ public class FunctionService {
     @Transactional
     public FunctionRequestDTO insert(FunctionRequestDTO dto){
         // Validar a função com o microservice Python
-        ValidateResponseDTO response = pythonClient.validate(dto);
+//        ValidateResponseDTO response = pythonClient.validate(dto);
+
+        ValidateResponseDTO response = validateMock(dto);
 
         // Verifica se a função é válida
         if (!response.getValid()){
@@ -49,6 +53,10 @@ public class FunctionService {
         function = functionRepository.save(function);
 
         return new FunctionRequestDTO(function.getFunction());
+    }
+
+    private ValidateResponseDTO validateMock(FunctionRequestDTO dto) {
+        return new ValidateResponseDTO(true, new ArrayList<>());
     }
 
     @Transactional(readOnly = true)

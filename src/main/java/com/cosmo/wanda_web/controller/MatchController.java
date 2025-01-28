@@ -1,8 +1,10 @@
 package com.cosmo.wanda_web.controller;
 
+import com.cosmo.wanda_web.dto.match.MatchResponseDTO;
 import com.cosmo.wanda_web.dto.match.PlayedMatchDTO;
 import com.cosmo.wanda_web.services.MatchService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,7 +20,8 @@ public class MatchController {
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN')")
     @PostMapping
-    public void RunMatch(@RequestBody PlayedMatchDTO dto){
-        matchService.RunMatch(dto);
+    public ResponseEntity<MatchResponseDTO> RunMatch(@RequestBody PlayedMatchDTO dto){
+        MatchResponseDTO result = matchService.RunMatch(dto);
+        return ResponseEntity.ok(result);
     }
 }
