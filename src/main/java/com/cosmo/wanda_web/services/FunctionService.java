@@ -38,7 +38,7 @@ public class FunctionService {
         // Validar a função com o microservice Python
 //        ValidateResponseDTO response = pythonClient.validate(dto);
 
-        ValidateResponseDTO response = validateMock(dto);
+        ValidateResponseDTO response = pythonClient.validate(dto);
 
         // Verifica se a função é válida
         if (!response.getValid()){

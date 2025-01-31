@@ -2,6 +2,7 @@ package com.cosmo.wanda_web.services;
 
 import com.cosmo.wanda_web.dto.match.MatchResponseDTO;
 import com.cosmo.wanda_web.dto.match.PlayedMatchDTO;
+import com.cosmo.wanda_web.dto.match.PlaysDTO;
 import com.cosmo.wanda_web.dto.match.TurnInformationDTO;
 import com.cosmo.wanda_web.dto.python.RoundRequestDTO;
 import com.cosmo.wanda_web.dto.python.RoundResponseDTO;
@@ -81,9 +82,12 @@ public class MatchService {
             //instancia os cards para começar um round
             matches.instanceCards(); // mudar a função para instanciar aleatoriamente a ordem das cartas
 
-            for (int i = 0; i < 3; i++){
+            TurnInformationDTO turnInformationDTO = new TurnInformationDTO();
 
-                System.out.println("Turno " + (i + 1)); // depuração
+            int turno;
+            for (int i = 0; i < 3; i++){
+                turno = i + 1;
+                System.out.println("Turno " + turno); // depuração
 
                 // instanciando os parametros
                 matches.updateParametersPlayer(matches.getParametersPlayer1());
@@ -124,6 +128,15 @@ public class MatchService {
 
                 System.out.println("winner turn: " + winnerTurn);
 
+                // PlayDTO
+                PlaysDTO playsDTO = new PlaysDTO();
+                playsDTO.setPlayNumber(turno);
+                playsDTO.setPlayerCard1(cardTurnPlayer1);
+                playsDTO.setPlayerCard2(cardTurnPlayer2);
+                playsDTO.setWinnerOfPlay(winnerTurn);
+
+                turnInformationDTO.getPlays().add(playsDTO);
+
                 // Verifica o vencedor do turno e armazena a info
                 if (winnerTurn == 0){
                     turnInfo.addTie();
@@ -147,7 +160,7 @@ public class MatchService {
 
             matches.roundWinner(turnInfo);
 
-            TurnInformationDTO turnInformationDTO = new TurnInformationDTO(turnInfo);
+            turnInformationDTO.update(turnInfo);
             matchResponseDTO.getTurns().add(turnInformationDTO);
 
             turnInfo.restart();

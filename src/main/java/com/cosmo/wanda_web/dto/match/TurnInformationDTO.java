@@ -2,7 +2,11 @@ package com.cosmo.wanda_web.dto.match;
 
 import com.cosmo.wanda_web.services.utils.TurnInformation;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class TurnInformationDTO {
+    private List<PlaysDTO> plays = new ArrayList<>();
     private int tie;
     private int player1Winners;
     private int player2Winners;
@@ -30,6 +34,14 @@ public class TurnInformationDTO {
         }else {
             playerWinTurn = 2;
         }
+    }
+
+    public List<PlaysDTO> getPlays() {
+        return plays;
+    }
+
+    public void setPlays(List<PlaysDTO> plays) {
+        this.plays = plays;
     }
 
     public int getTie() {
@@ -62,5 +74,18 @@ public class TurnInformationDTO {
 
     public void setPlayerWinTurn(int playerWinTurn) {
         this.playerWinTurn = playerWinTurn;
+    }
+
+    public void update(TurnInformation turn) {
+        tie = turn.getTurnTies();
+        player1Winners = turn.getPlayer1TurnWins();
+        player2Winners = turn.getPlayer2TurnWins();
+        if (turn.getPlayer1TurnWins() == turn.getPlayer2TurnWins()){
+            playerWinTurn = 0;
+        } else if (turn.getPlayer1TurnWins() > turn.getPlayer2TurnWins()) {
+            playerWinTurn = 1;
+        }else {
+            playerWinTurn = 2;
+        }
     }
 }
