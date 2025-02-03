@@ -196,4 +196,12 @@ public class MatchService {
 
         return matchResponseDTO;
     }
+
+    @Transactional(readOnly = true)
+    public MatchResponseDTO getReplayById(Long id) {
+        Match match = matchRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Match not found"));
+        String matchData = match.getMatchData();
+        MatchResponseDTO matchResponseDTO = jsonConverter.converterToDto(matchData);
+        return matchResponseDTO;
+    }
 }

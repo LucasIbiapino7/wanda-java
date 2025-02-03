@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MatchResponseDTO {
-    private Integer matchId;
     private UserDTO player1;
     private UserDTO player2;
     private List<TurnInformationDTO> turns = new ArrayList<>();
@@ -41,14 +40,6 @@ public class MatchResponseDTO {
 
     public UserDTO getPlayerWinner() {
         return playerWinner;
-    }
-
-    public Integer getMatchId() {
-        return matchId;
-    }
-
-    public void setMatchId(Integer matchId) {
-        this.matchId = matchId;
     }
 
     public void setPlayerWinner(UserDTO playerWinner) {

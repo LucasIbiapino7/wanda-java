@@ -10,11 +10,20 @@ public class JsonConverter {
         ObjectMapper mapper = new ObjectMapper();
         try{
             String jsonString = mapper.writeValueAsString(data);
-            System.out.println(jsonString);
             return jsonString;
         }catch (Exception e){
             System.out.println("erro ao ler o Json");
             return "";
+        }
+    }
+
+    public MatchResponseDTO converterToDto(String jsonString) {
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            MatchResponseDTO dto = mapper.readValue(jsonString, MatchResponseDTO.class);
+            return dto;
+        }catch (Exception e){
+            return null;
         }
     }
 }

@@ -6,10 +6,7 @@ import com.cosmo.wanda_web.services.MatchService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping(value = "/jokenpo/match")
@@ -22,6 +19,13 @@ public class MatchController {
     @PostMapping
     public ResponseEntity<MatchResponseDTO> RunMatch(@RequestBody PlayedMatchDTO dto){
         MatchResponseDTO result = matchService.RunMatch(dto);
+        return ResponseEntity.ok(result);
+    }
+
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN')")
+    @GetMapping("/{id}")
+    public ResponseEntity<MatchResponseDTO> getReplayById(@PathVariable(name = "id") Long id){
+        MatchResponseDTO result = matchService.getReplayById(id);
         return ResponseEntity.ok(result);
     }
 }
