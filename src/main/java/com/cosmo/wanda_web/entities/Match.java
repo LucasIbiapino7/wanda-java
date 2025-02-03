@@ -28,14 +28,19 @@ public class Match {
     @JoinColumn(name = "winner_id")
     private User winner;
 
+    @Lob
+    @Column(name = "match_data", columnDefinition = "TEXT")
+    private String matchData;
+
     public Match() {
     }
 
-    public Match(User player1, User player2, Instant moment, User winner) {
+    public Match(User player1, User player2, Instant moment, User winner, String matchData) {
         this.player1 = player1;
         this.player2 = player2;
         this.moment = moment;
         this.winner = winner;
+        this.matchData = matchData;
     }
 
     public Long getId() {
@@ -76,6 +81,14 @@ public class Match {
 
     public void setWinner(User winner) {
         this.winner = winner;
+    }
+
+    public String getMatchData() {
+        return matchData;
+    }
+
+    public void setMatchData(String matchData) {
+        this.matchData = matchData;
     }
 
     @Override

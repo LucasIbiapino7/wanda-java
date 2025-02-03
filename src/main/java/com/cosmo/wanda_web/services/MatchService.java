@@ -14,6 +14,7 @@ import com.cosmo.wanda_web.repositories.FunctionRepository;
 import com.cosmo.wanda_web.repositories.MatchRepository;
 import com.cosmo.wanda_web.repositories.UserRepository;
 import com.cosmo.wanda_web.services.client.PythonClient;
+import com.cosmo.wanda_web.services.utils.JsonConverter;
 import com.cosmo.wanda_web.services.utils.TurnInformation;
 import com.cosmo.wanda_web.services.exceptions.ResourceNotFoundException;
 import com.cosmo.wanda_web.services.utils.Matches;
@@ -40,6 +41,9 @@ public class MatchService {
 
     @Autowired
     private PythonClient pythonClient;
+
+    @Autowired
+    private JsonConverter jsonConverter;
 
     @Transactional
     public MatchResponseDTO RunMatch(PlayedMatchDTO dto){
@@ -183,7 +187,9 @@ public class MatchService {
 
         matchResponseDTO.setPlayerWinner((winner == null) ? null : new UserDTO(winner));
 
-        Match match = new Match(player1, player2, Instant.now(), winner);
+        String matchData = jsonConverter.converter(matchResponseDTO);
+
+        Match match = new Match(player1, player2, Instant.now(), winner, matchData);
         matchRepository.save(match);
 
         playerService.updateWinners(player1, player2, match);
