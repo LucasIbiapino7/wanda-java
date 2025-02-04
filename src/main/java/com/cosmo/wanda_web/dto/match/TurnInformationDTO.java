@@ -6,21 +6,27 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TurnInformationDTO {
+    private Integer turnNumber;
     private List<PlaysDTO> plays = new ArrayList<>();
     private int tie;
     private int player1Winners;
     private int player2Winners;
     private int playerWinTurn;
+    private CurrentScoreDTO currentScore;
 
 
     public TurnInformationDTO() {
+
     }
 
-    public TurnInformationDTO(int tie, int player1Winners, int player2Winners, int playerWinTurn) {
+    public TurnInformationDTO(Integer turnNumber, List<PlaysDTO> plays, int tie, int player1Winners, int player2Winners, int playerWinTurn, CurrentScoreDTO currentScore) {
+        this.turnNumber = turnNumber;
+        this.plays = plays;
         this.tie = tie;
         this.player1Winners = player1Winners;
         this.player2Winners = player2Winners;
         this.playerWinTurn = playerWinTurn;
+        this.currentScore = currentScore;
     }
 
     public TurnInformationDTO(TurnInformation turn) {
@@ -74,6 +80,22 @@ public class TurnInformationDTO {
 
     public void setPlayerWinTurn(int playerWinTurn) {
         this.playerWinTurn = playerWinTurn;
+    }
+
+    public Integer getTurnNumber() {
+        return turnNumber;
+    }
+
+    public void setTurnNumber(Integer turnNumber) {
+        this.turnNumber = turnNumber;
+    }
+
+    public CurrentScoreDTO getCurrentScore() {
+        return currentScore;
+    }
+
+    public void setCurrentScore(CurrentScoreDTO currentScore) {
+        this.currentScore = currentScore;
     }
 
     public void update(TurnInformation turn) {

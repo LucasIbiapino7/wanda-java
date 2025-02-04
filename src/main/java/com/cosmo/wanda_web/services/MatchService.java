@@ -1,9 +1,6 @@
 package com.cosmo.wanda_web.services;
 
-import com.cosmo.wanda_web.dto.match.MatchResponseDTO;
-import com.cosmo.wanda_web.dto.match.PlayedMatchDTO;
-import com.cosmo.wanda_web.dto.match.PlaysDTO;
-import com.cosmo.wanda_web.dto.match.TurnInformationDTO;
+import com.cosmo.wanda_web.dto.match.*;
 import com.cosmo.wanda_web.dto.python.RoundRequestDTO;
 import com.cosmo.wanda_web.dto.python.RoundResponseDTO;
 import com.cosmo.wanda_web.dto.users.UserDTO;
@@ -14,6 +11,7 @@ import com.cosmo.wanda_web.repositories.FunctionRepository;
 import com.cosmo.wanda_web.repositories.MatchRepository;
 import com.cosmo.wanda_web.repositories.UserRepository;
 import com.cosmo.wanda_web.services.client.PythonClient;
+import com.cosmo.wanda_web.services.utils.CurrentScore;
 import com.cosmo.wanda_web.services.utils.JsonConverter;
 import com.cosmo.wanda_web.services.utils.TurnInformation;
 import com.cosmo.wanda_web.services.exceptions.ResourceNotFoundException;
@@ -77,6 +75,7 @@ public class MatchService {
         TurnInformation turnInfo = new TurnInformation();
 
         int countRound = 1;
+        CurrentScore score = new CurrentScore();
 
         // Cada iteração é um round
         while (!matches.victory()){
@@ -87,6 +86,7 @@ public class MatchService {
             matches.instanceCards(); // mudar a função para instanciar aleatoriamente a ordem das cartas
 
             TurnInformationDTO turnInformationDTO = new TurnInformationDTO();
+            turnInformationDTO.setTurnNumber(countRound);
 
             int turno;
             for (int i = 0; i < 3; i++){
@@ -141,7 +141,7 @@ public class MatchService {
 
                 turnInformationDTO.getPlays().add(playsDTO);
 
-                // Verifica o vencedor do turno e armazena a info
+                // Verifica o vencedor da jogada
                 if (winnerTurn == 0){
                     turnInfo.addTie();
                 } else if (winnerTurn == 1) {
@@ -162,9 +162,10 @@ public class MatchService {
             System.out.println("player 1: " + turnInfo.getPlayer1TurnWins());
             System.out.println("player 2: " + turnInfo.getPlayer2TurnWins());
 
-            matches.roundWinner(turnInfo);
+            matches.roundWinner(turnInfo, score);
 
             turnInformationDTO.update(turnInfo);
+            turnInformationDTO.setCurrentScore(new CurrentScoreDTO(score));
             matchResponseDTO.getTurns().add(turnInformationDTO);
 
             turnInfo.restart();

@@ -207,13 +207,16 @@ public class Matches {
         return 5; // Lembrar de mudar isso;
     }
 
-    public void roundWinner(TurnInformation turnInfo) {
+    public void roundWinner(TurnInformation turnInfo, CurrentScore score) {
         if (turnInfo.getPlayer1TurnWins() == turnInfo.getPlayer2TurnWins()){
             tie++;
+            score.tie();
         } else if (turnInfo.getPlayer1TurnWins() > turnInfo.getPlayer2TurnWins()) {
             player1RoundsVictories++;
+            score.player1win();
         }else {
             player2RoundsVictories++;
+            score.player2win();
         }
     }
 
