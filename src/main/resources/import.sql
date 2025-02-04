@@ -9,3 +9,7 @@ INSERT INTO tb_user_role(user_id, role_id) values (1, 1)
 INSERT INTO tb_user_role(user_id, role_id) values (2, 1)
 INSERT INTO tb_user_role(user_id, role_id) values (3, 1)
 INSERT INTO tb_user_role(user_id, role_id) values (3, 2)
+
+INSERT INTO tb_badges (name, icon_url) values ('Aprendiz condicional!', 'test.png');
+INSERT INTO tb_badges (name, icon_url) values ('Mestre do If/Else!', 'test.png');
+INSERT INTO tb_badges (name, icon_url) values ('Ninja Condicional!', 'test.png');

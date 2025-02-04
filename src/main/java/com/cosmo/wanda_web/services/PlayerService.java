@@ -1,12 +1,11 @@
 package com.cosmo.wanda_web.services;
 
 import com.cosmo.wanda_web.dto.players.ProfileDTO;
-import com.cosmo.wanda_web.entities.Function;
-import com.cosmo.wanda_web.entities.Match;
-import com.cosmo.wanda_web.entities.Player;
-import com.cosmo.wanda_web.entities.User;
+import com.cosmo.wanda_web.entities.*;
+import com.cosmo.wanda_web.repositories.BadgeRepository;
 import com.cosmo.wanda_web.repositories.FunctionRepository;
 import com.cosmo.wanda_web.repositories.PlayerRepository;
+import com.cosmo.wanda_web.repositories.UserRepository;
 import com.cosmo.wanda_web.services.exceptions.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,6 +21,12 @@ public class PlayerService {
 
     @Autowired
     private FunctionRepository functionRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private BadgeRepository badgeRepository;
 
     @Autowired
     private UserService userService;
@@ -64,9 +69,31 @@ public class PlayerService {
        if (match.getWinner() != null){
            if (match.getWinner().equals(user1)){
                player1.setNumberOfWinners(player1.getNumberOfWinners() + 1);
+               verifyBadges(user1, player1);
            } else if (match.getWinner().equals(user2)) {
                player1.setNumberOfWinners(player2.getNumberOfWinners() + 1);
+               verifyBadges(user2, player2);
            }
        }
+    }
+
+    @Transactional
+    private void verifyBadges(User user, Player player) {
+        if (player.getNumberOfWinners() >= 10){
+            Badge badge = badgeRepository.findByName("Ninja Condicional!").orElseThrow(
+                    () -> new ResourceNotFoundException("Badge Not Found"));
+            user.getBadges().add(badge);
+            userRepository.save(user);
+        } else if (player.getNumberOfWinners() >= 5) {
+            Badge badge = badgeRepository.findByName("Mestre do If/Else!").orElseThrow(
+                    () -> new ResourceNotFoundException("Badge Not Found"));
+            user.getBadges().add(badge);
+            userRepository.save(user);
+        } else if (player.getNumberOfWinners() >= 3) {
+            Badge badge = badgeRepository.findByName("Aprendiz condicional!").orElseThrow(
+                    () -> new ResourceNotFoundException("Badge Not Found"));
+            user.getBadges().add(badge);
+            userRepository.save(user);
+        }
     }
 }

@@ -6,7 +6,7 @@ import java.util.Objects;
 
 @Entity
 @Table(name = "tb_badges")
-public class Badges {
+public class Badge {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -14,10 +14,10 @@ public class Badges {
     private String name;
     private String iconUrl;
 
-    public Badges() {
+    public Badge() {
     }
 
-    public Badges(Long id, String name, String iconUrl) {
+    public Badge(Long id, String name, String iconUrl) {
         this.id = id;
         this.name = name;
         this.iconUrl = iconUrl;
@@ -52,7 +52,7 @@ public class Badges {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        Badges badges = (Badges) o;
+        Badge badges = (Badge) o;
 
         return Objects.equals(id, badges.id);
     }

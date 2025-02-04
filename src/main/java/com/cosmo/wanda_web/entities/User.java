@@ -43,7 +43,7 @@ public class User implements UserDetails {
     @JoinTable(name = "tb_user_badges"
             , joinColumns = @JoinColumn(name = "user_id")
             ,inverseJoinColumns = @JoinColumn(name = "badges_id"))
-    private Set<Badges> badges = new HashSet<>();
+    private Set<Badge> badges = new HashSet<>();
 
     public User() {
     }
@@ -79,7 +79,7 @@ public class User implements UserDetails {
         this.email = email;
     }
 
-    public Set<Badges> getBadges() {
+    public Set<Badge> getBadges() {
         return badges;
     }
 
