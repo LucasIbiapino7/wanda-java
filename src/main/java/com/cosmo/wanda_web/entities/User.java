@@ -39,6 +39,12 @@ public class User implements UserDetails {
             inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<Role> roles = new HashSet<>();
 
+    @ManyToMany
+    @JoinTable(name = "tb_user_badges"
+            , joinColumns = @JoinColumn(name = "user_id")
+            ,inverseJoinColumns = @JoinColumn(name = "badges_id"))
+    private Set<Badges> badges = new HashSet<>();
+
     public User() {
     }
 
@@ -71,6 +77,10 @@ public class User implements UserDetails {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public Set<Badges> getBadges() {
+        return badges;
     }
 
     @Override
