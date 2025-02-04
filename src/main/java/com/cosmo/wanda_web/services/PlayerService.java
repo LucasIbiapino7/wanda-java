@@ -1,5 +1,6 @@
 package com.cosmo.wanda_web.services;
 
+import com.cosmo.wanda_web.dto.players.BadgeDTO;
 import com.cosmo.wanda_web.dto.players.ProfileDTO;
 import com.cosmo.wanda_web.entities.*;
 import com.cosmo.wanda_web.repositories.BadgeRepository;
@@ -11,7 +12,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class PlayerService {
@@ -45,11 +48,13 @@ public class PlayerService {
         }
 
         ProfileDTO profileDTO = new ProfileDTO();
+        profileDTO.setName(user.getName());
         profileDTO.setId(player.getId());
         profileDTO.setNickname(player.getNickname());
         profileDTO.setNumberOfMatches(player.getNumberOfMatches());
         profileDTO.setNumberOfWinners(player.getNumberOfWinners());
         profileDTO.setFunction(code);
+        profileDTO.addBadges(user.getBadges());
 
         return profileDTO;
     }
