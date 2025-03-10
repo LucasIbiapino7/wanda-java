@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 @FeignClient(name = "python-client", url = "http://localhost:8000/api")
 public interface PythonClient {
 
+    @PostMapping("/feedback")
+    ValidateResponseDTO feedback(@RequestBody FunctionRequestDTO dto);
+
     @PostMapping("/validate")
     ValidateResponseDTO validate(@RequestBody FunctionRequestDTO dto);
 

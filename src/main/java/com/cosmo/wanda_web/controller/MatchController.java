@@ -3,6 +3,7 @@ package com.cosmo.wanda_web.controller;
 import com.cosmo.wanda_web.dto.match.MatchResponseDTO;
 import com.cosmo.wanda_web.dto.match.PlayedMatchDTO;
 import com.cosmo.wanda_web.services.MatchService;
+import org.hibernate.query.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

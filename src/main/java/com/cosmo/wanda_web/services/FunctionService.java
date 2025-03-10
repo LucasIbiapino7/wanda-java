@@ -1,5 +1,6 @@
 package com.cosmo.wanda_web.services;
 
+import com.cosmo.wanda_web.dto.function.FeedbackResponseDTO;
 import com.cosmo.wanda_web.dto.function.FunctionRequestDTO;
 import com.cosmo.wanda_web.dto.python.ValidateResponseDTO;
 import com.cosmo.wanda_web.entities.Function;
@@ -33,10 +34,14 @@ public class FunctionService {
     @Autowired
     private UserService userService;
 
+    public FeedbackResponseDTO feedback(FunctionRequestDTO dto) {
+        ValidateResponseDTO response = pythonClient.feedback(dto);
+        return new FeedbackResponseDTO(response);
+    }
+
     @Transactional
     public FunctionRequestDTO insert(FunctionRequestDTO dto){
         // Validar a função com o microservice Python
-//        ValidateResponseDTO response = pythonClient.validate(dto);
 
         ValidateResponseDTO response = pythonClient.validate(dto);
 

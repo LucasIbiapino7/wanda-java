@@ -1,5 +1,6 @@
 package com.cosmo.wanda_web.controller;
 
+import com.cosmo.wanda_web.dto.function.FeedbackResponseDTO;
 import com.cosmo.wanda_web.dto.function.FunctionRequestDTO;
 import com.cosmo.wanda_web.services.FunctionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,13 @@ public class FunctionController {
 
     @Autowired
     private FunctionService functionService;
+
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
+    @PostMapping("/feedback")
+    public ResponseEntity<FeedbackResponseDTO> feedback(@RequestBody FunctionRequestDTO dto){
+        FeedbackResponseDTO result = functionService.feedback(dto);
+        return ResponseEntity.status(201).body(result);
+    }
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
     @PostMapping()
