@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.Optional;
 
 @Service
 public class ChallengeService {
@@ -31,6 +32,14 @@ public class ChallengeService {
 
         User userChallenged = userRepository.findById(dto.getChallengedId()).orElseThrow(
                 () -> new ResourceNotFoundException("Usuário desafiado não foi encontrado"));
+
+        System.out.println(userChallenger.getId());
+        System.out.println(userChallenged.getId());
+
+        // Verificar se há um desafio pendente entre esses dois alunos
+        if (challengeRepository.checkIfChallengePendingExists(userChallenger.getId(), userChallenged.getId()).isPresent()){
+            throw new ResourceNotFoundException("Já existe um desafio pendente!"); // Mudar essa exceção
+        }
 
         Challenge challenge = new Challenge();
         challenge.setChallenger(userChallenger);
