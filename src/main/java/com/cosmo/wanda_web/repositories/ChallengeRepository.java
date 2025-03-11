@@ -1,10 +1,12 @@
 package com.cosmo.wanda_web.repositories;
 
 import com.cosmo.wanda_web.entities.Challenge;
+import com.cosmo.wanda_web.entities.ChallengeStatus;
 import com.cosmo.wanda_web.projections.FindAllPendingChallengerProjection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
@@ -24,4 +26,10 @@ public interface ChallengeRepository extends JpaRepository<Challenge, Long> {
             WHERE status = 'PENDING' AND TB_CHALLENGE.challenged_id = :userChallengedId
             """)
     Page<FindAllPendingChallengerProjection> findAllPending(Long userChallengedId, Pageable pageable);
+
+    @Modifying
+    @Query("UPDATE Challenge obj " +
+            "SET obj.status = :status " +
+            "WHERE obj.id = :challengeId")
+    void rejectedChallenge(Long challengeId, ChallengeStatus status);
 }

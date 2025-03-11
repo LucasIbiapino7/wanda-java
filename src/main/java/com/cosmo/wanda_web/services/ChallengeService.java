@@ -2,6 +2,9 @@ package com.cosmo.wanda_web.services;
 
 import com.cosmo.wanda_web.dto.challengers.ChallengeDTO;
 import com.cosmo.wanda_web.dto.challengers.ChallengeFIndAllPendingDTO;
+import com.cosmo.wanda_web.dto.challengers.ChallengeIsAcceptedDTO;
+import com.cosmo.wanda_web.dto.match.MatchResponseDTO;
+import com.cosmo.wanda_web.dto.match.PlayedMatchDTO;
 import com.cosmo.wanda_web.entities.Challenge;
 import com.cosmo.wanda_web.entities.ChallengeStatus;
 import com.cosmo.wanda_web.entities.User;
@@ -31,15 +34,15 @@ public class ChallengeService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private MatchService matchService;
+
     @Transactional
     public void challenge(ChallengeDTO dto) {
         User userChallenger = userService.authenticated(); // Usuário Logado
 
         User userChallenged = userRepository.findById(dto.getChallengedId()).orElseThrow(
                 () -> new ResourceNotFoundException("Usuário desafiado não foi encontrado"));
-
-        System.out.println(userChallenger.getId());
-        System.out.println(userChallenged.getId());
 
         // Verificar se há um desafio pendente entre esses dois alunos
         if (challengeRepository.checkIfChallengePendingExists(userChallenger.getId(), userChallenged.getId()).isPresent()){
@@ -61,5 +64,26 @@ public class ChallengeService {
         User user = userService.authenticated();
         Page<FindAllPendingChallengerProjection> allPending = challengeRepository.findAllPending(user.getId(), pageable);
         return allPending.map(ChallengeFIndAllPendingDTO::new);
+    }
+
+    @Transactional
+    public MatchResponseDTO isAccepted(ChallengeIsAcceptedDTO dto) {
+        System.out.println("dto:" + dto.getAccepted());
+        Challenge challenge = challengeRepository.findById(dto.getChallengeId()).orElseThrow(
+                () -> new ResourceNotFoundException("esse Challenge não existe"));
+        if (!dto.getAccepted()){
+            System.out.println("caiu aqui");
+            challengeUpdate(dto.getChallengeId(), ChallengeStatus.DECLINED);
+            return null;
+        }
+        MatchResponseDTO result = matchService.RunMatch(
+                new PlayedMatchDTO(challenge.getChallenger().getId(), challenge.getChallenged().getId()));
+        challengeUpdate(dto.getChallengeId(), ChallengeStatus.ACCEPTED);
+        return result;
+    }
+
+    @Transactional
+    private void challengeUpdate(Long challengeId, ChallengeStatus status) {
+        challengeRepository.rejectedChallenge(challengeId, status);
     }
 }
