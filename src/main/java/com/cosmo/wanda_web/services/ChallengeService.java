@@ -1,17 +1,22 @@
 package com.cosmo.wanda_web.services;
 
 import com.cosmo.wanda_web.dto.challengers.ChallengeDTO;
+import com.cosmo.wanda_web.dto.challengers.ChallengeFIndAllPendingDTO;
 import com.cosmo.wanda_web.entities.Challenge;
 import com.cosmo.wanda_web.entities.ChallengeStatus;
 import com.cosmo.wanda_web.entities.User;
+import com.cosmo.wanda_web.projections.FindAllPendingChallengerProjection;
 import com.cosmo.wanda_web.repositories.ChallengeRepository;
 import com.cosmo.wanda_web.repositories.UserRepository;
 import com.cosmo.wanda_web.services.exceptions.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -49,5 +54,12 @@ public class ChallengeService {
         challenge.setStatus(ChallengeStatus.PENDING);
 
         challengeRepository.save(challenge);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ChallengeFIndAllPendingDTO> findAllPending(Pageable pageable) {
+        User user = userService.authenticated();
+        Page<FindAllPendingChallengerProjection> allPending = challengeRepository.findAllPending(user.getId(), pageable);
+        return allPending.map(ChallengeFIndAllPendingDTO::new);
     }
 }

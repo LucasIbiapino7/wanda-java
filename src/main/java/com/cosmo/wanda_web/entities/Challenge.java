@@ -24,6 +24,7 @@ public class Challenge {
     @Enumerated(EnumType.STRING)
     private ChallengeStatus status;
 
+    @Column(columnDefinition = "TIMESTAMP WITHOUT TIME ZONE")
     private Instant createdAt;
 
     @OneToOne
