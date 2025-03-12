@@ -1,6 +1,7 @@
 package com.cosmo.wanda_web.services;
 
 import com.cosmo.wanda_web.dto.players.BadgeDTO;
+import com.cosmo.wanda_web.dto.players.PlayerInformationDTO;
 import com.cosmo.wanda_web.dto.players.ProfileDTO;
 import com.cosmo.wanda_web.entities.*;
 import com.cosmo.wanda_web.repositories.BadgeRepository;
@@ -100,5 +101,12 @@ public class PlayerService {
             user.getBadges().add(badge);
             userRepository.save(user);
         }
+    }
+
+    @Transactional
+    public List<PlayerInformationDTO> findByName(String name) {
+        User user = userService.authenticated();
+        List<Player> players = playerRepository.searchByName(name, user.getId());
+        return players.stream().map(PlayerInformationDTO::new).toList();
     }
 }
