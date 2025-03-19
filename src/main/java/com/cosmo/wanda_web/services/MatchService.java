@@ -2,7 +2,7 @@ package com.cosmo.wanda_web.services;
 
 import com.cosmo.wanda_web.dto.match.*;
 import com.cosmo.wanda_web.dto.python.RoundRequestDTO;
-import com.cosmo.wanda_web.dto.python.RoundResponseDTO;
+import com.cosmo.wanda_web.dto.python.TurnResponseDTO;
 import com.cosmo.wanda_web.dto.users.UserDTO;
 import com.cosmo.wanda_web.entities.Function;
 import com.cosmo.wanda_web.entities.Match;
@@ -13,7 +13,7 @@ import com.cosmo.wanda_web.repositories.UserRepository;
 import com.cosmo.wanda_web.services.client.PythonClient;
 import com.cosmo.wanda_web.services.utils.CurrentScore;
 import com.cosmo.wanda_web.services.utils.JsonConverter;
-import com.cosmo.wanda_web.services.utils.TurnInformation;
+import com.cosmo.wanda_web.services.utils.RoundInformation;
 import com.cosmo.wanda_web.services.exceptions.ResourceNotFoundException;
 import com.cosmo.wanda_web.services.utils.Matches;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,32 +50,32 @@ public class MatchService {
 
         // Verifica se o Id do primeiro aluno é válido
         User player1 = userRepository.findById(dto.getPlayerId1()).orElseThrow(
-                () -> new ResourceNotFoundException("Aluno não encontrado"));
+                () -> new ResourceNotFoundException("Aluno não encontrado: " + dto.getPlayerId1()));
 
         matchResponseDTO.setPlayer1(new UserDTO(player1)); // Coloca o player 1 na resposta
 
         // Verifica se o Id do segundo aluno é válido
         User player2 = userRepository.findById(dto.getPlayerId2()).orElseThrow(
-                () -> new ResourceNotFoundException("Aluno não encontrado"));
+                () -> new ResourceNotFoundException("Aluno não encontrado" + dto.getPlayerId2()));
 
         matchResponseDTO.setPlayer2(new UserDTO(player2)); // Coloca o player 2 na resposta
 
         // Pegar a função do primeiro aluno
         Function functionPlayer1 = functionRepository.findByPlayerId(dto.getPlayerId1()).orElseThrow(
-                () -> new ResourceNotFoundException("O aluno não tem funções salvas"));
+                () -> new ResourceNotFoundException("O aluno " + player1.getName() + " não tem função cadastrada"));
 
         // Pegar a função do segundo aluno
         Function functionPlayer2 = functionRepository.findByPlayerId(dto.getPlayerId2()).orElseThrow(
-                () -> new ResourceNotFoundException("O aluno não tem funções salvas"));
+                () -> new ResourceNotFoundException("O aluno " + player2.getName() + " não tem função cadastrada"));
 
         // Objeto que vai ajudar a controlar uma partida
         Matches matches = new Matches(dto.getPlayerId1(), dto.getPlayerId2(), 5);
 
         // Informações sobre o turno
-        TurnInformation turnInfo = new TurnInformation();
+        RoundInformation turnInfo = new RoundInformation();
 
         int countRound = 1;
-        CurrentScore score = new CurrentScore();
+        CurrentScore score = new CurrentScore(); // Informacoes sobre o placar
 
         // Cada iteração é um round
         while (!matches.victory()){
@@ -83,10 +83,12 @@ public class MatchService {
             System.out.println("ROUND: " + countRound);
 
             //instancia os cards para começar um round
-            matches.instanceCards(); // mudar a função para instanciar aleatoriamente a ordem das cartas
+            matches.instanceCards();
 
-            TurnInformationDTO turnInformationDTO = new TurnInformationDTO();
-            turnInformationDTO.setTurnNumber(countRound);
+            RoundInformationDTO roundInformationDTO = new RoundInformationDTO();
+            roundInformationDTO.setTurnNumber(countRound);
+            roundInformationDTO.getPlayer1cards().addAll(matches.getCardsPlayer1());
+            roundInformationDTO.getPlayer2cards().addAll(matches.getCardsPlayer2());
 
             int turno;
             for (int i = 0; i < 3; i++){
@@ -115,7 +117,10 @@ public class MatchService {
                 System.out.println(roundRequestDTO.getPlayer2Parameters());
 
                 // Faz a chamada da requisição
-                RoundResponseDTO response = pythonClient.round(roundRequestDTO);
+                //TurnResponseDTO response = pythonClient.round(roundRequestDTO);
+
+                // Simulando uma resposta apenas para teste
+                TurnResponseDTO response = new TurnResponseDTO("pedra", "papel");
 
                 System.out.println("RESPOSTA DA REQUISIÇÃO");
                 System.out.println(response);
@@ -139,7 +144,7 @@ public class MatchService {
                 playsDTO.setPlayerCard2(cardTurnPlayer2);
                 playsDTO.setWinnerOfPlay(winnerTurn);
 
-                turnInformationDTO.getPlays().add(playsDTO);
+                roundInformationDTO.getPlays().add(playsDTO);
 
                 // Verifica o vencedor da jogada
                 if (winnerTurn == 0){
@@ -150,7 +155,7 @@ public class MatchService {
                     turnInfo.player2Win();
                 }
 
-                // Atualiza as cartas ao final de um turno
+                // Atualiza as cartas ao final de um turno -> coloca null nas cartas jogadas
                 matches.updateCardsPlayer(matches.getCardsPlayer1(), cardTurnPlayer1);
                 matches.updateCardsPlayer(matches.getCardsPlayer2(), cardTurnPlayer2);
             }
@@ -164,9 +169,9 @@ public class MatchService {
 
             matches.roundWinner(turnInfo, score);
 
-            turnInformationDTO.update(turnInfo);
-            turnInformationDTO.setCurrentScore(new CurrentScoreDTO(score));
-            matchResponseDTO.getTurns().add(turnInformationDTO);
+            roundInformationDTO.update(turnInfo);
+            roundInformationDTO.setCurrentScore(new CurrentScoreDTO(score));
+            matchResponseDTO.getRounds().add(roundInformationDTO);
 
             turnInfo.restart();
 

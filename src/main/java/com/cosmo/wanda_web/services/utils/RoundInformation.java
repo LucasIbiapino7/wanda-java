@@ -1,12 +1,12 @@
 package com.cosmo.wanda_web.services.utils;
 
-public class TurnInformation {
+public class RoundInformation {
 
     private int player1TurnWins;
     private int player2TurnWins;
     private int turnTies;
 
-    public TurnInformation() {
+    public RoundInformation() {
         this.player1TurnWins = 0;
         this.player2TurnWins = 0;
         this.turnTies = 0;
@@ -44,7 +44,7 @@ public class TurnInformation {
 
     @Override
     public String toString() {
-        return "TurnInformation{" +
+        return "RoundInformation{" +
                 "player1TurnWins=" + player1TurnWins +
                 ", player2TurnWins=" + player2TurnWins +
                 ", turnTies=" + turnTies +

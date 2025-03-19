@@ -1,6 +1,7 @@
 package com.cosmo.wanda_web.controller.handlers;
 
 import com.cosmo.wanda_web.dto.errors.CustomError;
+import com.cosmo.wanda_web.services.exceptions.ChallengeException;
 import com.cosmo.wanda_web.services.exceptions.DatabaseException;
 import com.cosmo.wanda_web.services.exceptions.InvalidFunctionException;
 import com.cosmo.wanda_web.services.exceptions.ResourceNotFoundException;
@@ -17,6 +18,13 @@ public class ControllerExceptionsHandler {
 
     @ExceptionHandler(InvalidFunctionException.class)
     public ResponseEntity<CustomError> resourceNotFound(InvalidFunctionException e, HttpServletRequest request) {
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        CustomError err = new CustomError(Instant.now(), status.value(), e.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(status).body(err);
+    }
+
+    @ExceptionHandler(ChallengeException.class)
+    public ResponseEntity<CustomError> challengeException(ChallengeException e, HttpServletRequest request) {
         HttpStatus status = HttpStatus.BAD_REQUEST;
         CustomError err = new CustomError(Instant.now(), status.value(), e.getMessage(), request.getRequestURI());
         return ResponseEntity.status(status).body(err);

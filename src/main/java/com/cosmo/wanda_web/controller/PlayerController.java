@@ -4,6 +4,8 @@ import com.cosmo.wanda_web.dto.players.PlayerInformationDTO;
 import com.cosmo.wanda_web.dto.players.ProfileDTO;
 import com.cosmo.wanda_web.services.PlayerService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,8 +30,8 @@ public class PlayerController {
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
     @GetMapping("/findByName")
-    public ResponseEntity<List<PlayerInformationDTO>> findByName(@RequestParam(name = "name", defaultValue = "") String name){
-        List<PlayerInformationDTO> result = playerService.findByName(name);
+    public ResponseEntity<Page<PlayerInformationDTO>> findByName(@RequestParam(name = "name", defaultValue = "") String name, Pageable pageable){
+        Page<PlayerInformationDTO> result = playerService.findByName(name, pageable);
         return ResponseEntity.ok(result);
     }
 }

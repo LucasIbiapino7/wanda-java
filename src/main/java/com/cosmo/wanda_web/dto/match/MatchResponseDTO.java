@@ -8,7 +8,7 @@ import java.util.List;
 public class MatchResponseDTO {
     private UserDTO player1;
     private UserDTO player2;
-    private List<TurnInformationDTO> turns = new ArrayList<>();
+    private List<RoundInformationDTO> rounds = new ArrayList<>();
     private UserDTO playerWinner;
 
     public MatchResponseDTO() {
@@ -30,12 +30,12 @@ public class MatchResponseDTO {
         this.player2 = player2;
     }
 
-    public List<TurnInformationDTO> getTurns() {
-        return turns;
+    public List<RoundInformationDTO> getRounds() {
+        return rounds;
     }
 
-    public void setTurns(List<TurnInformationDTO> turns) {
-        this.turns = turns;
+    public void setRounds(List<RoundInformationDTO> rounds) {
+        this.rounds = rounds;
     }
 
     public UserDTO getPlayerWinner() {

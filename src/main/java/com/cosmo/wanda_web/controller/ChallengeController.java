@@ -29,7 +29,7 @@ public class ChallengeController {
     }
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
-    @PostMapping("/pending")
+    @GetMapping("/pending")
     public ResponseEntity<Page<ChallengeFIndAllPendingDTO>> findAllPending(Pageable pageable){
         Page<ChallengeFIndAllPendingDTO> result = challengeService.findAllPending(pageable);
         return ResponseEntity.ok(result);

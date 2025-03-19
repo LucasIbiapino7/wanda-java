@@ -1,12 +1,14 @@
 package com.cosmo.wanda_web.dto.match;
 
-import com.cosmo.wanda_web.services.utils.TurnInformation;
+import com.cosmo.wanda_web.services.utils.RoundInformation;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class TurnInformationDTO {
+public class RoundInformationDTO {
     private Integer turnNumber;
+    private List<String> player1cards = new ArrayList<>();
+    private List<String> player2cards = new ArrayList<>();
     private List<PlaysDTO> plays = new ArrayList<>();
     private int tie;
     private int player1Winners;
@@ -15,11 +17,11 @@ public class TurnInformationDTO {
     private CurrentScoreDTO currentScore;
 
 
-    public TurnInformationDTO() {
+    public RoundInformationDTO() {
 
     }
 
-    public TurnInformationDTO(Integer turnNumber, List<PlaysDTO> plays, int tie, int player1Winners, int player2Winners, int playerWinTurn, CurrentScoreDTO currentScore) {
+    public RoundInformationDTO(Integer turnNumber, List<PlaysDTO> plays, int tie, int player1Winners, int player2Winners, int playerWinTurn, CurrentScoreDTO currentScore) {
         this.turnNumber = turnNumber;
         this.plays = plays;
         this.tie = tie;
@@ -29,7 +31,7 @@ public class TurnInformationDTO {
         this.currentScore = currentScore;
     }
 
-    public TurnInformationDTO(TurnInformation turn) {
+    public RoundInformationDTO(RoundInformation turn) {
         tie = turn.getTurnTies();
         player1Winners = turn.getPlayer1TurnWins();
         player2Winners = turn.getPlayer2TurnWins();
@@ -98,7 +100,23 @@ public class TurnInformationDTO {
         this.currentScore = currentScore;
     }
 
-    public void update(TurnInformation turn) {
+    public List<String> getPlayer1cards() {
+        return player1cards;
+    }
+
+    public void setPlayer1cards(List<String> player1cards) {
+        this.player1cards = player1cards;
+    }
+
+    public List<String> getPlayer2cards() {
+        return player2cards;
+    }
+
+    public void setPlayer2cards(List<String> player2cards) {
+        this.player2cards = player2cards;
+    }
+
+    public void update(RoundInformation turn) {
         tie = turn.getTurnTies();
         player1Winners = turn.getPlayer1TurnWins();
         player2Winners = turn.getPlayer2TurnWins();

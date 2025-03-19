@@ -10,6 +10,8 @@ import com.cosmo.wanda_web.repositories.PlayerRepository;
 import com.cosmo.wanda_web.repositories.UserRepository;
 import com.cosmo.wanda_web.services.exceptions.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -104,9 +106,19 @@ public class PlayerService {
     }
 
     @Transactional
+    public Page<PlayerInformationDTO> findByName(String name, Pageable pageable) {
+        User user = userService.authenticated();
+        Page<Player> list = playerRepository.searchByName(name, user.getId(), pageable);
+        List<Player> players = playerRepository.findPlayersFunctionsAndBadges(list.stream().toList());
+        return list.map(PlayerInformationDTO::new);
+    }
+
+    /*
+    @Transactional
     public List<PlayerInformationDTO> findByName(String name) {
         User user = userService.authenticated();
         List<Player> players = playerRepository.searchByName(name, user.getId());
         return players.stream().map(PlayerInformationDTO::new).toList();
     }
+     */
 }

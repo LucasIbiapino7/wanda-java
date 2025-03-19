@@ -2,15 +2,17 @@ package com.cosmo.wanda_web.services.utils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Random;
 
 public class Matches {
-
     private Long playerId1;
     private Long playerId2;
     private final List<String> cardsPlayer1 = new ArrayList<>();
     private final List<String> cardsPlayer2 = new ArrayList<>();
     private final List<String> parametersPlayer1 = new ArrayList<>();
     private final List<String> parametersPlayer2 = new ArrayList<>();
+    private final List<String> cardsGame = new ArrayList<>(List.of("pedra","pedra", "tesoura", "tesoura", "papel", "papel"));
     private Integer rounds;
     private Integer player1RoundsVictories;
     private Integer player2RoundsVictories;
@@ -70,19 +72,34 @@ public class Matches {
 
     /***
      * Intancia as Listas que representam as cartas de cada jogador no começo do turno
+     * As cartas são selecionadas aleatoriamente, podendo um jogador ter 2x a mesma carta
      */
     public void instanceCards(){
+        Random random = new Random();
         cardsPlayer1.clear();
 
-        cardsPlayer1.add("pedra");
-        cardsPlayer1.add("papel");
-        cardsPlayer1.add("tesoura");
+        // Adicionar as cartas do player 1 para um ROUND
+        for (int i = 0; i < 3; i++){
+            int index = random.nextInt(cardsGame.size());
+            cardsPlayer1.add(cardsGame.remove(index));
+        }
+
+        System.out.println("Cartas do jogador 1:" + cardsPlayer1);
 
         cardsPlayer2.clear();
 
-        cardsPlayer2.add("pedra");
-        cardsPlayer2.add("papel");
-        cardsPlayer2.add("tesoura");
+        while (!cardsGame.isEmpty()){
+            cardsPlayer2.add(cardsGame.remove(0));
+        }
+
+        System.out.println("Cartas do jogador 2:" + cardsPlayer2);
+
+        cardsGame.add("pedra");
+        cardsGame.add("pedra");
+        cardsGame.add("papel");
+        cardsGame.add("papel");
+        cardsGame.add("tesoura");
+        cardsGame.add("tesoura");
     }
 
     /***
@@ -127,6 +144,7 @@ public class Matches {
 
     /***
      * Válida se a carta recebida é válida, ou seja, se ainda está na mão do jogaror
+     * No caso de um retorno inválido ou carta que não está na mão, retornamos a próxima carta da mão do jogador
      * @param cardsPlayer - lista de cartas dp jogador
      * @param player1Choice - carta escolhida pela funcao
      * @return - se a carta existir, retorna ela, caso não, retorna a primeira da mão
@@ -144,7 +162,7 @@ public class Matches {
                 return card;
             }
         }
-        return ""; // Espero nunca chegar aqui
+        return "";
     }
 
     /***
@@ -153,7 +171,6 @@ public class Matches {
      */
     public void updateParametersPlayer(List<String> parametersPlayer){
         parametersPlayer.clear();
-
         if (parametersPlayer == parametersPlayer1){
             for (String card : cardsPlayer1) {
                 parametersPlayer.add(card);
@@ -204,10 +221,10 @@ public class Matches {
                 return 0;
             }
         }
-        return 5; // Lembrar de mudar isso;
+        return -1; // Lembrar de mudar isso;
     }
 
-    public void roundWinner(TurnInformation turnInfo, CurrentScore score) {
+    public void roundWinner(RoundInformation turnInfo, CurrentScore score) {
         if (turnInfo.getPlayer1TurnWins() == turnInfo.getPlayer2TurnWins()){
             tie++;
             score.tie();
@@ -222,7 +239,7 @@ public class Matches {
 
     public boolean victory() {
         int minVictories = rounds / 2;
-        return player1RoundsVictories > minVictories || player2RoundsVictories > minVictories || tie == rounds;
+        return player1RoundsVictories > minVictories || player2RoundsVictories > minVictories || Objects.equals(tie, rounds);
     }
 
     @Override

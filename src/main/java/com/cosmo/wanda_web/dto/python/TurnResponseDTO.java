@@ -1,14 +1,14 @@
 package com.cosmo.wanda_web.dto.python;
 
-public class RoundResponseDTO {
+public class TurnResponseDTO {
 
     private String player1Choice;
     private String player2Choice;
 
-    public RoundResponseDTO() {
+    public TurnResponseDTO() {
     }
 
-    public RoundResponseDTO(String player1Choice, String player2Choice) {
+    public TurnResponseDTO(String player1Choice, String player2Choice) {
         this.player1Choice = player1Choice;
         this.player2Choice = player2Choice;
     }
@@ -31,7 +31,7 @@ public class RoundResponseDTO {
 
     @Override
     public String toString() {
-        return "RoundResponseDTO{" +
+        return "TurnResponseDTO{" +
                 "player1Choice='" + player1Choice + '\'' +
                 ", player2Choice='" + player2Choice + '\'' +
                 '}';

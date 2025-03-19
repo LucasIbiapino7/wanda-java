@@ -11,6 +11,7 @@ import com.cosmo.wanda_web.entities.User;
 import com.cosmo.wanda_web.projections.FindAllPendingChallengerProjection;
 import com.cosmo.wanda_web.repositories.ChallengeRepository;
 import com.cosmo.wanda_web.repositories.UserRepository;
+import com.cosmo.wanda_web.services.exceptions.ChallengeException;
 import com.cosmo.wanda_web.services.exceptions.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -46,7 +47,7 @@ public class ChallengeService {
 
         // Verificar se há um desafio pendente entre esses dois alunos
         if (challengeRepository.checkIfChallengePendingExists(userChallenger.getId(), userChallenged.getId()).isPresent()){
-            throw new ResourceNotFoundException("Já existe um desafio pendente!"); // Mudar essa exceção
+            throw new ChallengeException("Já existe um desafio pendente!"); // Mudar essa exceção
         }
 
         Challenge challenge = new Challenge();
