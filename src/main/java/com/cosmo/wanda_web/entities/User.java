@@ -45,6 +45,12 @@ public class User implements UserDetails {
             ,inverseJoinColumns = @JoinColumn(name = "badges_id"))
     private Set<Badge> badges = new HashSet<>();
 
+    @ManyToMany
+    @JoinTable(name = "tb_user_tournaments",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "tournament_id"))
+    private Set<Tournament> tournaments = new HashSet<>();
+
     public User() {
     }
 
