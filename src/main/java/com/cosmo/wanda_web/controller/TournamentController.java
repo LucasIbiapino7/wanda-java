@@ -2,6 +2,7 @@ package com.cosmo.wanda_web.controller;
 
 import com.cosmo.wanda_web.dto.tournament.TournamentDTO;
 import com.cosmo.wanda_web.services.TournamentService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,7 +20,7 @@ public class TournamentController {
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
     @PostMapping
-    public ResponseEntity<TournamentDTO> create(@RequestBody TournamentDTO dto){
+    public ResponseEntity<TournamentDTO> create(@Valid @RequestBody TournamentDTO dto){
         TournamentDTO result = tournamentService.create(dto);
         return ResponseEntity.ok(result);
     }
