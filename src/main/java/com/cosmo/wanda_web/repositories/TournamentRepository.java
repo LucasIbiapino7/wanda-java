@@ -1,9 +1,13 @@
 package com.cosmo.wanda_web.repositories;
 
 import com.cosmo.wanda_web.entities.Tournament;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+
+import java.util.Optional;
 
 public interface TournamentRepository extends JpaRepository<Tournament, Long> {
 
@@ -13,4 +17,19 @@ public interface TournamentRepository extends JpaRepository<Tournament, Long> {
            WHERE obj.creatorId = :creatorId AND obj.status = 'OPEN'
            """)
     Long countOpenTournaments(@Param("creatorId") Long creatorId);
+
+    @Query("""
+    SELECT obj
+    FROM Tournament obj
+    WHERE lower(obj.name) LIKE lower(concat('%', :searchTerm, '%')) AND obj.status = 'OPEN'
+    ORDER BY obj.asPrivate ASC, obj.createdAt DESC
+    """)
+    Page<Tournament> findByNameWithOrdering(@Param("searchTerm") String searchTerm, Pageable pageable);
+
+    @Query("""
+           SELECT obj
+           FROM Tournament obj
+           WHERE obj.id = :id
+           """)
+    Tournament findByIdWithParticipants(@Param("id")Long id);
 }

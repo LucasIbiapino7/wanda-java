@@ -1,12 +1,16 @@
 package com.cosmo.wanda_web.services;
 
-import com.cosmo.wanda_web.dto.tournament.TournamentDTO;
+import com.cosmo.wanda_web.dto.tournament.TournamentCreateDTO;
+import com.cosmo.wanda_web.dto.tournament.TournamentMinDTO;
+import com.cosmo.wanda_web.dto.tournament.TournamentWithParticipantsDTO;
 import com.cosmo.wanda_web.entities.Tournament;
 import com.cosmo.wanda_web.entities.TournamentStatus;
 import com.cosmo.wanda_web.entities.User;
 import com.cosmo.wanda_web.repositories.TournamentRepository;
 import com.cosmo.wanda_web.services.exceptions.TournamentException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,18 +26,12 @@ public class TournamentService {
     private TournamentRepository tournamentRepository;
 
     @Transactional
-    public TournamentDTO create(TournamentDTO dto) {
-        System.out.println(dto.getAsPrivate());
+    public TournamentCreateDTO create(TournamentCreateDTO dto) {
         User user = userService.authenticated(); // Pega o usuário autenticado
-
         Long count = tournamentRepository.countOpenTournaments(user.getId());
-
-        System.out.println("COUNT = " + count);
-
         if (count >= 1){
             throw new TournamentException("O usuário já tem um torneio criado!");
         }
-
         Tournament tournament = new Tournament();
         tournament.setName(dto.getName());
         tournament.setDescription(dto.getDescription());
@@ -49,6 +47,21 @@ public class TournamentService {
             tournament.setPassword(dto.getPassword());
         }
         tournament = tournamentRepository.save(tournament);
-        return new TournamentDTO(tournament);
+        return new TournamentCreateDTO(tournament);
+    }
+
+    @Transactional(readOnly = true) //Preciso melhorar
+    public TournamentWithParticipantsDTO findByIdWithParticipants(Long id) {
+        Tournament tournament = tournamentRepository.findByIdWithParticipants(id);
+        if (tournament == null){
+            throw new TournamentException("O torneio não existe!");
+        }
+        return new TournamentWithParticipantsDTO(tournament);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<TournamentMinDTO> findAll(String searchTerm, Pageable pageable) {
+        Page<Tournament> result = tournamentRepository.findByNameWithOrdering(searchTerm, pageable);
+        return result.map(TournamentMinDTO::new);
     }
 }

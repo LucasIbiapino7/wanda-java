@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Size;
 
 import java.time.LocalDateTime;
 
-public class TournamentDTO {
+public class TournamentCreateDTO {
     private Long id;
 
     @NotBlank(message = "campo requerido!")
@@ -26,10 +26,10 @@ public class TournamentDTO {
     private Long creatorId;
     private Long winnerId;
 
-    public TournamentDTO() {
+    public TournamentCreateDTO() {
     }
 
-    public TournamentDTO(Tournament entity) {
+    public TournamentCreateDTO(Tournament entity) {
         id = entity.getId();
         name = entity.getName();
         description = entity.getDescription();
