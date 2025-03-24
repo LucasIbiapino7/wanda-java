@@ -1,5 +1,6 @@
 package com.cosmo.wanda_web.controller;
 
+import com.cosmo.wanda_web.dto.tournament.SubscribeTournamentDTO;
 import com.cosmo.wanda_web.dto.tournament.TournamentCreateDTO;
 import com.cosmo.wanda_web.dto.tournament.TournamentMinDTO;
 import com.cosmo.wanda_web.dto.tournament.TournamentWithParticipantsDTO;
@@ -30,6 +31,13 @@ public class TournamentController {
     @GetMapping
     public ResponseEntity<Page<TournamentMinDTO>> findAll(@RequestParam(name = "searchTerm", defaultValue = "") String searchTerm, Pageable pageable){
         Page<TournamentMinDTO> result = tournamentService.findAll(searchTerm, pageable);
+        return ResponseEntity.ok(result);
+    }
+
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
+    @PostMapping("/subscribe")
+    public ResponseEntity<TournamentMinDTO> subscribeTournament(@RequestBody SubscribeTournamentDTO dto){
+        TournamentMinDTO result = tournamentService.subscribeTournament(dto);
         return ResponseEntity.ok(result);
     }
 

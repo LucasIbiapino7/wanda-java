@@ -1,5 +1,6 @@
 package com.cosmo.wanda_web.services;
 
+import com.cosmo.wanda_web.dto.tournament.SubscribeTournamentDTO;
 import com.cosmo.wanda_web.dto.tournament.TournamentCreateDTO;
 import com.cosmo.wanda_web.dto.tournament.TournamentMinDTO;
 import com.cosmo.wanda_web.dto.tournament.TournamentWithParticipantsDTO;
@@ -63,5 +64,26 @@ public class TournamentService {
     public Page<TournamentMinDTO> findAll(String searchTerm, Pageable pageable) {
         Page<Tournament> result = tournamentRepository.findByNameWithOrdering(searchTerm, pageable);
         return result.map(TournamentMinDTO::new);
+    }
+
+    @Transactional
+    public TournamentMinDTO subscribeTournament(SubscribeTournamentDTO dto) {
+        Tournament tournament = tournamentRepository.findById(dto.tournamentId()).orElseThrow(
+                () -> new TournamentException("Torneio nao encontrado!"));
+        if (tournament.getCurrentParticipants() >= tournament.getMaxParticipants()){
+            throw new TournamentException("Torneio com o número máximo de participantes!");
+        }
+        if (!tournament.getStatus().toString().equals("OPEN")){
+            throw new TournamentException("Torneio não está aberto");
+        }
+        User participant = userService.authenticated();
+        if (tournament.getAsPrivate() && !dto.password().equals(tournament.getPassword())){
+            throw new TournamentException("A senha do torneio está incorreta!");
+        }
+        tournament.getUsers().add(participant);
+        participant.getTournaments().add(tournament);
+        tournament.setCurrentParticipants(tournament.getCurrentParticipants() + 1);
+        tournament = tournamentRepository.save(tournament);
+        return new TournamentMinDTO(tournament);
     }
 }

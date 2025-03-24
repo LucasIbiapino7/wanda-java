@@ -139,6 +139,10 @@ public class User implements UserDetails {
         return functions;
     }
 
+    public Set<Tournament> getTournaments() {
+        return tournaments;
+    }
+
     public void addRole(Role role){
         roles.add(role);
     }
