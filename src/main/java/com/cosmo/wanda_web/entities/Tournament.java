@@ -23,7 +23,7 @@ public class Tournament {
     private LocalDateTime startTime;
     @Enumerated(EnumType.STRING)
     private TournamentStatus status;
-    private Boolean isPrivate;
+    private Boolean asPrivate;
     private String password;
     private int maxParticipants;
     private int currentParticipants;
@@ -46,7 +46,7 @@ public class Tournament {
         this.createdAt = createdAt;
         this.startTime = startTime;
         this.status = status;
-        this.isPrivate = isPrivate;
+        this.asPrivate = isPrivate;
         this.password = password;
         this.maxParticipants = maxParticipants;
         this.currentParticipants = currentParticipants;
@@ -103,12 +103,12 @@ public class Tournament {
         this.status = status;
     }
 
-    public Boolean getPrivate() {
-        return isPrivate;
+    public Boolean getAsPrivate() {
+        return asPrivate;
     }
 
-    public void setPrivate(Boolean aPrivate) {
-        isPrivate = aPrivate;
+    public void setAsPrivate(Boolean asPrivate) {
+        this.asPrivate = asPrivate;
     }
 
     public String getPassword() {
