@@ -11,16 +11,7 @@ public class FeedbackResponseDTO {
 
     public FeedbackResponseDTO(ValidateResponseDTO dto) {
         this.valid = dto.getValid();
-        if (dto.getErrors().size() > 1){
-            StringBuilder aux = new StringBuilder();
-            for (String error : dto.getErrors()) {
-                aux.append(error);
-                aux.append("\n");
-            }
-            this.feedback = aux.toString();
-        }else {
-            this.feedback = dto.getErrors().get(0);
-        }
+        this.feedback = dto.getAnswer();
     }
 
     public FeedbackResponseDTO(Boolean valid, String feedback) {

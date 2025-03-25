@@ -11,6 +11,7 @@ import com.cosmo.wanda_web.services.client.PythonClient;
 import com.cosmo.wanda_web.services.exceptions.DatabaseException;
 import com.cosmo.wanda_web.services.exceptions.InvalidFunctionException;
 import com.cosmo.wanda_web.services.exceptions.ResourceNotFoundException;
+import com.cosmo.wanda_web.services.utils.AssistantStyle;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -35,7 +36,12 @@ public class FunctionService {
     private UserService userService;
 
     public FeedbackResponseDTO feedback(FunctionRequestDTO dto) {
+//        AssistantStyle style = AssistantStyle.valueOf(dto.getAssistantStyle());
         ValidateResponseDTO response = pythonClient.feedback(dto);
+        System.out.println("RESPOSTA: ");
+        System.out.println("Valid: " + response.getValid());
+        System.out.println("Pensamento: " + response.getThought());
+        System.out.println("Resposta:" + response.getAnswer());
         return new FeedbackResponseDTO(response);
     }
 
@@ -47,7 +53,7 @@ public class FunctionService {
 
         // Verifica se a função é válida
         if (!response.getValid()){
-            throw new InvalidFunctionException(response.getErrors().get(0));
+            throw new InvalidFunctionException(response.getAnswer());
         }
 
         // Verifica se usuário existe pelo contexto
@@ -61,7 +67,7 @@ public class FunctionService {
     }
 
     private ValidateResponseDTO validateMock(FunctionRequestDTO dto) {
-        return new ValidateResponseDTO(true, new ArrayList<>());
+        return new ValidateResponseDTO(true, "ok");
     }
 
     @Transactional(readOnly = true)

@@ -3,16 +3,16 @@ package com.cosmo.wanda_web.dto.python;
 import java.util.List;
 
 public class ValidateResponseDTO {
-
     private Boolean valid;
-    private List<String> errors;
+    private String answer;
+    private String thought;
 
     public ValidateResponseDTO() {
     }
 
-    public ValidateResponseDTO(Boolean valid, List<String> errors) {
+    public ValidateResponseDTO(Boolean valid, String answer) {
         this.valid = valid;
-        this.errors = errors;
+        this.answer = answer;
     }
 
     public Boolean getValid() {
@@ -23,19 +23,28 @@ public class ValidateResponseDTO {
         this.valid = valid;
     }
 
-    public List<String> getErrors() {
-        return errors;
+    public String getAnswer() {
+        return answer;
     }
 
-    public void setErrors(List<String> errors) {
-        this.errors = errors;
+    public void setAnswer(String answer) {
+        this.answer = answer;
+    }
+
+    public String getThought() {
+        return thought;
+    }
+
+    public void setThought(String thought) {
+        this.thought = thought;
     }
 
     @Override
     public String toString() {
         return "ValidateResponseDTO{" +
                 "valid=" + valid +
-                ", errors=" + errors +
+                ", answer='" + answer + '\'' +
+                ", thought='" + thought + '\'' +
                 '}';
     }
 }
