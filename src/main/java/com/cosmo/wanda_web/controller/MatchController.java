@@ -18,12 +18,12 @@ public class MatchController {
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN')")
     @PostMapping
-    public ResponseEntity<MatchResponseDTO> RunMatch(@RequestBody PlayedMatchDTO dto){
-        MatchResponseDTO result = matchService.RunMatch(dto);
+    public ResponseEntity<Long> RunMatch(@RequestBody PlayedMatchDTO dto){
+        Long result = matchService.RunMatch(dto);
         return ResponseEntity.ok(result);
     }
 
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
     @GetMapping("/{id}")
     public ResponseEntity<MatchResponseDTO> getReplayById(@PathVariable(name = "id") Long id){
         MatchResponseDTO result = matchService.getReplayById(id);

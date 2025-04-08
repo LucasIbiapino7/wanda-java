@@ -68,7 +68,7 @@ public class ChallengeService {
     }
 
     @Transactional
-    public MatchResponseDTO isAccepted(ChallengeIsAcceptedDTO dto) {
+    public Long isAccepted(ChallengeIsAcceptedDTO dto) {
         System.out.println("dto:" + dto.getAccepted());
         Challenge challenge = challengeRepository.findById(dto.getChallengeId()).orElseThrow(
                 () -> new ResourceNotFoundException("esse Challenge não existe"));
@@ -77,7 +77,7 @@ public class ChallengeService {
             challengeUpdate(dto.getChallengeId(), ChallengeStatus.DECLINED);
             return null;
         }
-        MatchResponseDTO result = matchService.RunMatch(
+        Long result = matchService.RunMatch(
                 new PlayedMatchDTO(challenge.getChallenger().getId(), challenge.getChallenged().getId()));
         challengeUpdate(dto.getChallengeId(), ChallengeStatus.ACCEPTED);
         return result;

@@ -44,7 +44,7 @@ public class MatchService {
     private JsonConverter jsonConverter;
 
     @Transactional
-    public MatchResponseDTO RunMatch(PlayedMatchDTO dto){
+    public Long RunMatch(PlayedMatchDTO dto){
 
         MatchResponseDTO matchResponseDTO = new MatchResponseDTO();
 
@@ -117,13 +117,15 @@ public class MatchService {
                 System.out.println(roundRequestDTO.getPlayer2Parameters());
 
                 // Faz a chamada da requisição
-                //TurnResponseDTO response = pythonClient.round(roundRequestDTO);
+                TurnResponseDTO response = pythonClient.round(roundRequestDTO);
 
                 // Simulando uma resposta apenas para teste
-                TurnResponseDTO response = new TurnResponseDTO("pedra", "papel");
+                //TurnResponseDTO response = new TurnResponseDTO("pedra", "papel");
 
                 System.out.println("RESPOSTA DA REQUISIÇÃO");
                 System.out.println(response);
+
+
 
                 // Vefificar se a carta é válida ou não
                 String cardTurnPlayer1 = matches.validateCardPlayer(matches.getCardsPlayer1(), response.getPlayer1Choice());
@@ -140,6 +142,8 @@ public class MatchService {
                 // PlayDTO
                 PlaysDTO playsDTO = new PlaysDTO();
                 playsDTO.setPlayNumber(turno);
+                playsDTO.setPlayer1LogicChoice(response.getPlayer1Choice());
+                playsDTO.setPlayer2LogicChoice(response.getPlayer2Choice());
                 playsDTO.setPlayerCard1(cardTurnPlayer1);
                 playsDTO.setPlayerCard2(cardTurnPlayer2);
                 playsDTO.setWinnerOfPlay(winnerTurn);
@@ -196,11 +200,12 @@ public class MatchService {
         String matchData = jsonConverter.converter(matchResponseDTO);
 
         Match match = new Match(player1, player2, Instant.now(), winner, matchData);
+
         matchRepository.save(match);
 
         playerService.updateWinners(player1, player2, match);
 
-        return matchResponseDTO;
+        return match.getId();
     }
 
     @Transactional(readOnly = true)

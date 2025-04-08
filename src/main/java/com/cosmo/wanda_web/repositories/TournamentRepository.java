@@ -32,4 +32,15 @@ public interface TournamentRepository extends JpaRepository<Tournament, Long> {
            WHERE obj.id = :id
            """)
     Tournament findByIdWithParticipants(@Param("id")Long id);
+
+    @Query("""
+    SELECT obj
+    FROM Tournament obj
+    JOIN obj.users u
+    WHERE u.id = :userId
+    ORDER BY obj.createdAt DESC
+""")
+    Page<Tournament> findAllByUser(
+            @Param("userId") Long userId, Pageable pageable
+    );
 }

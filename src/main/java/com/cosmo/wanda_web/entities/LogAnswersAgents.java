@@ -4,6 +4,7 @@ import com.cosmo.wanda_web.services.utils.AssistantStyle;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Entity
 @Table(name = "tb_log_answers_agents")
@@ -18,10 +19,14 @@ public class LogAnswersAgents {
     private AssistantStyle assistantStyle;
     @Column(columnDefinition = "TIMESTAMP WITHOUT TIME ZONE")
     private LocalDateTime moment;
+    @Column(columnDefinition = "TEXT")
     private String code;
+    @Column(columnDefinition = "TEXT")
     private String answer;
+    @Column(columnDefinition = "TEXT")
     private String thought;
     private Boolean valid;
+    private String feedbackUser;
 
     public LogAnswersAgents() {
     }
@@ -99,5 +104,28 @@ public class LogAnswersAgents {
 
     public void setMoment(LocalDateTime moment) {
         this.moment = moment;
+    }
+
+    public String getFeedbackUser() {
+        return feedbackUser;
+    }
+
+    public void setFeedbackUser(String feedbackUser) {
+        this.feedbackUser = feedbackUser;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        LogAnswersAgents that = (LogAnswersAgents) o;
+
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : 0;
     }
 }

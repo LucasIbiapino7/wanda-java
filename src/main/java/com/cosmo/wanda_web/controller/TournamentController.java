@@ -42,10 +42,16 @@ public class TournamentController {
     }
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
+    @GetMapping("/participating")
+    public ResponseEntity<Page<TournamentMinDTO>> findAllParticipating(Pageable pageable){
+        Page<TournamentMinDTO> result = tournamentService.findAllParticipating(pageable);
+        return ResponseEntity.ok(result);
+    }
+
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
     @GetMapping("/{id}")
     public ResponseEntity<TournamentWithParticipantsDTO> getById(@PathVariable(name = "id") Long id){
         TournamentWithParticipantsDTO result = tournamentService.findByIdWithParticipants(id);
         return ResponseEntity.ok(result);
     }
-
 }

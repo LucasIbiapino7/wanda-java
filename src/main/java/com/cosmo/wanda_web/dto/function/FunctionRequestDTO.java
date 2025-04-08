@@ -1,5 +1,7 @@
 package com.cosmo.wanda_web.dto.function;
 
+import com.cosmo.wanda_web.services.utils.AssistantStyle;
+
 public class FunctionRequestDTO {
     private String code;
     private String assistantStyle;

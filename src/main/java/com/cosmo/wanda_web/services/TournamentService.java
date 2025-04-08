@@ -86,4 +86,11 @@ public class TournamentService {
         tournament = tournamentRepository.save(tournament);
         return new TournamentMinDTO(tournament);
     }
+
+    @Transactional(readOnly = true)
+    public Page<TournamentMinDTO> findAllParticipating(Pageable pageable) {
+        User user = userService.authenticated();
+        Page<Tournament> result = tournamentRepository.findAllByUser(user.getId(), pageable);
+        return result.map(TournamentMinDTO::new);
+    }
 }

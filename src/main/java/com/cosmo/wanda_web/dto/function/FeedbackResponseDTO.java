@@ -5,6 +5,7 @@ import com.cosmo.wanda_web.dto.python.ValidateResponseDTO;
 public class FeedbackResponseDTO {
     private Boolean valid;
     private String feedback;
+    private Long feedbackId;
 
     public FeedbackResponseDTO() {
     }
@@ -12,6 +13,12 @@ public class FeedbackResponseDTO {
     public FeedbackResponseDTO(ValidateResponseDTO dto) {
         this.valid = dto.getValid();
         this.feedback = dto.getAnswer();
+    }
+
+    public FeedbackResponseDTO(ValidateResponseDTO dto, Long feedbackId) {
+        this.valid = dto.getValid();
+        this.feedback = dto.getAnswer();
+        this.feedbackId = feedbackId;
     }
 
     public FeedbackResponseDTO(Boolean valid, String feedback) {
@@ -25,5 +32,9 @@ public class FeedbackResponseDTO {
 
     public String getFeedback() {
         return feedback;
+    }
+
+    public Long getFeedbackId() {
+        return feedbackId;
     }
 }

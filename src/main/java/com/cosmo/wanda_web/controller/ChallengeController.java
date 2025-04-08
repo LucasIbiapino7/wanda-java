@@ -37,8 +37,8 @@ public class ChallengeController {
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
     @PostMapping("/isAccepted")
-    public ResponseEntity<MatchResponseDTO> isAccepted(@RequestBody ChallengeIsAcceptedDTO dto){
-        MatchResponseDTO result = challengeService.isAccepted(dto);
+    public ResponseEntity<Long> isAccepted(@RequestBody ChallengeIsAcceptedDTO dto){
+        Long result = challengeService.isAccepted(dto);
         return ResponseEntity.ok(result);
     }
 }

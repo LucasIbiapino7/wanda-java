@@ -146,17 +146,26 @@ public class Matches {
      * Válida se a carta recebida é válida, ou seja, se ainda está na mão do jogaror
      * No caso de um retorno inválido ou carta que não está na mão, retornamos a próxima carta da mão do jogador
      * @param cardsPlayer - lista de cartas dp jogador
-     * @param player1Choice - carta escolhida pela funcao
+     * @param playerChoice - carta escolhida pela funcao
      * @return - se a carta existir, retorna ela, caso não, retorna a primeira da mão
      */
-    public String validateCardPlayer(List<String> cardsPlayer, String player1Choice) {
-        //Verifica se a carta ainda está na mão e retorna se estiver (coloca null na carta)
+    public String validateCardPlayer(List<String> cardsPlayer, String playerChoice) {
+        // Caso o retorno seja Null, escolhe a primeira carta da mão que nã for null
+        if (playerChoice == null){
+            for (String card : cardsPlayer) {
+                if (card != null){
+                    return card;
+                }
+            }
+        }
+
+        //Verifica se a carta ainda está na mão e retorna se estiver
         for (String card : cardsPlayer) {
-            if (player1Choice.equalsIgnoreCase(card)){
+            if (playerChoice.equalsIgnoreCase(card)){
                 return card;
             }
         }
-        // Caso seja uma carta inválida ou um retorno inválido, retorna a primeira não Null
+        // Caso seja uma carta inválida (carta que já foi usada)
         for (String card : cardsPlayer) {
             if (card != null){
                 return card;
