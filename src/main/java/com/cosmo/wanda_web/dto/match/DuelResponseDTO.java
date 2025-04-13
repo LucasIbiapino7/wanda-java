@@ -5,13 +5,13 @@ import com.cosmo.wanda_web.dto.users.UserDTO;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MatchResponseDTO {
+public class DuelResponseDTO {
     private UserDTO player1;
     private UserDTO player2;
-    private List<RoundInformationDTO> rounds = new ArrayList<>();
+    private List<MatchInformationDTO> matches = new ArrayList<>();
     private UserDTO playerWinner;
 
-    public MatchResponseDTO() {
+    public DuelResponseDTO() {
     }
 
     public UserDTO getPlayer1() {
@@ -30,12 +30,12 @@ public class MatchResponseDTO {
         this.player2 = player2;
     }
 
-    public List<RoundInformationDTO> getRounds() {
-        return rounds;
+    public List<MatchInformationDTO> getMatches() {
+        return matches;
     }
 
-    public void setRounds(List<RoundInformationDTO> rounds) {
-        this.rounds = rounds;
+    public void setMatches(List<MatchInformationDTO> matches) {
+        this.matches = matches;
     }
 
     public UserDTO getPlayerWinner() {

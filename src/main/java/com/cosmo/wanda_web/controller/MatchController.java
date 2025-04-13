@@ -1,9 +1,8 @@
 package com.cosmo.wanda_web.controller;
 
-import com.cosmo.wanda_web.dto.match.MatchResponseDTO;
+import com.cosmo.wanda_web.dto.match.DuelResponseDTO;
 import com.cosmo.wanda_web.dto.match.PlayedMatchDTO;
 import com.cosmo.wanda_web.services.MatchService;
-import org.hibernate.query.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -25,8 +24,8 @@ public class MatchController {
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
     @GetMapping("/{id}")
-    public ResponseEntity<MatchResponseDTO> getReplayById(@PathVariable(name = "id") Long id){
-        MatchResponseDTO result = matchService.getReplayById(id);
+    public ResponseEntity<DuelResponseDTO> getReplayById(@PathVariable(name = "id") Long id){
+        DuelResponseDTO result = matchService.getReplayById(id);
         return ResponseEntity.ok(result);
     }
 }

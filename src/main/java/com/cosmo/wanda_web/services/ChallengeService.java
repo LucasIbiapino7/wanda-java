@@ -3,7 +3,6 @@ package com.cosmo.wanda_web.services;
 import com.cosmo.wanda_web.dto.challengers.ChallengeDTO;
 import com.cosmo.wanda_web.dto.challengers.ChallengeFIndAllPendingDTO;
 import com.cosmo.wanda_web.dto.challengers.ChallengeIsAcceptedDTO;
-import com.cosmo.wanda_web.dto.match.MatchResponseDTO;
 import com.cosmo.wanda_web.dto.match.PlayedMatchDTO;
 import com.cosmo.wanda_web.entities.Challenge;
 import com.cosmo.wanda_web.entities.ChallengeStatus;
@@ -20,8 +19,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ChallengeService {

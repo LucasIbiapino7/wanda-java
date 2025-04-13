@@ -5,21 +5,20 @@ import com.cosmo.wanda_web.entities.User;
 public class UserDTO {
     private Long id;
     private String name;
-    private String email;
+    private String character_url;
 
     public UserDTO() {
     }
 
-    public UserDTO(Long id, String name, String email) {
+    public UserDTO(Long id, String name, String character_url) {
         this.id = id;
         this.name = name;
-        this.email = email;
+        this.character_url = character_url;
     }
 
     public UserDTO(User user) {
         id = user.getId();
         name = user.getName();
-        email = user.getEmail();
     }
 
     public Long getId() {
@@ -38,11 +37,11 @@ public class UserDTO {
         this.name = name;
     }
 
-    public String getEmail() {
-        return email;
+    public String getCharacter_url() {
+        return character_url;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
+    public void setCharacter_url(String character_url) {
+        this.character_url = character_url;
     }
 }

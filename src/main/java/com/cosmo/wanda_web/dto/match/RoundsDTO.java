@@ -1,31 +1,29 @@
 package com.cosmo.wanda_web.dto.match;
 
-public class PlaysDTO {
-    private Integer playNumber;
-    private String player1LogicChoice;
-    private String player2LogicChoice;
+public class RoundsDTO {
+    private Integer roundNumber;
     private String playerCard1;
     private String playerCard2;
     private Integer winnerOfPlay;
     private Boolean tie;
 
-    public PlaysDTO() {
+    public RoundsDTO() {
     }
 
-    public PlaysDTO(Integer playNumber, String playerCard1, String playerCard2, Integer winnerOfPlay, Boolean tie) {
-        this.playNumber = playNumber;
+    public RoundsDTO(Integer playNumber, String playerCard1, String playerCard2, Integer winnerOfPlay, Boolean tie) {
+        this.roundNumber = playNumber;
         this.playerCard1 = playerCard1;
         this.playerCard2 = playerCard2;
         this.winnerOfPlay = winnerOfPlay;
         this.tie = tie;
     }
 
-    public Integer getPlayNumber() {
-        return playNumber;
+    public Integer getRoundNumber() {
+        return roundNumber;
     }
 
-    public void setPlayNumber(Integer playNumber) {
-        this.playNumber = playNumber;
+    public void setRoundNumber(Integer roundNumber) {
+        this.roundNumber = roundNumber;
     }
 
     public String getPlayerCard1() {
@@ -46,22 +44,6 @@ public class PlaysDTO {
 
     public Integer getWinnerOfPlay() {
         return winnerOfPlay;
-    }
-
-    public String getPlayer1LogicChoice() {
-        return player1LogicChoice;
-    }
-
-    public void setPlayer1LogicChoice(String player1LogicChoice) {
-        this.player1LogicChoice = player1LogicChoice;
-    }
-
-    public String getPlayer2LogicChoice() {
-        return player2LogicChoice;
-    }
-
-    public void setPlayer2LogicChoice(String player2LogicChoice) {
-        this.player2LogicChoice = player2LogicChoice;
     }
 
     public void setWinnerOfPlay(Integer winnerOfPlay) {

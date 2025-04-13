@@ -5,11 +5,11 @@ import com.cosmo.wanda_web.services.utils.RoundInformation;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RoundInformationDTO {
-    private Integer turnNumber;
+public class MatchInformationDTO {
+    private Integer matchNumber;
     private List<String> player1cards = new ArrayList<>();
     private List<String> player2cards = new ArrayList<>();
-    private List<PlaysDTO> plays = new ArrayList<>();
+    private List<RoundsDTO> plays = new ArrayList<>();
     private int tie;
     private int player1Winners;
     private int player2Winners;
@@ -17,12 +17,12 @@ public class RoundInformationDTO {
     private CurrentScoreDTO currentScore;
 
 
-    public RoundInformationDTO() {
+    public MatchInformationDTO() {
 
     }
 
-    public RoundInformationDTO(Integer turnNumber, List<PlaysDTO> plays, int tie, int player1Winners, int player2Winners, int playerWinTurn, CurrentScoreDTO currentScore) {
-        this.turnNumber = turnNumber;
+    public MatchInformationDTO(Integer matchNumber, List<RoundsDTO> plays, int tie, int player1Winners, int player2Winners, int playerWinTurn, CurrentScoreDTO currentScore) {
+        this.matchNumber = matchNumber;
         this.plays = plays;
         this.tie = tie;
         this.player1Winners = player1Winners;
@@ -31,7 +31,7 @@ public class RoundInformationDTO {
         this.currentScore = currentScore;
     }
 
-    public RoundInformationDTO(RoundInformation turn) {
+    public MatchInformationDTO(RoundInformation turn) {
         tie = turn.getTurnTies();
         player1Winners = turn.getPlayer1TurnWins();
         player2Winners = turn.getPlayer2TurnWins();
@@ -44,11 +44,11 @@ public class RoundInformationDTO {
         }
     }
 
-    public List<PlaysDTO> getPlays() {
+    public List<RoundsDTO> getPlays() {
         return plays;
     }
 
-    public void setPlays(List<PlaysDTO> plays) {
+    public void setPlays(List<RoundsDTO> plays) {
         this.plays = plays;
     }
 
@@ -84,12 +84,12 @@ public class RoundInformationDTO {
         this.playerWinTurn = playerWinTurn;
     }
 
-    public Integer getTurnNumber() {
-        return turnNumber;
+    public Integer getMatchNumber() {
+        return matchNumber;
     }
 
-    public void setTurnNumber(Integer turnNumber) {
-        this.turnNumber = turnNumber;
+    public void setMatchNumber(Integer matchNumber) {
+        this.matchNumber = matchNumber;
     }
 
     public CurrentScoreDTO getCurrentScore() {

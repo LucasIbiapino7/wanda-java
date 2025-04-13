@@ -1,12 +1,12 @@
 package com.cosmo.wanda_web.services.utils;
 
-import com.cosmo.wanda_web.dto.match.MatchResponseDTO;
+import com.cosmo.wanda_web.dto.match.DuelResponseDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Component;
 
 @Component
 public class JsonConverter {
-    public String converter(MatchResponseDTO data) {
+    public String converter(DuelResponseDTO data) {
         ObjectMapper mapper = new ObjectMapper();
         try{
             String jsonString = mapper.writeValueAsString(data);
@@ -17,10 +17,10 @@ public class JsonConverter {
         }
     }
 
-    public MatchResponseDTO converterToDto(String jsonString) {
+    public DuelResponseDTO converterToDto(String jsonString) {
         ObjectMapper mapper = new ObjectMapper();
         try {
-            MatchResponseDTO dto = mapper.readValue(jsonString, MatchResponseDTO.class);
+            DuelResponseDTO dto = mapper.readValue(jsonString, DuelResponseDTO.class);
             return dto;
         }catch (Exception e){
             return null;

@@ -246,9 +246,10 @@ public class Matches {
         }
     }
 
-    public boolean victory() {
-        int minVictories = rounds / 2;
-        return player1RoundsVictories > minVictories || player2RoundsVictories > minVictories || Objects.equals(tie, rounds);
+    public boolean victory(Integer countRound) {
+//        int minVictories = rounds / 2;
+//        return player1RoundsVictories > minVictories || player2RoundsVictories > minVictories || Objects.equals(tie, rounds);
+        return Objects.equals(countRound, rounds);
     }
 
     @Override

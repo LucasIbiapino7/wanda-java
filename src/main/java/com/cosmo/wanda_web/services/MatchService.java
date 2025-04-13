@@ -21,6 +21,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class MatchService {
@@ -46,7 +48,7 @@ public class MatchService {
     @Transactional
     public Long RunMatch(PlayedMatchDTO dto){
 
-        MatchResponseDTO matchResponseDTO = new MatchResponseDTO();
+        DuelResponseDTO matchResponseDTO = new DuelResponseDTO();
 
         // Verifica se o Id do primeiro aluno é válido
         User player1 = userRepository.findById(dto.getPlayerId1()).orElseThrow(
@@ -69,7 +71,7 @@ public class MatchService {
                 () -> new ResourceNotFoundException("O aluno " + player2.getName() + " não tem função cadastrada"));
 
         // Objeto que vai ajudar a controlar uma partida
-        Matches matches = new Matches(dto.getPlayerId1(), dto.getPlayerId2(), 5);
+        Matches matches = new Matches(dto.getPlayerId1(), dto.getPlayerId2(), 51);
 
         // Informações sobre o turno
         RoundInformation turnInfo = new RoundInformation();
@@ -77,18 +79,26 @@ public class MatchService {
         int countRound = 1;
         CurrentScore score = new CurrentScore(); // Informacoes sobre o placar
 
+        // Vai armazenar a jogada de cada player por partida
+        List<String> cardsPlayer1 = new ArrayList<>();
+        List<String> cardsPlayer2 = new ArrayList<>();
+
         // Cada iteração é um round
-        while (!matches.victory()){
+        while (!matches.victory(countRound)){
 
             System.out.println("ROUND: " + countRound);
 
             //instancia os cards para começar um round
             matches.instanceCards();
 
-            RoundInformationDTO roundInformationDTO = new RoundInformationDTO();
-            roundInformationDTO.setTurnNumber(countRound);
-            roundInformationDTO.getPlayer1cards().addAll(matches.getCardsPlayer1());
-            roundInformationDTO.getPlayer2cards().addAll(matches.getCardsPlayer2());
+            MatchInformationDTO roundInformationDTO = new MatchInformationDTO();
+            roundInformationDTO.setMatchNumber(countRound);
+
+            System.out.println("Cartas do jogador 1 na partida " + countRound);
+            System.out.println(matches.getCardsPlayer1());
+
+            System.out.println("Cartas do jogador 2 na partida " + countRound);
+            System.out.println(matches.getCardsPlayer2());
 
             int turno;
             for (int i = 0; i < 3; i++){
@@ -125,8 +135,6 @@ public class MatchService {
                 System.out.println("RESPOSTA DA REQUISIÇÃO");
                 System.out.println(response);
 
-
-
                 // Vefificar se a carta é válida ou não
                 String cardTurnPlayer1 = matches.validateCardPlayer(matches.getCardsPlayer1(), response.getPlayer1Choice());
                 String cardTurnPlayer2 = matches.validateCardPlayer(matches.getCardsPlayer2(), response.getPlayer2Choice());
@@ -134,16 +142,17 @@ public class MatchService {
                 System.out.println("escolha do player 1: " + cardTurnPlayer1);
                 System.out.println("escolha do player 2: " + cardTurnPlayer2);
 
+                cardsPlayer1.add(cardTurnPlayer1);
+                cardsPlayer2.add(cardTurnPlayer2);
+
                 // Verifica quem ganhou o turno de acordo com as regras de conflict()
                 Integer winnerTurn = matches.conflict(cardTurnPlayer1, cardTurnPlayer2);
 
                 System.out.println("winner turn: " + winnerTurn);
 
                 // PlayDTO
-                PlaysDTO playsDTO = new PlaysDTO();
-                playsDTO.setPlayNumber(turno);
-                playsDTO.setPlayer1LogicChoice(response.getPlayer1Choice());
-                playsDTO.setPlayer2LogicChoice(response.getPlayer2Choice());
+                RoundsDTO playsDTO = new RoundsDTO();
+                playsDTO.setRoundNumber(turno);
                 playsDTO.setPlayerCard1(cardTurnPlayer1);
                 playsDTO.setPlayerCard2(cardTurnPlayer2);
                 playsDTO.setWinnerOfPlay(winnerTurn);
@@ -174,8 +183,12 @@ public class MatchService {
             matches.roundWinner(turnInfo, score);
 
             roundInformationDTO.update(turnInfo);
+            roundInformationDTO.getPlayer1cards().addAll(cardsPlayer1);
+            cardsPlayer1.clear();
+            roundInformationDTO.getPlayer2cards().addAll(cardsPlayer2);
+            cardsPlayer2.clear();
             roundInformationDTO.setCurrentScore(new CurrentScoreDTO(score));
-            matchResponseDTO.getRounds().add(roundInformationDTO);
+            matchResponseDTO.getMatches().add(roundInformationDTO);
 
             turnInfo.restart();
 
@@ -209,10 +222,10 @@ public class MatchService {
     }
 
     @Transactional(readOnly = true)
-    public MatchResponseDTO getReplayById(Long id) {
+    public DuelResponseDTO getReplayById(Long id) {
         Match match = matchRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Match not found"));
         String matchData = match.getMatchData();
-        MatchResponseDTO matchResponseDTO = jsonConverter.converterToDto(matchData);
+        DuelResponseDTO matchResponseDTO = jsonConverter.converterToDto(matchData);
         return matchResponseDTO;
     }
 }
