@@ -23,9 +23,9 @@ public class FunctionController {
     }
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
-    @PostMapping()
-    public ResponseEntity<FunctionRequestDTO> insert(@RequestBody FunctionRequestDTO dto){
-        FunctionRequestDTO result = functionService.insert(dto);
+    @PutMapping()
+    public ResponseEntity<FeedbackResponseDTO> validate(@RequestBody FunctionRequestDTO dto){
+        FeedbackResponseDTO result = functionService.validate(dto);
         return ResponseEntity.status(201).body(result);
     }
 

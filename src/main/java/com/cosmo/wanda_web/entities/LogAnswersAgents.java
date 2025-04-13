@@ -27,11 +27,12 @@ public class LogAnswersAgents {
     private String thought;
     private Boolean valid;
     private String feedbackUser;
+    private String functionName;
 
     public LogAnswersAgents() {
     }
 
-    public LogAnswersAgents(Long id, User user, AssistantStyle assistantStyle, LocalDateTime moment, String code, String answer, String thought, Boolean valid) {
+    public LogAnswersAgents(Long id, User user, AssistantStyle assistantStyle, LocalDateTime moment, String code, String answer, String thought, Boolean valid, String functionName) {
         this.id = id;
         this.user = user;
         this.assistantStyle = assistantStyle;
@@ -40,6 +41,7 @@ public class LogAnswersAgents {
         this.answer = answer;
         this.thought = thought;
         this.valid = valid;
+        this.functionName = functionName;
     }
 
     public Long getId() {
@@ -112,6 +114,14 @@ public class LogAnswersAgents {
 
     public void setFeedbackUser(String feedbackUser) {
         this.feedbackUser = feedbackUser;
+    }
+
+    public String getFunctionName() {
+        return functionName;
+    }
+
+    public void setFunctionName(String functionName) {
+        this.functionName = functionName;
     }
 
     @Override

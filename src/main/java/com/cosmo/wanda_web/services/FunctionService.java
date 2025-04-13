@@ -11,7 +11,6 @@ import com.cosmo.wanda_web.repositories.LogAnswersAgentsRepository;
 import com.cosmo.wanda_web.repositories.UserRepository;
 import com.cosmo.wanda_web.services.client.PythonClient;
 import com.cosmo.wanda_web.services.exceptions.DatabaseException;
-import com.cosmo.wanda_web.services.exceptions.InvalidFunctionException;
 import com.cosmo.wanda_web.services.exceptions.ResourceNotFoundException;
 import com.cosmo.wanda_web.services.utils.AssistantStyle;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,8 +20,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Objects;
+import java.util.Optional;
 
 @Service
 public class FunctionService {
@@ -42,6 +40,7 @@ public class FunctionService {
     @Autowired
     private UserService userService;
 
+    @Transactional
     public FeedbackResponseDTO feedback(FunctionRequestDTO dto) {
         User user = userService.authenticated();
         ValidateResponseDTO response = pythonClient.feedback(dto);
@@ -49,7 +48,8 @@ public class FunctionService {
         return new FeedbackResponseDTO(response, feedbackId);
     }
 
-    public FunctionRequestDTO insert(FunctionRequestDTO dto){
+    @Transactional
+    public FeedbackResponseDTO validate(FunctionRequestDTO dto){
         // Validar a função com o microservice Python
         ValidateResponseDTO response = pythonClient.validate(dto);
         // Verifica se usuário existe pelo contexto
@@ -57,12 +57,25 @@ public class FunctionService {
         Long feedbackId = saveLogAnswer(dto, response, user);
         // Verifica se a função é válida
         if (!response.getValid()){
-            throw new InvalidFunctionException(response.getAnswer());
+            return new FeedbackResponseDTO(response, feedbackId); // Early return caso a funcao seja invalida
         }
         // Adiciona no Banco de dados a função aprovada
-        Function function = new Function("jokenpo", dto.getCode(), user);
-        function = functionRepository.save(function);
-        return new FunctionRequestDTO(function.getFunction());
+        saveOrUpdateFunction(dto, user);
+        return new FeedbackResponseDTO(response, feedbackId);
+    }
+
+    @Transactional
+    private void saveOrUpdateFunction(FunctionRequestDTO dto, User user) {
+        Optional<Function> result = functionRepository.findByUserIdAndName(user.getId(), dto.getFunctionName());
+        System.out.println("FUNÇÃO DA BUSCA JPQL: " + result);
+        Function function;
+        if (result.isPresent()){
+            function = result.get();
+            function.setFunction(dto.getCode());
+        }else {
+            function = new Function(dto.getFunctionName(), dto.getCode(), user);
+        }
+        functionRepository.save(function);
     }
 
     private ValidateResponseDTO validateMock(FunctionRequestDTO dto) {
@@ -119,6 +132,7 @@ public class FunctionService {
         log.setAssistantStyle(AssistantStyle.valueOf(dto.getAssistantStyle()));
         log.setMoment(LocalDateTime.now());
         log.setUser(user);
+        log.setFunctionName(dto.getFunctionName());
         LogAnswersAgents save = logAnswersAgentsRepository.save(log);
         return save.getId();
     }
