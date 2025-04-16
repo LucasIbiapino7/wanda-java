@@ -17,6 +17,9 @@ public interface PythonClient {
     @PostMapping("/validate")
     ValidateResponseDTO validate(@RequestBody FunctionRequestDTO dto);
 
+    @PostMapping("/run")
+    ValidateResponseDTO run(@RequestBody FunctionRequestDTO dto);
+
     @PostMapping("/round")
     TurnResponseDTO round(@RequestBody RoundRequestDTO dto);
 }

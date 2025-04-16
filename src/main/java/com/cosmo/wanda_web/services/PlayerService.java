@@ -45,7 +45,7 @@ public class PlayerService {
                 () -> new ResourceNotFoundException("Resource not found"));
 
         String code = "";
-        Optional<Function> function = functionRepository.findByPlayerId(user.getId());
+        Optional<Function> function = functionRepository.findJokenpo1ByPlayerId(user.getId());
         if (function.isPresent()){
             code = function.get().getFunction();
         }

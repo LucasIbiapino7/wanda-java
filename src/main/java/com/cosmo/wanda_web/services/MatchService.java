@@ -63,11 +63,11 @@ public class MatchService {
         matchResponseDTO.setPlayer2(new UserDTO(player2)); // Coloca o player 2 na resposta
 
         // Pegar a função do primeiro aluno
-        Function functionPlayer1 = functionRepository.findByPlayerId(dto.getPlayerId1()).orElseThrow(
+        Function functionPlayer1 = functionRepository.findJokenpo1ByPlayerId(dto.getPlayerId1()).orElseThrow(
                 () -> new ResourceNotFoundException("O aluno " + player1.getName() + " não tem função cadastrada"));
 
         // Pegar a função do segundo aluno
-        Function functionPlayer2 = functionRepository.findByPlayerId(dto.getPlayerId2()).orElseThrow(
+        Function functionPlayer2 = functionRepository.findJokenpo1ByPlayerId(dto.getPlayerId2()).orElseThrow(
                 () -> new ResourceNotFoundException("O aluno " + player2.getName() + " não tem função cadastrada"));
 
         // Objeto que vai ajudar a controlar uma partida

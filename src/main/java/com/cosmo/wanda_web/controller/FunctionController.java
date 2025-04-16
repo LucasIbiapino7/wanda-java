@@ -30,9 +30,16 @@ public class FunctionController {
     }
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
-    @GetMapping("/function")
-    public ResponseEntity<FunctionRequestDTO> findByUser(){
-        FunctionRequestDTO result = functionService.findByUser();
+    @PostMapping("/run")
+    public ResponseEntity<FeedbackResponseDTO> runTests(@RequestBody FunctionRequestDTO dto){
+        FeedbackResponseDTO result = functionService.runTests(dto);
+        return ResponseEntity.ok(result);
+    }
+
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
+    @GetMapping("/jokenpo1")
+    public ResponseEntity<FunctionRequestDTO> findJokenpo1ByUser(){
+        FunctionRequestDTO result = functionService.findJokenpo1ByUser();
         return ResponseEntity.ok(result);
     }
 

@@ -49,6 +49,14 @@ public class FunctionService {
     }
 
     @Transactional
+    public FeedbackResponseDTO runTests(FunctionRequestDTO dto) {
+        User user = userService.authenticated();
+        ValidateResponseDTO response = pythonClient.run(dto);
+        Long feedbackId = saveLogAnswer(dto, response, user);
+        return new FeedbackResponseDTO(response, feedbackId);
+    }
+
+    @Transactional
     public FeedbackResponseDTO validate(FunctionRequestDTO dto){
         // Validar a função com o microservice Python
         ValidateResponseDTO response = pythonClient.validate(dto);
@@ -67,7 +75,6 @@ public class FunctionService {
     @Transactional
     private void saveOrUpdateFunction(FunctionRequestDTO dto, User user) {
         Optional<Function> result = functionRepository.findByUserIdAndName(user.getId(), dto.getFunctionName());
-        System.out.println("FUNÇÃO DA BUSCA JPQL: " + result);
         Function function;
         if (result.isPresent()){
             function = result.get();
@@ -83,10 +90,10 @@ public class FunctionService {
     }
 
     @Transactional(readOnly = true)
-    public FunctionRequestDTO findByUser() {
+    public FunctionRequestDTO findJokenpo1ByUser() {
         User user = userService.authenticated();
 
-        Function function = functionRepository.findByPlayerId(user.getId()).orElseThrow(
+        Function function = functionRepository.findJokenpo1ByPlayerId(user.getId()).orElseThrow(
                 () -> new ResourceNotFoundException("Function Not Found"));
 
         return new FunctionRequestDTO(function.getFunction());
@@ -102,7 +109,7 @@ public class FunctionService {
     @Transactional
     public FunctionRequestDTO update(FunctionRequestDTO dto) {
         User user = userService.authenticated();
-        Function function = functionRepository.findByPlayerId(user.getId()).orElseThrow(
+        Function function = functionRepository.findJokenpo1ByPlayerId(user.getId()).orElseThrow(
                 () -> new ResourceNotFoundException("Function Not Found"));
         function.setFunction(dto.getCode());
         function = functionRepository.save(function);
@@ -112,7 +119,7 @@ public class FunctionService {
     @Transactional(propagation = Propagation.SUPPORTS)
     public void delete() {
         User user = userService.authenticated();
-        Function function = functionRepository.findByPlayerId(user.getId()).orElseThrow(
+        Function function = functionRepository.findJokenpo1ByPlayerId(user.getId()).orElseThrow(
                 () -> new ResourceNotFoundException("Function Not Found"));
         try {
             functionRepository.delete(function);
@@ -136,4 +143,5 @@ public class FunctionService {
         LogAnswersAgents save = logAnswersAgentsRepository.save(log);
         return save.getId();
     }
+
 }

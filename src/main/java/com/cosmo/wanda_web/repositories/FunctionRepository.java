@@ -11,9 +11,9 @@ public interface FunctionRepository extends JpaRepository<Function, Long> {
 
     @Query("SELECT obj " +
             "FROM Function obj " +
-            "WHERE obj.player.id = :id"
+            "WHERE obj.player.id = :id and obj.name = 'jokenpo1'"
     )
-    Optional<Function>findByPlayerId(Long id);
+    Optional<Function>findJokenpo1ByPlayerId(Long id);
 
     @Query("SELECT obj FROM Function obj WHERE obj.player.id = :userId AND obj.name = :name")
     Optional<Function> findByUserIdAndName(@Param("userId") Long userId, @Param("name") String name);
