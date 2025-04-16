@@ -100,6 +100,16 @@ public class FunctionService {
     }
 
     @Transactional(readOnly = true)
+    public FunctionRequestDTO findJokenpo2ByUser() {
+        User user = userService.authenticated();
+
+        Function function = functionRepository.findJokenpo2ByPlayerId(user.getId()).orElseThrow(
+                () -> new ResourceNotFoundException("Function Not Found"));
+
+        return new FunctionRequestDTO(function.getFunction());
+    }
+
+    @Transactional(readOnly = true)
     public FunctionRequestDTO findById(Long id) {
         Function function = functionRepository.findById(id).orElseThrow(
                 () -> new ResourceNotFoundException("Function Not Found"));

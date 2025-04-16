@@ -43,6 +43,13 @@ public class FunctionController {
         return ResponseEntity.ok(result);
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
+    @GetMapping("/jokenpo2")
+    public ResponseEntity<FunctionRequestDTO> findJokenpo2ByUser(){
+        FunctionRequestDTO result = functionService.findJokenpo2ByUser();
+        return ResponseEntity.ok(result);
+    }
+
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping("/function/{id}")
     public ResponseEntity<FunctionRequestDTO> findById(@PathVariable(name = "id") Long id){
