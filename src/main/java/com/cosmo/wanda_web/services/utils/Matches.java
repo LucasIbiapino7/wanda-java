@@ -13,7 +13,7 @@ public class Matches {
     private final List<String> parametersPlayer1 = new ArrayList<>();
     private final List<String> parametersPlayer2 = new ArrayList<>();
     private final List<String> cardsGame = new ArrayList<>(List.of("pedra","pedra", "tesoura", "tesoura", "papel", "papel"));
-    private Integer rounds;
+    private Integer matches;
     private Integer player1RoundsVictories;
     private Integer player2RoundsVictories;
     private Integer tie; //empate
@@ -21,10 +21,10 @@ public class Matches {
     public Matches() {
     }
 
-    public Matches(Long playerId1, Long playerId2, Integer rounds) {
+    public Matches(Long playerId1, Long playerId2, Integer matches) {
         this.playerId1 = playerId1;
         this.playerId2 = playerId2;
-        this.rounds = rounds;
+        this.matches = matches;
         this.player1RoundsVictories = 0;
         this.player2RoundsVictories = 0;
         this.tie = 0;
@@ -46,8 +46,8 @@ public class Matches {
         return cardsPlayer2;
     }
 
-    public Integer getRounds() {
-        return rounds;
+    public Integer getMatches() {
+        return matches;
     }
 
     public Integer getPlayer1RoundsVictories() {
@@ -150,7 +150,7 @@ public class Matches {
      * @return - se a carta existir, retorna ela, caso não, retorna a primeira da mão
      */
     public String validateCardPlayer(List<String> cardsPlayer, String playerChoice) {
-        // Caso o retorno seja Null, escolhe a primeira carta da mão que nã for null
+        // Caso o retorno seja Null, escolhe a primeira carta da mão que não for null
         if (playerChoice == null){
             for (String card : cardsPlayer) {
                 if (card != null){
@@ -193,6 +193,40 @@ public class Matches {
             }
             for (String card : cardsPlayer1) {
                 parametersPlayer.add(card);
+            }
+        }
+    }
+
+    public void updateParametersRound1() {
+        parametersPlayer1.clear();
+        parametersPlayer1.addAll(cardsPlayer1);
+
+        parametersPlayer2.clear();
+        parametersPlayer2.addAll(cardsPlayer2);
+    }
+
+    public void updateParametersRound2() {
+        parametersPlayer1.clear();
+        for (String card : cardsPlayer1) {
+            if (card != null){
+                parametersPlayer1.add(card);
+            }
+        }
+        for (String opponentCard : cardsPlayer2) {
+            if (opponentCard != null){
+                parametersPlayer1.add(opponentCard);
+            }
+        }
+
+        parametersPlayer2.clear();
+        for (String card : cardsPlayer2) {
+            if (card != null){
+                parametersPlayer2.add(card);
+            }
+        }
+        for (String opponentCard : cardsPlayer1) {
+            if (opponentCard != null){
+                parametersPlayer2.add(opponentCard);
             }
         }
     }
@@ -247,9 +281,9 @@ public class Matches {
     }
 
     public boolean victory(Integer countRound) {
-//        int minVictories = rounds / 2;
-//        return player1RoundsVictories > minVictories || player2RoundsVictories > minVictories || Objects.equals(tie, rounds);
-        return Objects.equals(countRound, rounds);
+//        int minVictories = matches / 2;
+//        return player1RoundsVictories > minVictories || player2RoundsVictories > minVictories || Objects.equals(tie, matches);
+        return Objects.equals(countRound, matches);
     }
 
     @Override
@@ -261,9 +295,27 @@ public class Matches {
                 ", cardsPlayer2=" + cardsPlayer2 +
                 ", parametersPlayer1=" + parametersPlayer1 +
                 ", parametersPlayer2=" + parametersPlayer2 +
-                ", rounds=" + rounds +
+                ", matches=" + matches +
                 ", player1RoundsVictories=" + player1RoundsVictories +
                 ", player2RoundsVictories=" + player2RoundsVictories +
                 '}';
+    }
+
+    public String getRound3Player1() {
+        for (String card : cardsPlayer1) {
+            if (card != null){
+                return card;
+            }
+        }
+        return "";
+    }
+
+    public String getRound3Player2() {
+        for (String card : cardsPlayer2) {
+            if (card != null){
+                return card;
+            }
+        }
+        return "";
     }
 }

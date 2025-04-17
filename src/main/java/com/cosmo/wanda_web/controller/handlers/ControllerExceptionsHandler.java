@@ -3,6 +3,7 @@ package com.cosmo.wanda_web.controller.handlers;
 import com.cosmo.wanda_web.dto.errors.CustomError;
 import com.cosmo.wanda_web.dto.errors.ValidationError;
 import com.cosmo.wanda_web.services.exceptions.*;
+import feign.FeignException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +23,14 @@ public class ControllerExceptionsHandler {
         CustomError err = new CustomError(Instant.now(), status.value(), e.getMessage(), request.getRequestURI());
         return ResponseEntity.status(status).body(err);
     }
+
+    @ExceptionHandler(FeignException.class)
+    public ResponseEntity<CustomError> FeignException(FeignException e, HttpServletRequest request) {
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        CustomError err = new CustomError(Instant.now(), status.value(), "tive um probleminha ao tentar processar sua função, peço desculpas por isso, tente novamente!", request.getRequestURI());
+        return ResponseEntity.status(status).body(err);
+    }
+
 
     @ExceptionHandler(ChallengeException.class)
     public ResponseEntity<CustomError> challengeException(ChallengeException e, HttpServletRequest request) {
