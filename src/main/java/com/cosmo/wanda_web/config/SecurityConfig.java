@@ -35,7 +35,6 @@ public class SecurityConfig {
     }
 
     @Bean
-    @Order(2)
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         return httpSecurity
                 .csrf(csrf -> csrf.disable())
@@ -45,12 +44,12 @@ public class SecurityConfig {
                 .build();
     }
 
-    @Bean
-    @Order(1)
-    public SecurityFilterChain h2SecurityFilterChain(HttpSecurity http) throws Exception {
-        http.securityMatcher(PathRequest.toH2Console()).csrf(csrf -> csrf.disable())
-                .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()));
-        return http.build();
-    }
+//    @Bean
+//    @Order(1)
+//    public SecurityFilterChain h2SecurityFilterChain(HttpSecurity http) throws Exception {
+//        http.securityMatcher(PathRequest.toH2Console()).csrf(csrf -> csrf.disable())
+//                .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()));
+//        return http.build();
+//    }
 
 }
