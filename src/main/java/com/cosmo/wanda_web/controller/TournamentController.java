@@ -21,6 +21,13 @@ public class TournamentController {
     private TournamentService tournamentService;
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
+    @PutMapping("/{id}")
+    public ResponseEntity<Void> run(@PathVariable(name = "id") Long id){
+        tournamentService.run(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
     @PostMapping
     public ResponseEntity<TournamentCreateDTO> create(@Valid @RequestBody TournamentCreateDTO dto){
         TournamentCreateDTO result = tournamentService.create(dto);

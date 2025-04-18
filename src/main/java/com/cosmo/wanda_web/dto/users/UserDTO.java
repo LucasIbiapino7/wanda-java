@@ -19,6 +19,7 @@ public class UserDTO {
     public UserDTO(User user) {
         id = user.getId();
         name = user.getName();
+        character_url = "p1.png";
     }
 
     public Long getId() {

@@ -64,21 +64,21 @@ public class MatchService {
 
         // Pegar a função jokenpo 1 do primeiro aluno
         Function functionJokenpo1Player1 = functionRepository.findJokenpo1ByPlayerId(dto.getPlayerId1()).orElseThrow(
-                () -> new ResourceNotFoundException("O aluno " + player1.getName() + " não tem função cadastrada"));
+                () -> new ResourceNotFoundException("O aluno " + player1.getName() + " não tem função 1 cadastrada"));
         // Pegar a função jokenpo  do primeiro aluno
         Function functionJokenpo2Player1 = functionRepository.findJokenpo2ByPlayerId(dto.getPlayerId1()).orElseThrow(
-                () -> new ResourceNotFoundException("O aluno " + player1.getName() + " não tem função cadastrada"));
+                () -> new ResourceNotFoundException("O aluno " + player1.getName() + " não tem função 2 cadastrada"));
 
 
         // // Pegar a função jokenpo 1 do segundo aluno
         Function functionJokenpo1Player2 = functionRepository.findJokenpo1ByPlayerId(dto.getPlayerId2()).orElseThrow(
-                () -> new ResourceNotFoundException("O aluno " + player2.getName() + " não tem função cadastrada"));
+                () -> new ResourceNotFoundException("O aluno " + player2.getName() + " não tem função 1 cadastrada"));
         // // Pegar a função jokenpo 2 do segundo aluno
         Function functionJokenpo2Player2 = functionRepository.findJokenpo2ByPlayerId(dto.getPlayerId2()).orElseThrow(
-                () -> new ResourceNotFoundException("O aluno " + player2.getName() + " não tem função cadastrada"));
+                () -> new ResourceNotFoundException("O aluno " + player2.getName() + " não tem função 2 cadastrada"));
 
         // Objeto que vai ajudar a controlar uma partida
-        Matches matches = new Matches(dto.getPlayerId1(), dto.getPlayerId2(), 5);
+        Matches matches = new Matches(dto.getPlayerId1(), dto.getPlayerId2(), 51);
 
         // Informações sobre o turno
         RoundInformation RoundInfo = new RoundInformation();
@@ -323,5 +323,10 @@ public class MatchService {
         String matchData = match.getMatchData();
         DuelResponseDTO matchResponseDTO = jsonConverter.converterToDto(matchData);
         return matchResponseDTO;
+    }
+
+    public Long winnerOfMatch(Long matchId) {
+        Match match = matchRepository.findById(matchId).orElseThrow(() -> new ResourceNotFoundException("Match not found"));
+        return match.getWinner().getId();
     }
 }
