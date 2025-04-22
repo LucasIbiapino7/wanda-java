@@ -1,9 +1,6 @@
 package com.cosmo.wanda_web.services;
 
-import com.cosmo.wanda_web.dto.players.BadgeDTO;
-import com.cosmo.wanda_web.dto.players.ChangeCharacterDTO;
-import com.cosmo.wanda_web.dto.players.PlayerInformationDTO;
-import com.cosmo.wanda_web.dto.players.ProfileDTO;
+import com.cosmo.wanda_web.dto.players.*;
 import com.cosmo.wanda_web.entities.*;
 import com.cosmo.wanda_web.repositories.BadgeRepository;
 import com.cosmo.wanda_web.repositories.FunctionRepository;
@@ -121,6 +118,13 @@ public class PlayerService {
         Page<Player> list = playerRepository.searchByName(name, user.getId(), pageable);
         List<Player> players = playerRepository.findPlayersFunctionsAndBadges(list.stream().toList());
         return list.map(PlayerInformationDTO::new);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<PlayerMinDTO> ranking(Pageable pageable){
+        Page<Player> ranking = playerRepository.ranking(pageable);
+        List<Player> players = playerRepository.findPlayersFunctionsAndBadges(ranking.stream().toList());
+        return ranking.map(PlayerMinDTO::new);
     }
 
     public void updateWinnerTournament(Long winnerId) {

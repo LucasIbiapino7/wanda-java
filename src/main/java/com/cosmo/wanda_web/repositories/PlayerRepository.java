@@ -23,4 +23,11 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
             "LEFT JOIN FETCH u.badges " +
             "WHERE obj IN :players")
     List<Player> findPlayersFunctionsAndBadges(List<Player> players);
+
+    @Query("SELECT obj " +
+            "FROM Player obj " +
+            "JOIN FETCH obj.user u " +
+            "ORDER BY obj.numberOfWinners DESC"
+            )
+    Page<Player> ranking(Pageable pageable);
 }

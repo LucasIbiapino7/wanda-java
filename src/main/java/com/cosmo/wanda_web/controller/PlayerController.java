@@ -2,6 +2,7 @@ package com.cosmo.wanda_web.controller;
 
 import com.cosmo.wanda_web.dto.players.ChangeCharacterDTO;
 import com.cosmo.wanda_web.dto.players.PlayerInformationDTO;
+import com.cosmo.wanda_web.dto.players.PlayerMinDTO;
 import com.cosmo.wanda_web.dto.players.ProfileDTO;
 import com.cosmo.wanda_web.services.PlayerService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,4 +41,13 @@ public class PlayerController {
         Page<PlayerInformationDTO> result = playerService.findByName(name, pageable);
         return ResponseEntity.ok(result);
     }
+
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
+    @GetMapping("/ranking")
+    public ResponseEntity<Page<PlayerMinDTO>> ranking(Pageable pageable){
+        Page<PlayerMinDTO> ranking = playerService.ranking(pageable);
+        return ResponseEntity.ok(ranking);
+    }
+
+
 }
