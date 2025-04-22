@@ -1,6 +1,7 @@
 package com.cosmo.wanda_web.services;
 
 import com.cosmo.wanda_web.dto.players.BadgeDTO;
+import com.cosmo.wanda_web.dto.players.ChangeCharacterDTO;
 import com.cosmo.wanda_web.dto.players.PlayerInformationDTO;
 import com.cosmo.wanda_web.dto.players.ProfileDTO;
 import com.cosmo.wanda_web.entities.*;
@@ -45,10 +46,15 @@ public class PlayerService {
         Player player = playerRepository.findById(user.getId()).orElseThrow(
                 () -> new ResourceNotFoundException("Resource not found"));
 
-        String code = "";
+        String function1 = "";
         Optional<Function> function = functionRepository.findJokenpo1ByPlayerId(user.getId());
         if (function.isPresent()){
-            code = function.get().getFunction();
+            function1 = function.get().getFunction();
+        }
+        String function2 = "";
+        function = functionRepository.findJokenpo2ByPlayerId(user.getId());
+        if (function.isPresent()){
+            function2 = function.get().getFunction();
         }
 
         ProfileDTO profileDTO = new ProfileDTO();
@@ -57,7 +63,10 @@ public class PlayerService {
         profileDTO.setNickname(player.getNickname());
         profileDTO.setNumberOfMatches(player.getNumberOfMatches());
         profileDTO.setNumberOfWinners(player.getNumberOfWinners());
-        profileDTO.setFunction(code);
+        profileDTO.setWinsTournaments(player.getWinsTournaments());
+        profileDTO.setCharacterUrl(player.getCharacterUrl());
+        profileDTO.setFunction1(function1);
+        profileDTO.setFunction2(function2);
         profileDTO.addBadges(user.getBadges());
 
         return profileDTO;
@@ -115,9 +124,21 @@ public class PlayerService {
     }
 
     public void updateWinnerTournament(Long winnerId) {
-        Player winner = playerRepository.getReferenceById(winnerId);
+        User user = userRepository.findById(winnerId).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        Player winner = user.getPlayer();
         winner.setWinsTournaments(winner.getWinsTournaments() + 1);
         playerRepository.save(winner);
+        Badge badge = badgeRepository.findByName("Aprendiz condicional!").orElseThrow(
+                () -> new ResourceNotFoundException("Badge Not Found"));
+        user.getBadges().add(badge);
+        userRepository.save(user);
+    }
+
+    public void changeCharacter(ChangeCharacterDTO dto) {
+        User user = userService.authenticated();
+        Player player = user.getPlayer();
+        player.setCharacterUrl(dto.characterUrl());
+        playerRepository.save(player);
     }
 
     /*

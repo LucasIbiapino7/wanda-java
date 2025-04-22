@@ -3,6 +3,7 @@ package com.cosmo.wanda_web.entities;
 import jakarta.persistence.*;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Entity
@@ -25,7 +26,7 @@ public class Challenge {
     private ChallengeStatus status;
 
     @Column(columnDefinition = "TIMESTAMP WITHOUT TIME ZONE")
-    private Instant createdAt;
+    private LocalDateTime createdAt;
 
     @OneToOne
     @JoinColumn(name = "match_id")
@@ -34,7 +35,7 @@ public class Challenge {
     public Challenge() {
     }
 
-    public Challenge(Long id, User challenger, User challenged, ChallengeStatus status, Instant createdAt, Match match) {
+    public Challenge(Long id, User challenger, User challenged, ChallengeStatus status, LocalDateTime createdAt, Match match) {
         this.id = id;
         this.challenger = challenger;
         this.challenged = challenged;
@@ -75,11 +76,11 @@ public class Challenge {
         this.status = status;
     }
 
-    public Instant getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(Instant createdAt) {
+    public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 

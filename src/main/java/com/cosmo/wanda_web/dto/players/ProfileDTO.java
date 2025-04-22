@@ -12,18 +12,25 @@ public class ProfileDTO {
     private String nickname;
     private Integer numberOfMatches;
     private Integer numberOfWinners;
-    private String function;
+    private Integer winsTournaments;
+    private String characterUrl;
+    private String function1;
+    private String function2;
     private List<BadgeDTO> badges = new ArrayList<>();
 
     public ProfileDTO() {
     }
 
-    public ProfileDTO(Long id, String nickname, Integer numberOfMatches, Integer numberOfWinners, String function) {
+    public ProfileDTO(Long id, String name, String nickname, Integer numberOfMatches, Integer numberOfWinners, Integer winsTournaments, String characterUrl, String function1, String function2) {
         this.id = id;
+        this.name = name;
         this.nickname = nickname;
         this.numberOfMatches = numberOfMatches;
         this.numberOfWinners = numberOfWinners;
-        this.function = function;
+        this.winsTournaments = winsTournaments;
+        this.characterUrl = characterUrl;
+        this.function1 = function1;
+        this.function2 = function2;
     }
 
     public Long getId() {
@@ -66,12 +73,36 @@ public class ProfileDTO {
         this.numberOfWinners = numberOfWinners;
     }
 
-    public String getFunction() {
-        return function;
+    public Integer getWinsTournaments() {
+        return winsTournaments;
     }
 
-    public void setFunction(String function) {
-        this.function = function;
+    public void setWinsTournaments(Integer winsTournaments) {
+        this.winsTournaments = winsTournaments;
+    }
+
+    public String getCharacterUrl() {
+        return characterUrl;
+    }
+
+    public void setCharacterUrl(String characterUrl) {
+        this.characterUrl = characterUrl;
+    }
+
+    public String getFunction1() {
+        return function1;
+    }
+
+    public void setFunction1(String function1) {
+        this.function1 = function1;
+    }
+
+    public String getFunction2() {
+        return function2;
+    }
+
+    public void setFunction2(String function2) {
+        this.function2 = function2;
     }
 
     public List<BadgeDTO> getBadges() {

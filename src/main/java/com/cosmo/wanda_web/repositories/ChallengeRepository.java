@@ -2,6 +2,7 @@ package com.cosmo.wanda_web.repositories;
 
 import com.cosmo.wanda_web.entities.Challenge;
 import com.cosmo.wanda_web.entities.ChallengeStatus;
+import com.cosmo.wanda_web.entities.Match;
 import com.cosmo.wanda_web.projections.FindAllPendingChallengerProjection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,7 +29,7 @@ public interface ChallengeRepository extends JpaRepository<Challenge, Long> {
 
     @Modifying
     @Query("UPDATE Challenge obj " +
-            "SET obj.status = :status " +
+            "SET obj.status = :status, obj.match = :match " +
             "WHERE obj.id = :challengeId")
-    void updateChallenge(Long challengeId, ChallengeStatus status);
+    void updateChallenge(Long challengeId, ChallengeStatus status, Match match);
 }

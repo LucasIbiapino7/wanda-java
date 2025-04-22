@@ -6,9 +6,11 @@ import com.cosmo.wanda_web.dto.challengers.ChallengeIsAcceptedDTO;
 import com.cosmo.wanda_web.dto.match.PlayedMatchDTO;
 import com.cosmo.wanda_web.entities.Challenge;
 import com.cosmo.wanda_web.entities.ChallengeStatus;
+import com.cosmo.wanda_web.entities.Match;
 import com.cosmo.wanda_web.entities.User;
 import com.cosmo.wanda_web.projections.FindAllPendingChallengerProjection;
 import com.cosmo.wanda_web.repositories.ChallengeRepository;
+import com.cosmo.wanda_web.repositories.MatchRepository;
 import com.cosmo.wanda_web.repositories.UserRepository;
 import com.cosmo.wanda_web.services.exceptions.ChallengeException;
 import com.cosmo.wanda_web.services.exceptions.ResourceNotFoundException;
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Service
 public class ChallengeService {
@@ -35,6 +38,9 @@ public class ChallengeService {
     @Autowired
     private MatchService matchService;
 
+    @Autowired
+    private MatchRepository matchRepository;
+
     @Transactional
     public void challenge(ChallengeDTO dto) {
         User userChallenger = userService.authenticated(); // Usuário Logado
@@ -50,7 +56,7 @@ public class ChallengeService {
         Challenge challenge = new Challenge();
         challenge.setChallenger(userChallenger);
         challenge.setChallenged(userChallenged);
-        challenge.setCreatedAt(Instant.now());
+        challenge.setCreatedAt(LocalDateTime.now());
         challenge.setMatch(null);
         challenge.setStatus(ChallengeStatus.PENDING);
 
@@ -70,18 +76,18 @@ public class ChallengeService {
         Challenge challenge = challengeRepository.findById(dto.getChallengeId()).orElseThrow(
                 () -> new ResourceNotFoundException("esse Challenge não existe"));
         if (!dto.getAccepted()){
-            System.out.println("caiu aqui");
-            challengeUpdate(dto.getChallengeId(), ChallengeStatus.DECLINED);
+            challengeUpdate(dto.getChallengeId(), ChallengeStatus.DECLINED, null);
             return null;
         }
         Long result = matchService.RunMatch(
                 new PlayedMatchDTO(challenge.getChallenger().getId(), challenge.getChallenged().getId()));
-        challengeUpdate(dto.getChallengeId(), ChallengeStatus.ACCEPTED);
+        Match match = matchRepository.getReferenceById(result);
+        challengeUpdate(dto.getChallengeId(), ChallengeStatus.ACCEPTED, match);
         return result;
     }
 
     @Transactional
-    private void challengeUpdate(Long challengeId, ChallengeStatus status) {
-        challengeRepository.updateChallenge(challengeId, status);
+    private void challengeUpdate(Long challengeId, ChallengeStatus status, Match match) {
+        challengeRepository.updateChallenge(challengeId, status, match);
     }
 }

@@ -1,5 +1,6 @@
 package com.cosmo.wanda_web.controller;
 
+import com.cosmo.wanda_web.dto.players.ChangeCharacterDTO;
 import com.cosmo.wanda_web.dto.players.PlayerInformationDTO;
 import com.cosmo.wanda_web.dto.players.ProfileDTO;
 import com.cosmo.wanda_web.services.PlayerService;
@@ -8,10 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -22,10 +20,18 @@ public class PlayerController {
     @Autowired
     private PlayerService playerService;
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
     @GetMapping("/profile")
     public ResponseEntity<ProfileDTO> findProfileByUser(){
         ProfileDTO result = playerService.findProfileByUser();
         return ResponseEntity.ok(result);
+    }
+
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
+    @PutMapping("/profile/character")
+    public ResponseEntity<Void> changeCharacter(@RequestBody ChangeCharacterDTO dto){
+        playerService.changeCharacter(dto);
+        return ResponseEntity.noContent().build();
     }
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
