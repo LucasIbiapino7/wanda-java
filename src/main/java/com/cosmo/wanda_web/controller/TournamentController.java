@@ -1,9 +1,6 @@
 package com.cosmo.wanda_web.controller;
 
-import com.cosmo.wanda_web.dto.tournament.SubscribeTournamentDTO;
-import com.cosmo.wanda_web.dto.tournament.TournamentCreateDTO;
-import com.cosmo.wanda_web.dto.tournament.TournamentMinDTO;
-import com.cosmo.wanda_web.dto.tournament.TournamentWithParticipantsDTO;
+import com.cosmo.wanda_web.dto.tournament.*;
 import com.cosmo.wanda_web.services.TournamentService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +25,13 @@ public class TournamentController {
     }
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
+    @GetMapping("/{id}")
+    public ResponseEntity<BracketTournament> getTournamentBracketById(@PathVariable(name = "id") Long id){
+        BracketTournament result = tournamentService.getTournamentBracketById(id);
+        return ResponseEntity.ok(result);
+    }
+
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN')")
     @PostMapping
     public ResponseEntity<TournamentCreateDTO> create(@Valid @RequestBody TournamentCreateDTO dto){
         TournamentCreateDTO result = tournamentService.create(dto);
@@ -55,10 +59,10 @@ public class TournamentController {
         return ResponseEntity.ok(result);
     }
 
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
-    @GetMapping("/{id}")
-    public ResponseEntity<TournamentWithParticipantsDTO> getById(@PathVariable(name = "id") Long id){
-        TournamentWithParticipantsDTO result = tournamentService.findByIdWithParticipants(id);
-        return ResponseEntity.ok(result);
-    }
+//    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
+//    @GetMapping("/{id}")
+//    public ResponseEntity<TournamentWithParticipantsDTO> getById(@PathVariable(name = "id") Long id){
+//        TournamentWithParticipantsDTO result = tournamentService.findByIdWithParticipants(id);
+//        return ResponseEntity.ok(result);
+//    }
 }

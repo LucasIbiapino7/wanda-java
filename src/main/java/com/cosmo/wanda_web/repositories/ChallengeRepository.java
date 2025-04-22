@@ -9,7 +9,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
-import java.util.List;
 import java.util.Optional;
 
 public interface ChallengeRepository extends JpaRepository<Challenge, Long> {
@@ -31,5 +30,5 @@ public interface ChallengeRepository extends JpaRepository<Challenge, Long> {
     @Query("UPDATE Challenge obj " +
             "SET obj.status = :status " +
             "WHERE obj.id = :challengeId")
-    void rejectedChallenge(Long challengeId, ChallengeStatus status);
+    void updateChallenge(Long challengeId, ChallengeStatus status);
 }

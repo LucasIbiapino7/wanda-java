@@ -138,6 +138,18 @@ public class FunctionService {
         }
     }
 
+    public boolean verifyJokenpoFunctionsByUser(User user){
+        Optional<Function> jokenpo1ByPlayerId = functionRepository.findJokenpo1ByPlayerId(user.getId());
+        if (jokenpo1ByPlayerId.isEmpty()){
+            return false;
+        }
+        Optional<Function> jokenpo2ByPlayerId = functionRepository.findJokenpo2ByPlayerId(user.getId());
+        if (jokenpo2ByPlayerId.isEmpty()){
+            return false;
+        }
+        return true;
+    }
+
     @Transactional
     private Long saveLogAnswer(FunctionRequestDTO dto, ValidateResponseDTO response, User user) {
         LogAnswersAgents log = new LogAnswersAgents();
@@ -153,5 +165,7 @@ public class FunctionService {
         LogAnswersAgents save = logAnswersAgentsRepository.save(log);
         return save.getId();
     }
+
+
 
 }

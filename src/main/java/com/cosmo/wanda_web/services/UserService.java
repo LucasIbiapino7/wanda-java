@@ -10,10 +10,10 @@ import com.cosmo.wanda_web.entities.Player;
 import com.cosmo.wanda_web.entities.Role;
 import com.cosmo.wanda_web.entities.User;
 import com.cosmo.wanda_web.infra.TokenService;
-import com.cosmo.wanda_web.projections.UserDetailsProjection;
 import com.cosmo.wanda_web.repositories.PlayerRepository;
 import com.cosmo.wanda_web.repositories.RoleRepository;
 import com.cosmo.wanda_web.repositories.UserRepository;
+import com.cosmo.wanda_web.services.utils.PlayerWithCharacter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,8 +23,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 public class UserService {
@@ -43,6 +41,9 @@ public class UserService {
 
     @Autowired
     private PlayerRepository playerRepository;
+
+    @Autowired
+    private PlayerWithCharacter playerWithCharacter;
 
     @Autowired
     private TokenService tokenService;
@@ -71,7 +72,7 @@ public class UserService {
         newUser.addRole(roleUser);
         newUser = userRepository.save(newUser);
 
-        Player player = new Player(newUser);
+        Player player = playerWithCharacter.createPlayer(newUser);
 
         playerRepository.save(player);
     }

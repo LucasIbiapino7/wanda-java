@@ -82,6 +82,6 @@ public class ChallengeService {
 
     @Transactional
     private void challengeUpdate(Long challengeId, ChallengeStatus status) {
-        challengeRepository.rejectedChallenge(challengeId, status);
+        challengeRepository.updateChallenge(challengeId, status);
     }
 }

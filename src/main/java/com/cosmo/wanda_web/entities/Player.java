@@ -13,6 +13,10 @@ public class Player {
     private Integer numberOfMatches;
     private Integer numberOfWinners;
     private String nickname;
+    @Column(name = "character_url")
+    private String characterUrl;
+    @Column(name = "wins_tournaments")
+    private Integer winsTournaments;
 
     @OneToOne
     @MapsId
@@ -74,6 +78,22 @@ public class Player {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public String getCharacterUrl() {
+        return characterUrl;
+    }
+
+    public void setCharacterUrl(String characterUrl) {
+        this.characterUrl = characterUrl;
+    }
+
+    public Integer getWinsTournaments() {
+        return winsTournaments;
+    }
+
+    public void setWinsTournaments(Integer winsTournaments) {
+        this.winsTournaments = winsTournaments;
     }
 
     @Override

@@ -43,4 +43,13 @@ public interface TournamentRepository extends JpaRepository<Tournament, Long> {
     Page<Tournament> findAllByUser(
             @Param("userId") Long userId, Pageable pageable
     );
+
+    @Query("""
+      SELECT CASE WHEN COUNT(obj)>0 THEN true ELSE false END
+      FROM Tournament obj
+      JOIN obj.users u
+      WHERE obj.id = :tournamentId
+        AND u.id = :userId
+    """)
+    boolean isUserInTournament(@Param("tournamentId") Long tournamentId, @Param("userId") Long userId);
 }

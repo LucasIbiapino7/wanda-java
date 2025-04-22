@@ -298,7 +298,7 @@ public class MatchService {
 
         User winner = null;
 
-        if (matches.getPlayer1RoundsVictories() > matches.getPlayer2RoundsVictories()){
+        if (matches.getPlayer1RoundsVictories() >= matches.getPlayer2RoundsVictories()){
             winner = player1;
         } else if (matches.getPlayer2RoundsVictories() > matches.getPlayer1RoundsVictories()) {
             winner = player2;

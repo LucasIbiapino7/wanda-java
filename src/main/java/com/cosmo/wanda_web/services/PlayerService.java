@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 import java.util.Set;
 
 @Service
@@ -79,7 +80,7 @@ public class PlayerService {
                player1.setNumberOfWinners(player1.getNumberOfWinners() + 1);
                verifyBadges(user1, player1);
            } else if (match.getWinner().equals(user2)) {
-               player1.setNumberOfWinners(player2.getNumberOfWinners() + 1);
+               player2.setNumberOfWinners(player2.getNumberOfWinners() + 1);
                verifyBadges(user2, player2);
            }
        }
@@ -111,6 +112,12 @@ public class PlayerService {
         Page<Player> list = playerRepository.searchByName(name, user.getId(), pageable);
         List<Player> players = playerRepository.findPlayersFunctionsAndBadges(list.stream().toList());
         return list.map(PlayerInformationDTO::new);
+    }
+
+    public void updateWinnerTournament(Long winnerId) {
+        Player winner = playerRepository.getReferenceById(winnerId);
+        winner.setWinsTournaments(winner.getWinsTournaments() + 1);
+        playerRepository.save(winner);
     }
 
     /*

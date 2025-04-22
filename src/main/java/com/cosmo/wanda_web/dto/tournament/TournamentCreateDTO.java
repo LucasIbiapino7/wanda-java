@@ -18,7 +18,6 @@ public class TournamentCreateDTO {
     private String description;
     private LocalDateTime startTime;
     private Boolean asPrivate;
-    @Size(min = 3, message = "A senha deve ter no mínimo 3 caracteres!")
     private String password;
     @Positive(message = "O número de participantes deve ser positivo!")
     private int maxParticipants;
