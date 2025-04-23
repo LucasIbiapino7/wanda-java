@@ -1,12 +1,15 @@
 package com.cosmo.wanda_web.repositories;
 
 import com.cosmo.wanda_web.entities.Tournament;
+import com.cosmo.wanda_web.entities.TournamentStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 public interface TournamentRepository extends JpaRepository<Tournament, Long> {
@@ -33,13 +36,23 @@ public interface TournamentRepository extends JpaRepository<Tournament, Long> {
            """)
     Tournament findByIdWithParticipants(@Param("id")Long id);
 
-    @Query("""
-    SELECT obj
-    FROM Tournament obj
-    JOIN obj.users u
-    WHERE u.id = :userId
-    ORDER BY obj.createdAt DESC
-""")
+    @Query(
+            value = """
+        SELECT DISTINCT t
+          FROM Tournament t
+          LEFT JOIN t.users u
+         WHERE u.id = :userId
+            OR t.creatorId = :userId
+         ORDER BY t.createdAt DESC
+      """,
+            countQuery = """
+        SELECT COUNT(DISTINCT t)
+          FROM Tournament t
+          LEFT JOIN t.users u
+         WHERE u.id = :userId
+            OR t.creatorId = :userId
+      """
+    )
     Page<Tournament> findAllByUser(
             @Param("userId") Long userId, Pageable pageable
     );
@@ -52,4 +65,6 @@ public interface TournamentRepository extends JpaRepository<Tournament, Long> {
         AND u.id = :userId
     """)
     boolean isUserInTournament(@Param("tournamentId") Long tournamentId, @Param("userId") Long userId);
+
+    List<Tournament> findByStatusAndStartTimeLessThanEqual(TournamentStatus status, LocalDateTime time);
 }

@@ -65,7 +65,7 @@ public class TournamentService {
         return new TournamentCreateDTO(tournament);
     }
 
-    @Transactional(readOnly = true) //Preciso melhorar
+    @Transactional(readOnly = true)
     public TournamentWithParticipantsDTO findByIdWithParticipants(Long id) {
         Tournament tournament = tournamentRepository.findByIdWithParticipants(id);
         if (tournament == null){
@@ -124,14 +124,24 @@ public class TournamentService {
     }
 
     @Transactional
-    public void run(Long id) {
+    public void run(Long id){
         Tournament tournament = tournamentRepository.findById(id).orElseThrow(
                 () -> new ResourceNotFoundException("Torneio nao encontrado!"));
         User user = userService.authenticated();
         if (!Objects.equals(user.getId(), tournament.getCreatorId())){
-            throw new ResourceNotFoundException("Voce nao eh o criador do torneio");
+            throw new TournamentException("Voce nao eh o criador do torneio");
         }
+        running(tournament);
+    }
 
+    @Transactional
+    public void startTournament(Long id) {
+        Tournament tournament = tournamentRepository.findById(id).orElseThrow(
+                () -> new ResourceNotFoundException("Torneio nao encontrado!"));
+        running(tournament);
+    }
+
+    private void running(Tournament tournament){
         Map<Long,String> nameMap = tournament.getUsers().stream()
                 .collect(Collectors.toMap(User::getId, User::getName));
 
@@ -182,7 +192,7 @@ public class TournamentService {
 
     private String describeRound(int players) {
         return switch (players) {
-            case 32 -> "Oitavas de Final";
+            case 32 -> "Primeiras Fases";
             case 16 -> "Oitavas de Final";
             case 8  -> "Quartas de Final";
             case 4  -> "Semifinal";

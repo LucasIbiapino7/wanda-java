@@ -145,6 +145,11 @@ public class PlayerService {
         playerRepository.save(player);
     }
 
+    public String findCharacterByUser(Long id) {
+        Player player = playerRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Not found"));
+        return player.getCharacterUrl();
+    }
+
     /*
     @Transactional
     public List<PlayerInformationDTO> findByName(String name) {

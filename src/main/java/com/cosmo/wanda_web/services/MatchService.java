@@ -322,6 +322,10 @@ public class MatchService {
         Match match = matchRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Match not found"));
         String matchData = match.getMatchData();
         DuelResponseDTO matchResponseDTO = jsonConverter.converterToDto(matchData);
+        String characterPlayer1 = playerService.findCharacterByUser(matchResponseDTO.getPlayer1().getId());
+        String characterPlayer2 = playerService.findCharacterByUser(matchResponseDTO.getPlayer2().getId());
+        matchResponseDTO.getPlayer1().setCharacter_url(characterPlayer1);
+        matchResponseDTO.getPlayer2().setCharacter_url(characterPlayer2);
         return matchResponseDTO;
     }
 

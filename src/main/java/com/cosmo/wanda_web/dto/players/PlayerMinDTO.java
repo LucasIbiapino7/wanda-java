@@ -10,6 +10,7 @@ public class PlayerMinDTO {
     private Integer numberOfMatches;
     private Integer numberOfWinners;
     private Integer winsTournaments;
+    private String characterUrl;
     private List<BadgeDTO> badges;
 
     public PlayerMinDTO() {
@@ -21,6 +22,7 @@ public class PlayerMinDTO {
         numberOfMatches = player.getNumberOfMatches();
         numberOfWinners = player.getNumberOfWinners();
         winsTournaments = player.getWinsTournaments();
+        characterUrl = player.getCharacterUrl();
         badges = player.getUser().getBadges().stream().map(BadgeDTO::new).toList();
     }
 
@@ -42,6 +44,10 @@ public class PlayerMinDTO {
 
     public Integer getWinsTournaments() {
         return winsTournaments;
+    }
+
+    public String getCharacterUrl() {
+        return characterUrl;
     }
 
     public List<BadgeDTO> getBadges() {
