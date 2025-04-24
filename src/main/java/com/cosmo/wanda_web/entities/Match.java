@@ -3,6 +3,7 @@ package com.cosmo.wanda_web.entities;
 import jakarta.persistence.*;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Entity
@@ -22,20 +23,20 @@ public class Match {
     private User player2;
 
     @Column(columnDefinition = "TIMESTAMP WITHOUT TIME ZONE")
-    private Instant moment;
+    private LocalDateTime moment;
 
     @ManyToOne
     @JoinColumn(name = "winner_id")
     private User winner;
 
-    @Lob
+//    @Lob
     @Column(name = "match_data", columnDefinition = "TEXT")
     private String matchData;
 
     public Match() {
     }
 
-    public Match(User player1, User player2, Instant moment, User winner, String matchData) {
+    public Match(User player1, User player2, LocalDateTime moment, User winner, String matchData) {
         this.player1 = player1;
         this.player2 = player2;
         this.moment = moment;
@@ -67,11 +68,11 @@ public class Match {
         this.player2 = player2;
     }
 
-    public Instant getMoment() {
+    public LocalDateTime getMoment() {
         return moment;
     }
 
-    public void setMoment(Instant moment) {
+    public void setMoment(LocalDateTime moment) {
         this.moment = moment;
     }
 

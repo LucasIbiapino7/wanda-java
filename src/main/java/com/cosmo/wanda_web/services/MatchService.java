@@ -7,6 +7,7 @@ import com.cosmo.wanda_web.dto.users.UserDTO;
 import com.cosmo.wanda_web.entities.Function;
 import com.cosmo.wanda_web.entities.Match;
 import com.cosmo.wanda_web.entities.User;
+import com.cosmo.wanda_web.projections.MatchSummary;
 import com.cosmo.wanda_web.repositories.FunctionRepository;
 import com.cosmo.wanda_web.repositories.MatchRepository;
 import com.cosmo.wanda_web.repositories.UserRepository;
@@ -17,10 +18,12 @@ import com.cosmo.wanda_web.services.utils.RoundInformation;
 import com.cosmo.wanda_web.services.exceptions.ResourceNotFoundException;
 import com.cosmo.wanda_web.services.utils.Matches;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,6 +38,9 @@ public class MatchService {
 
     @Autowired
     private MatchRepository matchRepository;
+
+    @Autowired
+    private UserService userService;
 
     @Autowired
     private PlayerService playerService;
@@ -308,7 +314,7 @@ public class MatchService {
 
         String matchData = jsonConverter.converter(duelResponseDTO);
 
-        Match match = new Match(player1, player2, Instant.now(), winner, matchData);
+        Match match = new Match(player1, player2, LocalDateTime.now(), winner, matchData);
 
         matchRepository.save(match);
 
@@ -322,6 +328,7 @@ public class MatchService {
         Match match = matchRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Match not found"));
         String matchData = match.getMatchData();
         DuelResponseDTO matchResponseDTO = jsonConverter.converterToDto(matchData);
+        System.out.println(matchResponseDTO);
         String characterPlayer1 = playerService.findCharacterByUser(matchResponseDTO.getPlayer1().getId());
         String characterPlayer2 = playerService.findCharacterByUser(matchResponseDTO.getPlayer2().getId());
         matchResponseDTO.getPlayer1().setCharacter_url(characterPlayer1);
@@ -332,5 +339,11 @@ public class MatchService {
     public Long winnerOfMatch(Long matchId) {
         Match match = matchRepository.findById(matchId).orElseThrow(() -> new ResourceNotFoundException("Match not found"));
         return match.getWinner().getId();
+    }
+
+    public Page<MatchMinDTO> getAll(Pageable pageable) {
+        User user = userService.authenticated();
+        Page<Match> result = matchRepository.searchAllById(user.getId(), pageable);
+        return result.map(MatchMinDTO::new);
     }
 }

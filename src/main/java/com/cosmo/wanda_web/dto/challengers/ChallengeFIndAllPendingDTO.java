@@ -3,6 +3,7 @@ package com.cosmo.wanda_web.dto.challengers;
 import com.cosmo.wanda_web.projections.FindAllPendingChallengerProjection;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
@@ -11,7 +12,7 @@ public class ChallengeFIndAllPendingDTO {
     private Long challengerId;
     private String challengedName;
     private String challengerName;
-    private OffsetDateTime createdAt;
+    private LocalDateTime createdAt;
 
     public ChallengeFIndAllPendingDTO() {
     }
@@ -22,9 +23,7 @@ public class ChallengeFIndAllPendingDTO {
         challengerId = projection.getChallengerId();
         challengedName = projection.getChallengedName();
         challengerName = projection.getChallengerName();
-        Instant instant = projection.getCreatedAt();
-        ZoneOffset offset = ZoneOffset.of("-03:00");
-        createdAt = instant.atOffset(offset);
+        createdAt = LocalDateTime.now();
     }
 
     public Long getId() {
@@ -59,11 +58,11 @@ public class ChallengeFIndAllPendingDTO {
         this.challengerName = challengerName;
     }
 
-    public OffsetDateTime getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(OffsetDateTime createdAt) {
+    public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 }

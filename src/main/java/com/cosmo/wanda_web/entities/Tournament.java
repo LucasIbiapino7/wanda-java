@@ -27,7 +27,6 @@ public class Tournament {
     private String password;
     private int maxParticipants;
     private int currentParticipants;
-    @Lob
     @Column(name = "bracket_json", columnDefinition = "TEXT")
     private String bracketJson;
     private Long creatorId;

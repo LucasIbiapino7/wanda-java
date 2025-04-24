@@ -132,7 +132,7 @@ public class PlayerService {
         Player winner = user.getPlayer();
         winner.setWinsTournaments(winner.getWinsTournaments() + 1);
         playerRepository.save(winner);
-        Badge badge = badgeRepository.findByName("Aprendiz condicional!").orElseThrow(
+        Badge badge = badgeRepository.findByName("Vencedor de Torneio!").orElseThrow(
                 () -> new ResourceNotFoundException("Badge Not Found"));
         user.getBadges().add(badge);
         userRepository.save(user);
