@@ -111,7 +111,13 @@ public class TournamentService {
     public Page<TournamentMinDTO> findAllParticipating(Pageable pageable) {
         User user = userService.authenticated();
         Page<Tournament> result = tournamentRepository.findAllByUser(user.getId(), pageable);
-        return result.map(TournamentMinDTO::new);
+        Page<TournamentMinDTO> mapDto = result.map(TournamentMinDTO::new);
+        for (TournamentMinDTO dto : mapDto) {
+            if (dto.getStatus().toString().equals("OPEN") && Objects.equals(dto.getCreatorId(), user.getId()) && dto.getCurrentParticipants() >= dto.getMaxParticipants()){
+                dto.setCanReady(true);
+            }
+        }
+        return mapDto;
     }
 
     @Transactional(readOnly = true)

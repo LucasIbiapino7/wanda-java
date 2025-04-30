@@ -46,6 +46,14 @@ public class ControllerExceptionsHandler {
         return ResponseEntity.status(status).body(err);
     }
 
+
+    @ExceptionHandler(RegisterException.class)
+    public ResponseEntity<CustomError> RegisterException(RegisterException e, HttpServletRequest request) {
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        CustomError err = new CustomError(Instant.now(), status.value(), e.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(status).body(err);
+    }
+
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<CustomError> resourceNotFound(ResourceNotFoundException e, HttpServletRequest request) {
         HttpStatus status = HttpStatus.NOT_FOUND;

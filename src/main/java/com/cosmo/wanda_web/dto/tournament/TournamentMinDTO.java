@@ -21,6 +21,7 @@ public class TournamentMinDTO {
     private int currentParticipants;
     private Long creatorId;
     private Long winnerId;
+    private Boolean canReady;
 
     public TournamentMinDTO() {
     }
@@ -40,6 +41,7 @@ public class TournamentMinDTO {
         currentParticipants = entity.getCurrentParticipants();
         creatorId = entity.getCreatorId();
         winnerId = (entity.getCreatorId() != null) ? entity.getWinnerId() : null;
+        canReady = false;
     }
 
     public Long getId() {
@@ -88,5 +90,13 @@ public class TournamentMinDTO {
 
     public Long getWinnerId() {
         return winnerId;
+    }
+
+    public Boolean getCanReady() {
+        return canReady;
+    }
+
+    public void setCanReady(Boolean canReady) {
+        this.canReady = canReady;
     }
 }

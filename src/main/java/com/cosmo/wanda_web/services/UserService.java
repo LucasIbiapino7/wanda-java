@@ -13,6 +13,7 @@ import com.cosmo.wanda_web.infra.TokenService;
 import com.cosmo.wanda_web.repositories.PlayerRepository;
 import com.cosmo.wanda_web.repositories.RoleRepository;
 import com.cosmo.wanda_web.repositories.UserRepository;
+import com.cosmo.wanda_web.services.exceptions.RegisterException;
 import com.cosmo.wanda_web.services.utils.PlayerWithCharacter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -50,7 +51,7 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public AccessTokenDTO login(AuthenticationDTO dto) {
-        UsernamePasswordAuthenticationToken usernamePassword = new UsernamePasswordAuthenticationToken(dto.getEmail(), dto.getPassword());
+        UsernamePasswordAuthenticationToken usernamePassword = new UsernamePasswordAuthenticationToken(dto.getEmail().toLowerCase().trim(), dto.getPassword());
         Authentication auth = authenticationManager.authenticate(usernamePassword);
 
         String token = tokenService.generateToken((User) auth.getPrincipal());
@@ -61,7 +62,7 @@ public class UserService {
     public void register(RegisterDTO dto) {
         User result = userRepository.findByEmail(dto.getEmail().toLowerCase());
         if (result != null) {
-            throw new RuntimeException("Esse email já está sendo usado");
+            throw new RegisterException("Esse email já está sendo usado");
         }
         User newUser = new User();
         String passwordEncode = passwordEncoder.encode(dto.getPassword());
