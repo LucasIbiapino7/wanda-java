@@ -60,13 +60,13 @@ public class UserService {
 
     @Transactional
     public void register(RegisterDTO dto) {
-        User result = userRepository.findByEmail(dto.getEmail().toLowerCase());
+        User result = userRepository.findByEmail(dto.getEmail().toLowerCase().trim());
         if (result != null) {
             throw new RegisterException("Esse email já está sendo usado");
         }
         User newUser = new User();
         String passwordEncode = passwordEncoder.encode(dto.getPassword());
-        newUser.setEmail(dto.getEmail());
+        newUser.setEmail(dto.getEmail().toLowerCase().trim());
         newUser.setName(dto.getName());
         newUser.setPassword(passwordEncode);
         Role roleUser = roleRepository.getReferenceById(1L);

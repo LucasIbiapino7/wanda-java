@@ -8,6 +8,7 @@ import java.util.List;
 public class PlayerInformationDTO {
     private Long id;
     private String name;
+    private String characterUrl;
     private Integer numberOfMatches;
     private Integer numberOfWinners;
     private String code;
@@ -32,6 +33,7 @@ public class PlayerInformationDTO {
             }
         }
         badges = player.getUser().getBadges().stream().map(BadgeDTO::new).toList();
+        characterUrl = player.getCharacterUrl();
     }
 
     public Long getId() {
@@ -60,5 +62,9 @@ public class PlayerInformationDTO {
 
     public List<BadgeDTO> getBadges() {
         return badges;
+    }
+
+    public String getCharacterUrl() {
+        return characterUrl;
     }
 }
