@@ -8,7 +8,10 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-@FeignClient(name = "python-client", url = "http://localhost:8000/api")
+@FeignClient(
+        name = "python-client",
+        url  = "${PYTHON_BASE_URL:http://localhost:8000/api}"
+)
 public interface PythonClient {
 
     @PostMapping("/feedback")

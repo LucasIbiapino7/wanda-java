@@ -99,36 +99,18 @@ public class MatchService {
         // Cada iteração é uma Partida
         while (countMatch <= matches.getMatches()){
 
-            System.out.println("PARTIDA: " + countMatch);
-
             //instancia os cards para começar um round
             matches.instanceCards();
 
             MatchInformationDTO matchInformationDTO = new MatchInformationDTO();
             matchInformationDTO.setMatchNumber(countMatch);
 
-            System.out.println("Cartas do jogador 1 na partida " + countMatch);
-            System.out.println(matches.getCardsPlayer1());
-
-            System.out.println("Cartas do jogador 2 na partida " + countMatch);
-            System.out.println(matches.getCardsPlayer2());
-
             int round = 1;
-
-            System.out.println("Round " + round); // depuração
 
             // 1 Round -> função 1 (card1, card2, card3)
 
             // Instancia os parametros do Round 1 - as próprias cartas do jogador
             matches.updateParametersRound1();
-
-            // Depuração
-            System.out.println("Parametros do player 1 no round 1");
-            System.out.println(matches.getParametersPlayer1());
-
-            // Depuração
-            System.out.println("Parametros do player 2 no round 1");
-            System.out.println(matches.getParametersPlayer2());
 
             // Monta o payload da requisição do 1 round
             RoundRequestDTO roundRequestDTO = new RoundRequestDTO(functionJokenpo1Player1.getFunction(),
@@ -139,17 +121,9 @@ public class MatchService {
             // Faz a requisição
             TurnResponseDTO round1 = pythonClient.round(roundRequestDTO);
 
-            // Depuração
-            System.out.println("RESPOSTA DA REQUISIÇÃO");
-            System.out.println(round1);
-
             // Valida e escolhe a carta que vai ser usada
             String cardRound1Player1 = matches.validateCardPlayer(matches.getCardsPlayer1(), round1.getPlayer1Choice());
             String cardRound1Player2 = matches.validateCardPlayer(matches.getCardsPlayer2(), round1.getPlayer2Choice());
-
-            // Depuração
-            System.out.println("escolha do player 1 no round1: " + cardRound1Player1);
-            System.out.println("escolha do player 2 no round1: " + cardRound1Player2);
 
             // Adiciona na lista de jogadas da partida!
             cardsPlayer1.add(cardRound1Player1);
@@ -158,7 +132,6 @@ public class MatchService {
             // Verifica quem ganhou o round1  de acordo com as regras de conflict()
             Integer winnerTurn = matches.conflict(cardRound1Player1, cardRound1Player2);
 
-            System.out.println("winner round1: " + winnerTurn);
             // PlayDTO
             RoundsDTO playsDTO = new RoundsDTO();
             playsDTO.setRoundNumber(round);
@@ -185,14 +158,6 @@ public class MatchService {
 
             matches.updateParametersRound2();
 
-            // Depuração
-            System.out.println("Parametros do player 1 no round 2");
-            System.out.println(matches.getParametersPlayer1());
-
-            // Depuração
-            System.out.println("Parametros do player 2 no round 2");
-            System.out.println(matches.getParametersPlayer2());
-
             RoundRequestDTO roundRequestDTORound2 = new RoundRequestDTO(functionJokenpo2Player1.getFunction(),
                     matches.getParametersPlayer1(),
                     functionJokenpo2Player2.getFunction(),
@@ -200,16 +165,9 @@ public class MatchService {
 
             TurnResponseDTO round2 = pythonClient.round(roundRequestDTORound2);
 
-            System.out.println("RESPOSTA DA REQUISIÇÃO NO ROUND 2");
-            System.out.println(round2);
-
             // Valida e escolhe a carta que vai ser usada
             String cardRound2Player1 = matches.validateCardPlayer(matches.getCardsPlayer1(), round2.getPlayer1Choice());
             String cardRound2Player2 = matches.validateCardPlayer(matches.getCardsPlayer2(), round2.getPlayer2Choice());
-
-            // Depuração
-            System.out.println("escolha do player 1 no round2: " + cardRound2Player1);
-            System.out.println("escolha do player 2 no round2: " + cardRound2Player2);
 
             // Adiciona na lista de jogadas da partida!
             cardsPlayer1.add(cardRound2Player1);
@@ -218,8 +176,6 @@ public class MatchService {
             // Verifica quem ganhou o round1  de acordo com as regras de conflict()
             winnerTurn = matches.conflict(cardRound2Player1, cardRound2Player2);
 
-            System.out.println("winner round2: " + winnerTurn);
-            // PlayDTO
             RoundsDTO playsDTORound2 = new RoundsDTO();
             round++;
             playsDTORound2.setRoundNumber(round);
@@ -250,12 +206,8 @@ public class MatchService {
             cardsPlayer1.add(cardRound3Player1);
             cardsPlayer2.add(cardRound3Player2);
 
-            System.out.println("escolha do player 1 no round3: " + cardRound3Player1);
-            System.out.println("escolha do player 2 no round3: " + cardRound3Player2);
-
             winnerTurn = matches.conflict(cardRound3Player1, cardRound3Player2);
 
-            System.out.println("winner round3: " + winnerTurn);
             // PlayDTO
             RoundsDTO playsDTORound3 = new RoundsDTO();
             round++;
@@ -275,13 +227,6 @@ public class MatchService {
                 RoundInfo.player2Win();
             }
 
-            // Final da partida (loop while)
-
-            System.out.println("Fim");
-            System.out.println("empates: " + RoundInfo.getTurnTies());
-            System.out.println("player 1: " + RoundInfo.getPlayer1TurnWins());
-            System.out.println("player 2: " + RoundInfo.getPlayer2TurnWins());
-
             matches.roundWinner(RoundInfo, score);
 
             matchInformationDTO.update(RoundInfo);
@@ -296,12 +241,6 @@ public class MatchService {
 
             countMatch++;
         }
-
-        System.out.println("RESULTADO:");
-        System.out.println("player 1: " + matches.getPlayer1RoundsVictories());
-        System.out.println("player 2: " + matches.getPlayer2RoundsVictories());
-        System.out.println("empates: " + matches.getTie());
-
         User winner = null;
 
         if (matches.getPlayer1RoundsVictories() >= matches.getPlayer2RoundsVictories()){
@@ -328,7 +267,6 @@ public class MatchService {
         Match match = matchRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Match not found"));
         String matchData = match.getMatchData();
         DuelResponseDTO matchResponseDTO = jsonConverter.converterToDto(matchData);
-        System.out.println(matchResponseDTO);
         String characterPlayer1 = playerService.findCharacterByUser(matchResponseDTO.getPlayer1().getId());
         String characterPlayer2 = playerService.findCharacterByUser(matchResponseDTO.getPlayer2().getId());
         matchResponseDTO.getPlayer1().setCharacter_url(characterPlayer1);
