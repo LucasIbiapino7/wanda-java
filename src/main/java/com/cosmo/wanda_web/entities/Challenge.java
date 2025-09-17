@@ -32,6 +32,10 @@ public class Challenge {
     @JoinColumn(name = "match_id")
     private Match match;
 
+    @ManyToOne
+    @JoinColumn(name = "game_id")
+    private Game game;
+
     public Challenge() {
     }
 
@@ -90,6 +94,14 @@ public class Challenge {
 
     public void setMatch(Match match) {
         this.match = match;
+    }
+
+    public Game getGame() {
+        return game;
+    }
+
+    public void setGame(Game game) {
+        this.game = game;
     }
 
     @Override
