@@ -16,6 +16,7 @@ public class LogAnswersAgents {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
+    @Enumerated(EnumType.STRING)
     private AssistantStyle assistantStyle;
     @Column(columnDefinition = "TIMESTAMP WITHOUT TIME ZONE")
     private LocalDateTime moment;
@@ -28,6 +29,10 @@ public class LogAnswersAgents {
     private Boolean valid;
     private String feedbackUser;
     private String functionName;
+
+    @ManyToOne
+    @JoinColumn(name = "game_id")
+    private Game game;
 
     public LogAnswersAgents() {
     }
@@ -122,6 +127,14 @@ public class LogAnswersAgents {
 
     public void setFunctionName(String functionName) {
         this.functionName = functionName;
+    }
+
+    public Game getGame() {
+        return game;
+    }
+
+    public void setGame(Game game) {
+        this.game = game;
     }
 
     @Override

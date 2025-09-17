@@ -33,6 +33,10 @@ public class Match {
     @Column(name = "match_data", columnDefinition = "TEXT")
     private String matchData;
 
+    @ManyToOne
+    @JoinColumn(name = "game_id")
+    private Game game;
+
     public Match() {
     }
 
@@ -90,6 +94,14 @@ public class Match {
 
     public void setMatchData(String matchData) {
         this.matchData = matchData;
+    }
+
+    public Game getGame() {
+        return game;
+    }
+
+    public void setGame(Game game) {
+        this.game = game;
     }
 
     @Override

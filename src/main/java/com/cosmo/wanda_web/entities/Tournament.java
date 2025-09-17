@@ -32,6 +32,10 @@ public class Tournament {
     private Long creatorId;
     private Long winnerId;
 
+    @ManyToOne
+    @JoinColumn(name = "game_id")
+    private Game game;
+
     @ManyToMany(mappedBy = "tournaments")
     private Set<User> users = new HashSet<>();
 
@@ -160,6 +164,14 @@ public class Tournament {
 
     public Set<User> getUsers() {
         return users;
+    }
+
+    public Game getGame() {
+        return game;
+    }
+
+    public void setGame(Game game) {
+        this.game = game;
     }
 
     @Override

@@ -20,6 +20,10 @@ public class Function {
     @JoinColumn(name = "player_id")
     private User player;
 
+    @ManyToOne
+    @JoinColumn(name = "game_id")
+    private Game game;
+
     public Function() {
     }
 
@@ -57,6 +61,14 @@ public class Function {
 
     public void setFunction(String function) {
         this.function = function;
+    }
+
+    public Game getGame() {
+        return game;
+    }
+
+    public void setGame(Game game) {
+        this.game = game;
     }
 
     @Override
