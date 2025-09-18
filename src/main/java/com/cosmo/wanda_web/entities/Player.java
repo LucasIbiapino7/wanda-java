@@ -20,6 +20,7 @@ public class Player {
 
     @OneToOne
     @MapsId
+    @JoinColumn(name = "id")
     private User user;
 
     public Player() {
