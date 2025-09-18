@@ -62,3 +62,5 @@ public class Badge {
         return id != null ? id.hashCode() : 0;
     }
 }
+
+

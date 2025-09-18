@@ -42,8 +42,8 @@ public class TournamentWithParticipantsDTO {
         password = (entity.getAsPrivate() ? entity.getPassword() : null);
         maxParticipants = entity.getMaxParticipants();
         currentParticipants = entity.getCurrentParticipants();
-        creatorId = entity.getCreatorId();
-        winnerId = (entity.getWinnerId() != null) ? entity.getWinnerId() : null;
+        creatorId = entity.getCreator().getId();
+        winnerId = (entity.getWinner() != null) ? entity.getWinner().getId() : null;
         for (User participant : entity.getUsers()) {
             participants.add(new UserDTO(participant));
         }

@@ -52,12 +52,12 @@ public class TournamentService {
         tournament.setDescription(dto.getDescription());
         tournament.setStartTime(dto.getStartTime());
         tournament.setMaxParticipants(dto.getMaxParticipants());
-        tournament.setCreatorId(user.getId());
+        tournament.setCreator(user);
         tournament.setCreatedAt(LocalDateTime.now());
         tournament.setCurrentParticipants(0);
         tournament.setStatus(TournamentStatus.OPEN);
         tournament.setAsPrivate(dto.getAsPrivate());
-        tournament.setWinnerId(null);
+        tournament.setWinner(null);
         if (dto.getAsPrivate()){
             tournament.setPassword(dto.getPassword());
         }
@@ -134,7 +134,7 @@ public class TournamentService {
         Tournament tournament = tournamentRepository.findById(id).orElseThrow(
                 () -> new ResourceNotFoundException("Torneio nao encontrado!"));
         User user = userService.authenticated();
-        if (!Objects.equals(user.getId(), tournament.getCreatorId())){
+        if (!Objects.equals(user.getId(), tournament.getCreator().getId())){
             throw new TournamentException("Voce nao eh o criador do torneio");
         }
         running(tournament);
@@ -167,6 +167,10 @@ public class TournamentService {
             for (int i = 0; i < currentParticipants.size(); i += 2) {
                 Long player1 = currentParticipants.get(i);
                 Long player2 = currentParticipants.get(i + 1);
+                /*
+                A IDEIA AQUI É TER FUMA FUNÇÃO RUN PRA CADA JOGO, E AQUI TER UM IF PRA DECIDIR
+                PRA QUAL FUNÇÃO IR
+                 */
                 Long matchId = matchService.RunMatch(new PlayedMatchDTO(player1, player2));
                 Long winnerId = matchService.winnerOfMatch(matchId);
 
@@ -190,7 +194,9 @@ public class TournamentService {
 
         String jsonData = jsonConverter.converterBracket(bracket);
         tournament.setBracketJson(jsonData);
-        tournament.setWinnerId(currentParticipants.get(0));
+        // Vou precisar mudar a lógica aqui! A ideia, é que agora setamos um User no Winner
+        // e não mais apenas o Id
+        tournament.setWinner(null);
         playerService.updateWinnerTournament(currentParticipants.get(0));
         tournament.setStatus(TournamentStatus.FINISHED);
         tournamentRepository.save(tournament);

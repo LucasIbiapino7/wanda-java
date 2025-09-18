@@ -39,8 +39,8 @@ public class TournamentMinDTO {
         createdAt = entity.getCreatedAt();
         maxParticipants = entity.getMaxParticipants();
         currentParticipants = entity.getCurrentParticipants();
-        creatorId = entity.getCreatorId();
-        winnerId = (entity.getCreatorId() != null) ? entity.getWinnerId() : null;
+        creatorId = entity.getCreator().getId();
+        winnerId = (entity.getCreator() != null) ? entity.getWinner().getId() : null;
         canReady = false;
     }
 

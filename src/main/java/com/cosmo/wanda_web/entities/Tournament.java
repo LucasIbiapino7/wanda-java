@@ -29,8 +29,12 @@ public class Tournament {
     private int currentParticipants;
     @Column(name = "bracket_json", columnDefinition = "TEXT")
     private String bracketJson;
-    private Long creatorId;
-    private Long winnerId;
+    @ManyToOne
+    @JoinColumn(name = "creator_id")
+    private User creator;
+    @ManyToOne
+    @JoinColumn(name = "winner_id")
+    private User winner;
 
     @ManyToOne
     @JoinColumn(name = "game_id")
@@ -42,20 +46,21 @@ public class Tournament {
     public Tournament() {
     }
 
-    public Tournament(Long id, String name, String description, LocalDateTime createdAt, LocalDateTime startTime, TournamentStatus status, Boolean isPrivate, String password, int maxParticipants, int currentParticipants, String bracketJson, Long creatorId, Long winnerId) {
+    public Tournament(Long id, String name, String description, LocalDateTime createdAt, LocalDateTime startTime, TournamentStatus status, Boolean asPrivate, String password, int maxParticipants, int currentParticipants, String bracketJson, User creator, User winner, Game game) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.createdAt = createdAt;
         this.startTime = startTime;
         this.status = status;
-        this.asPrivate = isPrivate;
+        this.asPrivate = asPrivate;
         this.password = password;
         this.maxParticipants = maxParticipants;
         this.currentParticipants = currentParticipants;
         this.bracketJson = bracketJson;
-        this.creatorId = creatorId;
-        this.winnerId = winnerId;
+        this.creator = creator;
+        this.winner = winner;
+        this.game = game;
     }
 
     public Long getId() {
@@ -146,24 +151,24 @@ public class Tournament {
         this.bracketJson = bracketJson;
     }
 
-    public Long getCreatorId() {
-        return creatorId;
-    }
-
-    public void setCreatorId(Long creatorId) {
-        this.creatorId = creatorId;
-    }
-
-    public Long getWinnerId() {
-        return winnerId;
-    }
-
-    public void setWinnerId(Long winnerId) {
-        this.winnerId = winnerId;
-    }
-
     public Set<User> getUsers() {
         return users;
+    }
+
+    public User getCreator() {
+        return creator;
+    }
+
+    public void setCreator(User creator) {
+        this.creator = creator;
+    }
+
+    public User getWinner() {
+        return winner;
+    }
+
+    public void setWinner(User winner) {
+        this.winner = winner;
     }
 
     public Game getGame() {

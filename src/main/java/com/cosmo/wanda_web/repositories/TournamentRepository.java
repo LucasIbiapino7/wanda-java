@@ -17,7 +17,7 @@ public interface TournamentRepository extends JpaRepository<Tournament, Long> {
     @Query("""
            SELECT COUNT(obj)
            FROM Tournament obj
-           WHERE obj.creatorId = :creatorId AND obj.status = 'OPEN'
+           WHERE obj.creator.id = :creatorId AND obj.status = 'OPEN'
            """)
     Long countOpenTournaments(@Param("creatorId") Long creatorId);
 
@@ -42,7 +42,7 @@ public interface TournamentRepository extends JpaRepository<Tournament, Long> {
           FROM Tournament t
           LEFT JOIN t.users u
          WHERE u.id = :userId
-            OR t.creatorId = :userId
+            OR t.creator.id = :userId
          ORDER BY t.createdAt DESC
       """,
             countQuery = """
@@ -50,7 +50,7 @@ public interface TournamentRepository extends JpaRepository<Tournament, Long> {
           FROM Tournament t
           LEFT JOIN t.users u
          WHERE u.id = :userId
-            OR t.creatorId = :userId
+            OR t.creator.id = :userId
       """
     )
     Page<Tournament> findAllByUser(

@@ -39,8 +39,8 @@ public class TournamentCreateDTO {
         }
         maxParticipants = entity.getMaxParticipants();
         currentParticipants = entity.getCurrentParticipants();
-        creatorId = entity.getCreatorId();
-        winnerId = (entity.getCreatorId() != null) ? entity.getWinnerId() : null;
+        creatorId = entity.getCreator().getId();
+        winnerId = (entity.getCreator().getId() != null) ? entity.getWinner().getId() : null;
     }
 
     public Long getId() {
