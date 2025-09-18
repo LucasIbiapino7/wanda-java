@@ -175,10 +175,10 @@ VALUES ('Admin', 'admin@gmail.com', '$2a$10$IdLFSuaa6xb2cNM801mmLeuF7aXKULKm4EiE
 INSERT INTO tb_role (authority) VALUES ('ROLE_USER');
 INSERT INTO tb_role (authority) VALUES ('ROLE_ADMIN');
 
--- Vínculo Admin -> ROLE_USER
-INSERT INTO tb_user_role (user_id, role_id) VALUES (1, 1);
+-- Vínculo Admin -> ROLE_ADMIN
+INSERT INTO tb_user_role (user_id, role_id) VALUES (1, 2);
 
--- Player vinculado ao Admin (@MapsId => id = user_id)
+-- Player vinculado ao Admin
 INSERT INTO tb_player (id, number_of_matches, number_of_winners, nickname, character_url, wins_tournaments)
 VALUES (1, 0, 0, 'Admin', 'p1.png', 0);
 
