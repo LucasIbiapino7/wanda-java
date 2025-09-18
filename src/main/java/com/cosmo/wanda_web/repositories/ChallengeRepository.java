@@ -19,10 +19,11 @@ public interface ChallengeRepository extends JpaRepository<Challenge, Long> {
     Optional<Challenge> checkIfChallengePendingExists(Long userChallengerId, Long userChallengedId);
 
     @Query(nativeQuery = true, value = """
-            SELECT TB_CHALLENGE.id, TB_CHALLENGE.challenger_id AS challengerId, TB_CHALLENGE.created_at AS createdAt, challenged.name AS challengedName, challenger.name AS challengerName
+            SELECT TB_CHALLENGE.id, TB_CHALLENGE.challenger_id AS challengerId, TB_CHALLENGE.created_at AS createdAt, challenged.name AS challengedName, challenger.name AS challengerName, game.name AS gameName
             FROM TB_CHALLENGE
             INNER JOIN TB_USER as challenged ON challenged .id = TB_CHALLENGE.challenged_id
             INNER JOIN TB_USER as challenger ON challenger .id = TB_CHALLENGE.challenger_id
+            INNER JOIN TB_GAME as game ON game.id = TB_CHALLENGE.game_id
             WHERE status = 'PENDING' AND TB_CHALLENGE.challenged_id = :userChallengedId
             """)
     Page<FindAllPendingChallengerProjection> findAllPending(Long userChallengedId, Pageable pageable);

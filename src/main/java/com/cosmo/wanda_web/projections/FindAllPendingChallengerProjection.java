@@ -8,4 +8,5 @@ public interface FindAllPendingChallengerProjection {
     String getChallengedName();
     String getChallengerName();
     Instant getCreatedAt();
+    String getGameName();
 }

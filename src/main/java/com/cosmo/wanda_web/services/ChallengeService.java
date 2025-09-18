@@ -4,12 +4,10 @@ import com.cosmo.wanda_web.dto.challengers.ChallengeDTO;
 import com.cosmo.wanda_web.dto.challengers.ChallengeFIndAllPendingDTO;
 import com.cosmo.wanda_web.dto.challengers.ChallengeIsAcceptedDTO;
 import com.cosmo.wanda_web.dto.match.PlayedMatchDTO;
-import com.cosmo.wanda_web.entities.Challenge;
-import com.cosmo.wanda_web.entities.ChallengeStatus;
-import com.cosmo.wanda_web.entities.Match;
-import com.cosmo.wanda_web.entities.User;
+import com.cosmo.wanda_web.entities.*;
 import com.cosmo.wanda_web.projections.FindAllPendingChallengerProjection;
 import com.cosmo.wanda_web.repositories.ChallengeRepository;
+import com.cosmo.wanda_web.repositories.GameRepository;
 import com.cosmo.wanda_web.repositories.MatchRepository;
 import com.cosmo.wanda_web.repositories.UserRepository;
 import com.cosmo.wanda_web.services.exceptions.ChallengeException;
@@ -41,9 +39,16 @@ public class ChallengeService {
     @Autowired
     private MatchRepository matchRepository;
 
+    @Autowired
+    private GameRepository gameRepository;
+
     @Transactional
     public void challenge(ChallengeDTO dto) {
         User userChallenger = userService.authenticated(); // Usuário Logado
+
+        Game game = gameRepository.findByName(dto.getGameName()).orElseThrow(
+                () -> new ResourceNotFoundException("O jogo nao foi encontrado!")
+        );
 
         User userChallenged = userRepository.findById(dto.getChallengedId()).orElseThrow(
                 () -> new ResourceNotFoundException("Usuário desafiado não foi encontrado"));
@@ -59,6 +64,7 @@ public class ChallengeService {
         challenge.setCreatedAt(LocalDateTime.now());
         challenge.setMatch(null);
         challenge.setStatus(ChallengeStatus.PENDING);
+        challenge.setGame(game);
 
         challengeRepository.save(challenge);
     }
@@ -72,7 +78,6 @@ public class ChallengeService {
 
     @Transactional
     public Long isAccepted(ChallengeIsAcceptedDTO dto) {
-        System.out.println("dto:" + dto.getAccepted());
         Challenge challenge = challengeRepository.findById(dto.getChallengeId()).orElseThrow(
                 () -> new ResourceNotFoundException("esse Challenge não existe"));
         if (!dto.getAccepted()){

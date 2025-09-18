@@ -1,5 +1,6 @@
 package com.cosmo.wanda_web.dto.challengers;
 
+import com.cosmo.wanda_web.dto.game.GameDto;
 import com.cosmo.wanda_web.projections.FindAllPendingChallengerProjection;
 
 import java.time.Instant;
@@ -13,6 +14,7 @@ public class ChallengeFIndAllPendingDTO {
     private String challengedName;
     private String challengerName;
     private LocalDateTime createdAt;
+    private String gameDto;
 
     public ChallengeFIndAllPendingDTO() {
     }
@@ -24,6 +26,7 @@ public class ChallengeFIndAllPendingDTO {
         challengedName = projection.getChallengedName();
         challengerName = projection.getChallengerName();
         createdAt = LocalDateTime.now();
+        gameDto = projection.getGameName();
     }
 
     public Long getId() {
@@ -64,5 +67,13 @@ public class ChallengeFIndAllPendingDTO {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getGameDto() {
+        return gameDto;
+    }
+
+    public void setGameDto(String gameDto) {
+        this.gameDto = gameDto;
     }
 }
