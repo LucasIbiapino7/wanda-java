@@ -141,7 +141,9 @@ CREATE TABLE tb_log_answers_agents (
     valid BOOLEAN,
     feedback_user VARCHAR(255),
     function_name VARCHAR(255),
-    CONSTRAINT fk_log_agents_user FOREIGN KEY (user_id) REFERENCES tb_user(id)
+    game_id BIGINT,
+    CONSTRAINT fk_log_agents_user FOREIGN KEY (user_id) REFERENCES tb_user(id),
+    CONSTRAINT fk_log_agents_game FOREIGN KEY (game_id) REFERENCES tb_game(id)
 );
 
 -- ========== Índices auxiliares ==========
@@ -162,6 +164,7 @@ CREATE INDEX idx_tournament_creator ON tb_tournament(creator_id);
 CREATE INDEX idx_tournament_winner  ON tb_tournament(winner_id);
 
 CREATE INDEX idx_log_agents_user ON tb_log_answers_agents(user_id);
+CREATE INDEX idx_log_agents_game ON tb_log_answers_agents(game_id);
 
 -- =========================================================
 -- SEED INICIAL
