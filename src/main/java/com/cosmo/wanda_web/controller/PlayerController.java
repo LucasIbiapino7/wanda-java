@@ -1,10 +1,8 @@
 package com.cosmo.wanda_web.controller;
 
-import com.cosmo.wanda_web.dto.players.ChangeCharacterDTO;
-import com.cosmo.wanda_web.dto.players.PlayerInformationDTO;
-import com.cosmo.wanda_web.dto.players.PlayerMinDTO;
-import com.cosmo.wanda_web.dto.players.ProfileDTO;
+import com.cosmo.wanda_web.dto.players.*;
 import com.cosmo.wanda_web.services.PlayerService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -34,6 +32,14 @@ public class PlayerController {
         playerService.changeCharacter(dto);
         return ResponseEntity.noContent().build();
     }
+
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
+    @PutMapping("/profile/nickname")
+    public ResponseEntity<Void> changeNickname(@Valid @RequestBody ChangeNicknameDto dto){
+        playerService.changeNickname(dto);
+        return ResponseEntity.noContent().build();
+    }
+
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
     @GetMapping("/findByName")

@@ -1,5 +1,6 @@
 package com.cosmo.wanda_web.services;
 
+import com.cosmo.wanda_web.dto.function.FunctionResponseDto;
 import com.cosmo.wanda_web.dto.players.*;
 import com.cosmo.wanda_web.entities.*;
 import com.cosmo.wanda_web.repositories.BadgeRepository;
@@ -43,16 +44,8 @@ public class PlayerService {
         Player player = playerRepository.findById(user.getId()).orElseThrow(
                 () -> new ResourceNotFoundException("Resource not found"));
 
-        String function1 = "";
-        Optional<Function> function = functionRepository.findJokenpo1ByPlayerId(user.getId());
-        if (function.isPresent()){
-            function1 = function.get().getFunction();
-        }
-        String function2 = "";
-        function = functionRepository.findJokenpo2ByPlayerId(user.getId());
-        if (function.isPresent()){
-            function2 = function.get().getFunction();
-        }
+        List<FunctionResponseDto> functions =
+                functionRepository.findAllFunctionsByUser(user.getId());
 
         ProfileDTO profileDTO = new ProfileDTO();
         profileDTO.setName(user.getName());
@@ -62,8 +55,7 @@ public class PlayerService {
         profileDTO.setNumberOfWinners(player.getNumberOfWinners());
         profileDTO.setWinsTournaments(player.getWinsTournaments());
         profileDTO.setCharacterUrl(player.getCharacterUrl());
-        profileDTO.setFunction1(function1);
-        profileDTO.setFunction2(function2);
+        profileDTO.setFunctions(functions);
         profileDTO.addBadges(user.getBadges());
 
         return profileDTO;
@@ -148,6 +140,13 @@ public class PlayerService {
     public String findCharacterByUser(Long id) {
         Player player = playerRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Not found"));
         return player.getCharacterUrl();
+    }
+
+    public void changeNickname(ChangeNicknameDto dto) {
+        User user = userService.authenticated();
+        Player player = user.getPlayer();
+        player.setNickname(dto.getNickname());
+        playerRepository.save(player);
     }
 
     /*
