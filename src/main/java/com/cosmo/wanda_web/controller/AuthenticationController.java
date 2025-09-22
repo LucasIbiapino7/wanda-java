@@ -5,6 +5,7 @@ import com.cosmo.wanda_web.dto.auth.AuthenticationDTO;
 import com.cosmo.wanda_web.dto.auth.RegisterDTO;
 import com.cosmo.wanda_web.dto.users.UserDTO;
 import com.cosmo.wanda_web.services.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,7 +25,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Void> register(@RequestBody RegisterDTO dto){
+    public ResponseEntity<Void> register(@Valid @RequestBody RegisterDTO dto){
         userService.register(dto);
         return ResponseEntity.ok().build();
     }
@@ -34,5 +35,11 @@ public class AuthenticationController {
     public ResponseEntity<UserDTO> getMe(){
         UserDTO result = userService.getMe();
         return ResponseEntity.ok(result);
+    }
+
+    @PreAuthorize("@authz.isInstructorOrAdmin(authentication)")
+    @GetMapping(value = "/test")
+    public String test(){
+        return "deu certo!";
     }
 }
