@@ -1,5 +1,6 @@
 package com.cosmo.wanda_web.repositories;
 
+import com.cosmo.wanda_web.dto.function.FunctionResponseDto;
 import com.cosmo.wanda_web.entities.Function;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -23,5 +24,16 @@ public interface FunctionRepository extends JpaRepository<Function, Long> {
 
     @Query("SELECT obj FROM Function obj WHERE obj.player.id = :userId AND obj.name = :name")
     Optional<Function> findByUserIdAndName(@Param("userId") Long userId, @Param("name") String name);
+
+    @Query("""
+           SELECT new com.cosmo.wanda_web.dto.function.FunctionResponseDto(
+               obj.function,
+               obj.name,
+               new com.cosmo.wanda_web.dto.game.GameDto(obj.game)
+           )
+           from Function obj
+           where obj.player.id = :userId and obj.name = :name
+           """)
+    Optional<FunctionResponseDto> findByUserIdAndGameName(@Param("userId") Long userId, @Param("name") String name);
 
 }

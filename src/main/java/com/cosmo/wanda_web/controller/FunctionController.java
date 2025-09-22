@@ -2,6 +2,7 @@ package com.cosmo.wanda_web.controller;
 
 import com.cosmo.wanda_web.dto.function.FeedbackResponseDTO;
 import com.cosmo.wanda_web.dto.function.FunctionRequestDTO;
+import com.cosmo.wanda_web.dto.function.FunctionResponseDto;
 import com.cosmo.wanda_web.services.FunctionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -9,7 +10,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping(value = "/jokenpo")
+@RequestMapping(value = "/api/function")
 public class FunctionController {
 
     @Autowired
@@ -33,6 +34,13 @@ public class FunctionController {
     @PostMapping("/run")
     public ResponseEntity<FeedbackResponseDTO> runTests(@RequestBody FunctionRequestDTO dto){
         FeedbackResponseDTO result = functionService.runTests(dto);
+        return ResponseEntity.ok(result);
+    }
+
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
+    @GetMapping()
+    public ResponseEntity<FunctionResponseDto> getFunctionByGameName(@RequestParam(name = "gameName", defaultValue = "") String gameName){
+        FunctionResponseDto result = functionService.getFunctionByGameName(gameName);
         return ResponseEntity.ok(result);
     }
 

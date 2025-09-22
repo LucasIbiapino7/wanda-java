@@ -2,11 +2,14 @@ package com.cosmo.wanda_web.services;
 
 import com.cosmo.wanda_web.dto.function.FeedbackResponseDTO;
 import com.cosmo.wanda_web.dto.function.FunctionRequestDTO;
+import com.cosmo.wanda_web.dto.function.FunctionResponseDto;
 import com.cosmo.wanda_web.dto.python.ValidateResponseDTO;
 import com.cosmo.wanda_web.entities.Function;
+import com.cosmo.wanda_web.entities.Game;
 import com.cosmo.wanda_web.entities.LogAnswersAgents;
 import com.cosmo.wanda_web.entities.User;
 import com.cosmo.wanda_web.repositories.FunctionRepository;
+import com.cosmo.wanda_web.repositories.GameRepository;
 import com.cosmo.wanda_web.repositories.LogAnswersAgentsRepository;
 import com.cosmo.wanda_web.repositories.UserRepository;
 import com.cosmo.wanda_web.services.client.PythonClient;
@@ -40,53 +43,74 @@ public class FunctionService {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private GameRepository gameRepository;
+
     @Transactional
     public FeedbackResponseDTO feedback(FunctionRequestDTO dto) {
         User user = userService.authenticated();
+        Game game = gameRepository.findByName(dto.getGameName()).orElseThrow(
+                () -> new ResourceNotFoundException("Jogo ao encontrado!")
+        );
         ValidateResponseDTO response = pythonClient.feedback(dto);
-        Long feedbackId = saveLogAnswer(dto, response, user);
+        Long feedbackId = saveLogAnswer(dto, response, user, game);
         return new FeedbackResponseDTO(response, feedbackId);
     }
 
     @Transactional
     public FeedbackResponseDTO runTests(FunctionRequestDTO dto) {
         User user = userService.authenticated();
+        Game game = gameRepository.findByName(dto.getGameName()).orElseThrow(
+                () -> new ResourceNotFoundException("Jogo ao encontrado!")
+        );
         ValidateResponseDTO response = pythonClient.run(dto);
-        Long feedbackId = saveLogAnswer(dto, response, user);
+        Long feedbackId = saveLogAnswer(dto, response, user, game);
         return new FeedbackResponseDTO(response, feedbackId);
     }
 
+    // Método que de fato salva uma função no BD
     @Transactional
     public FeedbackResponseDTO validate(FunctionRequestDTO dto){
-        // Validar a função com o microservice Python
-        ValidateResponseDTO response = pythonClient.validate(dto);
         // Verifica se usuário existe pelo contexto
         User user = userService.authenticated();
-        Long feedbackId = saveLogAnswer(dto, response, user);
+        Game game = gameRepository.findByName(dto.getGameName()).orElseThrow(
+                () -> new ResourceNotFoundException("Jogo ao encontrado!")
+        );
+        // Validar a função com o microservice Python
+        ValidateResponseDTO response = pythonClient.validate(dto);
+        Long feedbackId = saveLogAnswer(dto, response, user, game);
         // Verifica se a função é válida
         if (!response.getValid()){
             return new FeedbackResponseDTO(response, feedbackId); // Early return caso a funcao seja invalida
         }
         // Adiciona no Banco de dados a função aprovada
-        saveOrUpdateFunction(dto, user);
+        saveOrUpdateFunction(dto, user, game);
         return new FeedbackResponseDTO(response, feedbackId);
     }
 
     @Transactional
-    private void saveOrUpdateFunction(FunctionRequestDTO dto, User user) {
+    private void saveOrUpdateFunction(FunctionRequestDTO dto, User user, Game game) {
         Optional<Function> result = functionRepository.findByUserIdAndName(user.getId(), dto.getFunctionName());
         Function function;
         if (result.isPresent()){
             function = result.get();
             function.setFunction(dto.getCode());
         }else {
-            function = new Function(dto.getFunctionName(), dto.getCode(), user);
+            function = new Function(dto.getFunctionName(), dto.getCode(), user, game);
         }
         functionRepository.save(function);
     }
 
     private ValidateResponseDTO validateMock(FunctionRequestDTO dto) {
         return new ValidateResponseDTO(true, "ok");
+    }
+
+    @Transactional(readOnly = true)
+    public FunctionResponseDto getFunctionByGameName(String gameName) {
+        User user = userService.authenticated();
+        FunctionResponseDto response = functionRepository.findByUserIdAndGameName(user.getId(), gameName).orElseThrow(
+                () -> new ResourceNotFoundException("Function Not Found"));
+        return response;
     }
 
     @Transactional(readOnly = true)
@@ -151,7 +175,7 @@ public class FunctionService {
     }
 
     @Transactional
-    private Long saveLogAnswer(FunctionRequestDTO dto, ValidateResponseDTO response, User user) {
+    private Long saveLogAnswer(FunctionRequestDTO dto, ValidateResponseDTO response, User user, Game game) {
         LogAnswersAgents log = new LogAnswersAgents();
         log.setCode(dto.getCode());
         log.setAnswer(response.getAnswer());
@@ -162,10 +186,8 @@ public class FunctionService {
         log.setMoment(LocalDateTime.now());
         log.setUser(user);
         log.setFunctionName(dto.getFunctionName());
+        log.setGame(game);
         LogAnswersAgents save = logAnswersAgentsRepository.save(log);
         return save.getId();
     }
-
-
-
 }
