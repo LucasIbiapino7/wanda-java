@@ -7,6 +7,7 @@ import feign.FeignException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -78,6 +79,11 @@ public class ControllerExceptionsHandler {
         return ResponseEntity.status(status).body(err);
     }
 
-
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<CustomError> badCredentials(BadCredentialsException e, HttpServletRequest request) {
+        var status = HttpStatus.UNAUTHORIZED;
+        var body = new CustomError(Instant.now(), status.value(), "Credenciais inválidas", request.getRequestURI());
+        return ResponseEntity.status(status).body(body);
+    }
 
 }
