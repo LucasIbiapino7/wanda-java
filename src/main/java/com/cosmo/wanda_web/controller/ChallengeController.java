@@ -12,7 +12,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping(value = "/jokenpo/challenge")
+@RequestMapping(value = "/challenge")
 public class ChallengeController {
 
     @Autowired

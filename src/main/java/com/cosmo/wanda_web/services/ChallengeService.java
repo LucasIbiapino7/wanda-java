@@ -54,8 +54,9 @@ public class ChallengeService {
                 () -> new ResourceNotFoundException("Usuário desafiado não foi encontrado"));
 
         // Verificar se há um desafio pendente entre esses dois alunos
-        if (challengeRepository.checkIfChallengePendingExists(userChallenger.getId(), userChallenged.getId()).isPresent()){
-            throw new ChallengeException("Já existe um desafio pendente!"); // Mudar essa exceção
+        if (challengeRepository.checkIfChallengePendingExists(
+                userChallenger.getId(), userChallenged.getId(), game.getId()).isPresent()) {
+            throw new ChallengeException("Já existe um desafio pendente para este jogo!");
         }
 
         Challenge challenge = new Challenge();

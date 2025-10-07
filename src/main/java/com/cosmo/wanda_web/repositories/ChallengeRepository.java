@@ -13,10 +13,16 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.Optional;
 
 public interface ChallengeRepository extends JpaRepository<Challenge, Long> {
-    @Query("SELECT obj " +
-            "FROM Challenge obj " +
-            "WHERE obj.challenger.id = :userChallengerId AND obj.challenged.id = :userChallengedId AND obj.status = 'PENDING'")
-    Optional<Challenge> checkIfChallengePendingExists(Long userChallengerId, Long userChallengedId);
+    @Query("""
+       SELECT c
+       FROM Challenge c
+       WHERE c.challenger.id = :challengerId
+         AND c.challenged.id = :challengedId
+         AND c.game.id = :gameId
+         AND c.status = 'PENDING'
+       """)
+    Optional<Challenge> checkIfChallengePendingExists(Long challengerId, Long challengedId, Long gameId);
+
 
     @Query(nativeQuery = true, value = """
             SELECT TB_CHALLENGE.id, TB_CHALLENGE.challenger_id AS challengerId, TB_CHALLENGE.created_at AS createdAt, challenged.name AS challengedName, challenger.name AS challengerName, game.name AS gameName
