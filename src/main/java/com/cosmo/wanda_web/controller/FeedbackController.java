@@ -11,14 +11,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping(value = "/jokenpo")
+@RequestMapping(value = "/feedback")
 public class FeedbackController {
 
     @Autowired
     private FeedbackUserService feedbackUserService;
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
-    @PutMapping("/feedback-user")
+    @PutMapping("/user")
     public ResponseEntity<Void> feedbackByUser(@RequestBody FeedbackUserDTO dto){
         feedbackUserService.feedbackByUser(dto);
         return ResponseEntity.noContent().build();
