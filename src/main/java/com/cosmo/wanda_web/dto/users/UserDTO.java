@@ -6,6 +6,7 @@ import com.cosmo.wanda_web.projections.PlayerInfo;
 public class UserDTO {
     private Long id;
     private String name;
+    private String nickname;
     private String character_url;
 
     public UserDTO() {
@@ -21,6 +22,7 @@ public class UserDTO {
         id = user.getId();
         name = user.getName();
         character_url = user.getPlayer().getCharacterUrl();
+        nickname = user.getPlayer().getNickname();
     }
 
     public Long getId() {
@@ -45,5 +47,13 @@ public class UserDTO {
 
     public void setCharacter_url(String character_url) {
         this.character_url = character_url;
+    }
+
+    public String getNickname() {
+        return nickname;
+    }
+
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
     }
 }

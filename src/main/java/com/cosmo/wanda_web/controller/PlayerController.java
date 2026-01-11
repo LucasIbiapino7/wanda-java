@@ -13,28 +13,28 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping(value = "/jokenpo")
+@RequestMapping(value = "/profile")
 public class PlayerController {
 
     @Autowired
     private PlayerService playerService;
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
-    @GetMapping("/profile")
+    @GetMapping()
     public ResponseEntity<ProfileDTO> findProfileByUser(){
         ProfileDTO result = playerService.findProfileByUser();
         return ResponseEntity.ok(result);
     }
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
-    @PutMapping("/profile/character")
+    @PutMapping("/character")
     public ResponseEntity<Void> changeCharacter(@RequestBody ChangeCharacterDTO dto){
         playerService.changeCharacter(dto);
         return ResponseEntity.noContent().build();
     }
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
-    @PutMapping("/profile/nickname")
+    @PutMapping("/nickname")
     public ResponseEntity<Void> changeNickname(@Valid @RequestBody ChangeNicknameDto dto){
         playerService.changeNickname(dto);
         return ResponseEntity.noContent().build();
@@ -42,7 +42,7 @@ public class PlayerController {
 
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
-    @GetMapping("/findByName")
+    @GetMapping("/findByNameIgnoreCase")
     public ResponseEntity<Page<PlayerInformationDTO>> findByName(@RequestParam(name = "name", defaultValue = "") String name, Pageable pageable){
         Page<PlayerInformationDTO> result = playerService.findByName(name, pageable);
         return ResponseEntity.ok(result);
@@ -54,6 +54,4 @@ public class PlayerController {
         Page<PlayerMinDTO> ranking = playerService.ranking(pageable);
         return ResponseEntity.ok(ranking);
     }
-
-
 }

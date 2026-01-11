@@ -1,5 +1,6 @@
 package com.cosmo.wanda_web.dto.tournament;
 
+import com.cosmo.wanda_web.dto.game.GameDto;
 import com.cosmo.wanda_web.dto.users.UserDTO;
 import com.cosmo.wanda_web.entities.Tournament;
 import com.cosmo.wanda_web.entities.TournamentStatus;
@@ -19,9 +20,10 @@ public class TournamentMinDTO {
     private String password;
     private int maxParticipants;
     private int currentParticipants;
-    private Long creatorId;
-    private Long winnerId;
+    private UserDTO creator;
+    private UserDTO winnerId;
     private Boolean canReady;
+    private GameDto game;
 
     public TournamentMinDTO() {
     }
@@ -39,9 +41,10 @@ public class TournamentMinDTO {
         createdAt = entity.getCreatedAt();
         maxParticipants = entity.getMaxParticipants();
         currentParticipants = entity.getCurrentParticipants();
-        creatorId = entity.getCreator().getId();
-        winnerId = (entity.getCreator() != null) ? entity.getWinner().getId() : null;
+        creator = new UserDTO(entity.getCreator());
+        winnerId = (entity.getWinner() != null) ? new UserDTO(entity.getWinner()) : null;
         canReady = false;
+        game = new GameDto(entity.getGame());
     }
 
     public Long getId() {
@@ -84,11 +87,15 @@ public class TournamentMinDTO {
         return currentParticipants;
     }
 
-    public Long getCreatorId() {
-        return creatorId;
+    public UserDTO getCreator() {
+        return creator;
     }
 
-    public Long getWinnerId() {
+    public GameDto getGame() {
+        return game;
+    }
+
+    public UserDTO getWinnerId() {
         return winnerId;
     }
 

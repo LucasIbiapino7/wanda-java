@@ -48,6 +48,15 @@ public class Match {
         this.matchData = matchData;
     }
 
+    public Match(User player1, User player2, LocalDateTime moment, User winner, String matchData, Game game) {
+        this.player1 = player1;
+        this.player2 = player2;
+        this.moment = moment;
+        this.winner = winner;
+        this.matchData = matchData;
+        this.game = game;
+    }
+
     public Long getId() {
         return id;
     }

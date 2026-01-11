@@ -35,6 +35,7 @@ public class TokenService {
                     .withExpiresAt(generateExpirationDate()) // Tempo de experição do token
                     .withClaim("userId", user.getId())
                     .withClaim("username", user.getUsername())
+                    .withClaim("profile", user.getProfileType().toString())
                     .withArrayClaim("roles", authorities) // Roles
                     .sign(algorithm); // assinatura (algoritmo de criptografia)
             return token;

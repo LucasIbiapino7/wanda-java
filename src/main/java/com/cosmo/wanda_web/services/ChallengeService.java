@@ -3,8 +3,8 @@ package com.cosmo.wanda_web.services;
 import com.cosmo.wanda_web.dto.challengers.ChallengeDTO;
 import com.cosmo.wanda_web.dto.challengers.ChallengeFIndAllPendingDTO;
 import com.cosmo.wanda_web.dto.challengers.ChallengeIsAcceptedDTO;
-import com.cosmo.wanda_web.dto.match.PlayedMatchDTO;
 import com.cosmo.wanda_web.entities.*;
+import com.cosmo.wanda_web.infra.MatchOrchestrator;
 import com.cosmo.wanda_web.projections.FindAllPendingChallengerProjection;
 import com.cosmo.wanda_web.repositories.ChallengeRepository;
 import com.cosmo.wanda_web.repositories.GameRepository;
@@ -18,7 +18,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Service
@@ -42,11 +41,14 @@ public class ChallengeService {
     @Autowired
     private GameRepository gameRepository;
 
+    @Autowired
+    private MatchOrchestrator matchOrchestrator;
+
     @Transactional
     public void challenge(ChallengeDTO dto) {
         User userChallenger = userService.authenticated(); // Usuário Logado
 
-        Game game = gameRepository.findByName(dto.getGameName()).orElseThrow(
+        Game game = gameRepository.findByNameIgnoreCase(dto.getGameName()).orElseThrow(
                 () -> new ResourceNotFoundException("O jogo nao foi encontrado!")
         );
 
@@ -81,12 +83,16 @@ public class ChallengeService {
     public Long isAccepted(ChallengeIsAcceptedDTO dto) {
         Challenge challenge = challengeRepository.findById(dto.getChallengeId()).orElseThrow(
                 () -> new ResourceNotFoundException("esse Challenge não existe"));
+
+        Long currentUserId = userService.authenticated().getId();
+        if (!challenge.getChallenged().getId().equals(currentUserId)) {
+            throw new ChallengeException("Você não pode aceitar este desafio.");
+        }
         if (!dto.getAccepted()){
             challengeUpdate(dto.getChallengeId(), ChallengeStatus.DECLINED, null);
             return null;
         }
-        Long result = matchService.RunMatch(
-                new PlayedMatchDTO(challenge.getChallenger().getId(), challenge.getChallenged().getId()));
+        Long result = matchOrchestrator.run(challenge.getChallenger().getId(), challenge.getChallenged().getId(), challenge.getGame());
         Match match = matchRepository.getReferenceById(result);
         challengeUpdate(dto.getChallengeId(), ChallengeStatus.ACCEPTED, match);
         return result;

@@ -31,7 +31,7 @@ public class TournamentController {
         return ResponseEntity.ok(result);
     }
 
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN')")
+    @PreAuthorize("@authz.isInstructorOrAdmin(authentication)")
     @PostMapping
     public ResponseEntity<TournamentCreateDTO> create(@Valid @RequestBody TournamentCreateDTO dto){
         TournamentCreateDTO result = tournamentService.create(dto);

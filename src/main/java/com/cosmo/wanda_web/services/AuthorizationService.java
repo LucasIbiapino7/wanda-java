@@ -27,6 +27,7 @@ public class AuthorizationService implements UserDetailsService {
         User user = new User();
         user.setEmail(username);
         user.setPassword(result.get(0).getPassword());
+        user.setProfileType(result.get(0).getProfile());
         for (UserDetailsProjection projection : result) {
             user.addRole(new Role(projection.getRoleId(), projection.getAuthority()));
         }

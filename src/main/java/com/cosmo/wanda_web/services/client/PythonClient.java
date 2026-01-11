@@ -1,5 +1,6 @@
 package com.cosmo.wanda_web.services.client;
 
+import com.cosmo.wanda_web.dto.bits.RoundBitsRequestDTO;
 import com.cosmo.wanda_web.dto.function.FunctionRequestDTO;
 import com.cosmo.wanda_web.dto.python.RoundRequestDTO;
 import com.cosmo.wanda_web.dto.python.TurnResponseDTO;
@@ -25,4 +26,7 @@ public interface PythonClient {
 
     @PostMapping("/round")
     TurnResponseDTO round(@RequestBody RoundRequestDTO dto);
+
+    @PostMapping("/round/bits")
+    TurnResponseDTO roundBits(@RequestBody RoundBitsRequestDTO dto);
 }

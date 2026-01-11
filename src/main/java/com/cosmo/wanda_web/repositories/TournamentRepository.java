@@ -5,6 +5,7 @@ import com.cosmo.wanda_web.entities.TournamentStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -67,4 +68,13 @@ public interface TournamentRepository extends JpaRepository<Tournament, Long> {
     boolean isUserInTournament(@Param("tournamentId") Long tournamentId, @Param("userId") Long userId);
 
     List<Tournament> findByStatusAndStartTimeLessThanEqual(TournamentStatus status, LocalDateTime time);
+
+    @Modifying
+    @Query("""
+        UPDATE Tournament t
+           SET t.status = com.cosmo.wanda_web.entities.TournamentStatus.RUNNING
+         WHERE t.id = :id
+           AND t.status = com.cosmo.wanda_web.entities.TournamentStatus.OPEN
+      """)
+    int tryStart(@Param("id") Long id);
 }

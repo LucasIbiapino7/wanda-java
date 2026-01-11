@@ -1,5 +1,6 @@
 package com.cosmo.wanda_web.dto.match;
 
+import com.cosmo.wanda_web.dto.game.GameDto;
 import com.cosmo.wanda_web.dto.users.UserDTO;
 import com.cosmo.wanda_web.entities.Match;
 import com.cosmo.wanda_web.projections.MatchSummary;
@@ -9,6 +10,7 @@ public class MatchMinDTO {
     private UserDTO player1;
     private UserDTO player2;
     private UserDTO winner;
+    private GameDto game;
 
     public MatchMinDTO() {
     }
@@ -16,8 +18,9 @@ public class MatchMinDTO {
     public MatchMinDTO(Match entity) {
         id = entity.getId();
         player1 = new UserDTO(entity.getPlayer1());
-        player2 = new UserDTO(entity.getPlayer2());;
-        winner = new UserDTO(entity.getWinner());;
+        player2 = new UserDTO(entity.getPlayer2());
+        winner = new UserDTO(entity.getWinner());
+        game = new GameDto(entity.getGame());
     }
 
     public Long getId() {
@@ -50,5 +53,13 @@ public class MatchMinDTO {
 
     public void setWinner(UserDTO winner) {
         this.winner = winner;
+    }
+
+    public GameDto getGame() {
+        return game;
+    }
+
+    public void setGame(GameDto game) {
+        this.game = game;
     }
 }

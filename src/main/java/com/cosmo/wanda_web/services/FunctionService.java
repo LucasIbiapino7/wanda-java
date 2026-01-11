@@ -49,7 +49,7 @@ public class FunctionService {
     @Transactional
     public FeedbackResponseDTO feedback(FunctionRequestDTO dto) {
         User user = userService.authenticated();
-        Game game = gameRepository.findByName(dto.getGameName()).orElseThrow(
+        Game game = gameRepository.findByNameIgnoreCase(dto.getGameName()).orElseThrow(
                 () -> new ResourceNotFoundException("Jogo ao encontrado!")
         );
         ValidateResponseDTO response = pythonClient.feedback(dto);
@@ -60,8 +60,8 @@ public class FunctionService {
     @Transactional
     public FeedbackResponseDTO runTests(FunctionRequestDTO dto) {
         User user = userService.authenticated();
-        Game game = gameRepository.findByName(dto.getGameName()).orElseThrow(
-                () -> new ResourceNotFoundException("Jogo ao encontrado!")
+        Game game = gameRepository.findByNameIgnoreCase(dto.getGameName()).orElseThrow(
+                () -> new ResourceNotFoundException("Jogo nao encontrado!")
         );
         ValidateResponseDTO response = pythonClient.run(dto);
         Long feedbackId = saveLogAnswer(dto, response, user, game);
@@ -73,7 +73,7 @@ public class FunctionService {
     public FeedbackResponseDTO validate(FunctionRequestDTO dto){
         // Verifica se usuário existe pelo contexto
         User user = userService.authenticated();
-        Game game = gameRepository.findByName(dto.getGameName()).orElseThrow(
+        Game game = gameRepository.findByNameIgnoreCase(dto.getGameName()).orElseThrow(
                 () -> new ResourceNotFoundException("Jogo ao encontrado!")
         );
         // Validar a função com o microservice Python
@@ -162,14 +162,21 @@ public class FunctionService {
         }
     }
 
-    public boolean verifyJokenpoFunctionsByUser(User user){
-        Optional<Function> jokenpo1ByPlayerId = functionRepository.findJokenpo1ByPlayerId(user.getId());
-        if (jokenpo1ByPlayerId.isEmpty()){
-            return false;
-        }
-        Optional<Function> jokenpo2ByPlayerId = functionRepository.findJokenpo2ByPlayerId(user.getId());
-        if (jokenpo2ByPlayerId.isEmpty()){
-            return false;
+    public boolean verifyFunctionsByGame(User user, String gameName){
+        if (gameName.equalsIgnoreCase("jokenpo")){
+            Optional<Function> jokenpo1ByPlayerId = functionRepository.findJokenpo1ByPlayerId(user.getId());
+            if (jokenpo1ByPlayerId.isEmpty()){
+                return false;
+            }
+            Optional<Function> jokenpo2ByPlayerId = functionRepository.findJokenpo2ByPlayerId(user.getId());
+            if (jokenpo2ByPlayerId.isEmpty()){
+                return false;
+            }
+        }else if (gameName.equalsIgnoreCase("bits")){
+            Optional<Function> bitsByPlayerId = functionRepository.findBitsByPlayerId(user.getId());
+            if (bitsByPlayerId.isEmpty()){
+                return false;
+            }
         }
         return true;
     }

@@ -19,6 +19,10 @@ public class User implements UserDetails {
     private String email;
     private String password;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "profile_type", nullable = false)
+    private ProfileType profileType;
+
     @OneToMany(mappedBy = "player")
     private List<Function> functions = new ArrayList<>();
 
@@ -101,6 +105,14 @@ public class User implements UserDetails {
     @Override
     public String getUsername() {
         return email;
+    }
+
+    public ProfileType getProfileType() {
+        return profileType;
+    }
+
+    public void setProfileType(ProfileType profileType) {
+        this.profileType = profileType;
     }
 
     @Override

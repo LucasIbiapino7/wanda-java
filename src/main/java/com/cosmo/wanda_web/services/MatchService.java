@@ -1,22 +1,23 @@
 package com.cosmo.wanda_web.services;
 
+import com.cosmo.wanda_web.dto.bits.*;
+import com.cosmo.wanda_web.dto.function.FunctionResponseDto;
+import com.cosmo.wanda_web.dto.game.GameDto;
 import com.cosmo.wanda_web.dto.match.*;
 import com.cosmo.wanda_web.dto.python.RoundRequestDTO;
 import com.cosmo.wanda_web.dto.python.TurnResponseDTO;
 import com.cosmo.wanda_web.dto.users.UserDTO;
 import com.cosmo.wanda_web.entities.Function;
+import com.cosmo.wanda_web.entities.Game;
 import com.cosmo.wanda_web.entities.Match;
 import com.cosmo.wanda_web.entities.User;
-import com.cosmo.wanda_web.projections.MatchSummary;
 import com.cosmo.wanda_web.repositories.FunctionRepository;
+import com.cosmo.wanda_web.repositories.GameRepository;
 import com.cosmo.wanda_web.repositories.MatchRepository;
 import com.cosmo.wanda_web.repositories.UserRepository;
 import com.cosmo.wanda_web.services.client.PythonClient;
-import com.cosmo.wanda_web.services.utils.CurrentScore;
-import com.cosmo.wanda_web.services.utils.JsonConverter;
-import com.cosmo.wanda_web.services.utils.RoundInformation;
+import com.cosmo.wanda_web.services.utils.*;
 import com.cosmo.wanda_web.services.exceptions.ResourceNotFoundException;
-import com.cosmo.wanda_web.services.utils.Matches;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -40,6 +41,9 @@ public class MatchService {
     private MatchRepository matchRepository;
 
     @Autowired
+    private GameRepository gameRepository;
+
+    @Autowired
     private UserService userService;
 
     @Autowired
@@ -51,6 +55,7 @@ public class MatchService {
     @Autowired
     private JsonConverter jsonConverter;
 
+    // ENGINE DO JOKENPO
     @Transactional
     public Long RunMatch(PlayedMatchDTO dto){
 
@@ -253,7 +258,11 @@ public class MatchService {
 
         String matchData = jsonConverter.converter(duelResponseDTO);
 
-        Match match = new Match(player1, player2, LocalDateTime.now(), winner, matchData);
+        Game game = gameRepository.findByNameIgnoreCase("jokenpo").orElseThrow(
+                () -> new ResourceNotFoundException("Jogo não encontrado!")
+        );
+
+        Match match = new Match(player1, player2, LocalDateTime.now(), winner, matchData, game);
 
         matchRepository.save(match);
 
@@ -262,16 +271,157 @@ public class MatchService {
         return match.getId();
     }
 
+    @Transactional
+    public Long RunMatchBits(PlayedMatchDTO dto){
+        DuelDTO duelDto = new DuelDTO();
+
+        // Verifica se o Id do primeiro aluno é válido
+        User player1 = userRepository.findById(dto.getPlayerId1()).orElseThrow(
+                () -> new ResourceNotFoundException("Aluno não encontrado: " + dto.getPlayerId1()));
+        duelDto.setPlayer1(new UserDTO(player1));
+
+        // Verifica se o Id do segundo aluno é válido
+        User player2 = userRepository.findById(dto.getPlayerId2()).orElseThrow(
+                () -> new ResourceNotFoundException("Aluno não encontrado" + dto.getPlayerId2()));
+        duelDto.setPlayer2(new UserDTO(player2));
+
+        // Pegar as funcoes de cada aluno
+        FunctionResponseDto player1function = functionRepository.findByUserIdAndGameName(dto.getPlayerId1(), "bits").orElseThrow(
+                () -> new ResourceNotFoundException("o usuário " + player1.getName() + "nao tem a funcao cadastrada"));
+
+        FunctionResponseDto player2function = functionRepository.findByUserIdAndGameName(dto.getPlayerId2(), "bits").orElseThrow(
+                () -> new ResourceNotFoundException("o usuário " + player2.getName() + "nao tem a funcao cadastrada"));
+
+        MatchesBits match = new MatchesBits(dto.getPlayerId1(), dto.getPlayerId2(), 11);
+        RoundInformation roundInformation = new RoundInformation();
+        CurrentScore currentScore = new CurrentScore();
+
+        // Vai armazenar a jogada de cada player por partida - lembrar de adicionar algo parecido no JSON do replay
+        List<String> cardsPlayedPlayer1 = new ArrayList<>();
+        List<String> cardsPlayedPlayer2 = new ArrayList<>();
+
+        int countMatch = 1;
+        while (match.endMatch(countMatch)){
+            match.instanceInitialCards();
+            MatchBitsDTO matchBitsDTO = new MatchBitsDTO();
+            matchBitsDTO.setNumberMatch(countMatch);
+            for (int i = 0; i <= 3; i++){
+                // armazena infos da play
+                PlaysBitsDTO playsDto = new PlaysBitsDTO(i + 1);
+                // Preparar o DTO pra enviar na requisição - Parâmetros são enviados em uma List<Object>
+                RoundBitsRequestDTO request = new RoundBitsRequestDTO(player1function.getCode(),
+                        match.getParamsPlayer1(),
+                        player2function.getCode(),
+                        match.getParamsPlayer2());
+                // Fazer a requisição - mock da request por enquanto
+                TurnResponseDTO round = pythonClient.roundBits(request);
+                // Validando a resposta
+                String cardPlayer1 = match.validateChoice(match.getCardsPlayer1(), round.getPlayer1Choice());
+                String cardPlayer2 = match.validateChoice(match.getCardsPlayer2(), round.getPlayer2Choice());
+
+                // Lidando com o ReturnBitsDTO - vai ser armazenado no replay
+                playsDto.resolveReturnedPlayer1(MatchesBits.ORDEM_MAO, round.getPlayer1Choice(), cardPlayer1);
+                playsDto.resolveReturnedPlayer2(MatchesBits.ORDEM_MAO, round.getPlayer2Choice(), cardPlayer2);
+
+                // Verificar o vencedor do round de acordo com as regras do jogo.
+                // 0 - empate, 1 - player1 venceu, 2 - player2 venceu
+                Integer roundWinner = match.conflict(cardPlayer1, cardPlayer2);
+                // atualizar cartas e parametros
+                match.updatePlayerCards(cardPlayer1, cardPlayer2);
+                // atualizar as infos do round
+                roundInformation.update(roundWinner);
+                // atualizar a lista de cartas jogadas
+                cardsPlayedPlayer1.add(cardPlayer1);
+                cardsPlayedPlayer2.add(cardPlayer2);
+
+                // atualiza o resolved da Play
+                playsDto.updateResolved(cardPlayer1, cardPlayer2, roundWinner);
+
+                // adiciona a play no array da partida
+                matchBitsDTO.getPlays().add(playsDto);
+            }
+            // Adiciona a lista de jogadas ao DTO de replay e limpa a lista para o próximo round
+            matchBitsDTO.setPlayer1Plays(new ArrayList<>(cardsPlayedPlayer1));
+            cardsPlayedPlayer1.clear();
+            matchBitsDTO.setPlayer2Plays(new ArrayList<>(cardsPlayedPlayer2));
+            cardsPlayedPlayer2.clear();
+
+            MatchDecisionBitsDTO decision = match.roundWinner(roundInformation, currentScore, matchBitsDTO.getPlays());
+            matchBitsDTO.setDecision(decision);
+            matchBitsDTO.setSummary(new SummaryBitsDTO(roundInformation));
+            matchBitsDTO.setCumulativeScore(new ScoreBitsDTO(currentScore));
+
+            duelDto.getMatches().add(matchBitsDTO);
+            // Reseta os valores do round
+            roundInformation.restart();
+
+            countMatch++;
+        }
+        // Verifica quem venceu a partida e retorna esse valor
+        User winner = null;
+
+        if (match.getPlayer1RoundsVictories() >= match.getPlayer2RoundsVictories()){
+            winner = player1;
+        } else if (match.getPlayer2RoundsVictories() > match.getPlayer1RoundsVictories()) {
+            winner = player2;
+        }
+
+        String matchData = jsonConverter.converterBits(duelDto);
+
+        duelDto.setDuelWInner((winner == null) ? null : new UserDTO(winner));
+
+        Game game = gameRepository.findByNameIgnoreCase("bits").orElseThrow(
+                () -> new ResourceNotFoundException("Jogo não encontrado!")
+        );
+
+        Match matchResult = new Match(player1, player2, LocalDateTime.now(), winner, matchData, game);
+
+        matchRepository.save(matchResult);
+
+        playerService.updateWinners(player1, player2, matchResult);
+
+        return matchResult.getId();
+    }
+
+    // Possiveis retornos - BITS8, BIT16, BIT32, FIREWALL, STR
+    private TurnResponseDTO mockRequestBits(RoundBitsRequestDTO request) {
+        return new TurnResponseDTO("BIT8", "BIT16");
+    }
+
     @Transactional(readOnly = true)
-    public DuelResponseDTO getReplayById(Long id) {
-        Match match = matchRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Match not found"));
+    public ReplayDto getReplayById(Long id) {
+        Match match = matchRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
         String matchData = match.getMatchData();
-        DuelResponseDTO matchResponseDTO = jsonConverter.converterToDto(matchData);
-        String characterPlayer1 = playerService.findCharacterByUser(matchResponseDTO.getPlayer1().getId());
-        String characterPlayer2 = playerService.findCharacterByUser(matchResponseDTO.getPlayer2().getId());
-        matchResponseDTO.getPlayer1().setCharacter_url(characterPlayer1);
-        matchResponseDTO.getPlayer2().setCharacter_url(characterPlayer2);
-        return matchResponseDTO;
+        if (matchData == null || matchData.isBlank()) {
+            throw new IllegalStateException("MatchData está vazio para o match " + id);
+        }
+        String gameName = match.getGame() != null ? match.getGame().getName() : null;
+        if (gameName == null || gameName.isBlank()) {
+            throw new IllegalStateException("Match sem game associado (match " + id + ")");
+        }
+        GameDto gameDto = new GameDto(match.getGame());
+        var fillCharacter = (java.util.function.Consumer<UserDTO>) (u) -> {
+            if (u == null || u.getId() == null) return;
+            String character = playerService.findCharacterByUser(u.getId());
+            u.setCharacter_url(character);
+        };
+
+        if ("bits".equalsIgnoreCase(gameName)) {
+            DuelDTO bitsDto = jsonConverter.converterToBitsDuelDto(matchData);
+            fillCharacter.accept(bitsDto.getPlayer1());
+            fillCharacter.accept(bitsDto.getPlayer2());
+            if (bitsDto.getDuelWInner() != null) {
+                fillCharacter.accept(bitsDto.getDuelWInner());
+            }
+
+            return new ReplayDto(gameDto, bitsDto);
+        }
+        DuelResponseDTO jokenpoDto = jsonConverter.converterToDuelResponseDto(matchData);
+        fillCharacter.accept(jokenpoDto.getPlayer1());
+        fillCharacter.accept(jokenpoDto.getPlayer2());
+        jokenpoDto.setGameDto(gameDto);
+        return new ReplayDto(gameDto, jokenpoDto);
     }
 
     public Long winnerOfMatch(Long matchId) {

@@ -1,6 +1,8 @@
 package com.cosmo.wanda_web.dto.match;
 
+import com.cosmo.wanda_web.dto.game.GameDto;
 import com.cosmo.wanda_web.dto.users.UserDTO;
+import com.cosmo.wanda_web.entities.Game;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,6 +12,7 @@ public class DuelResponseDTO {
     private UserDTO player2;
     private List<MatchInformationDTO> matches = new ArrayList<>();
     private UserDTO playerWinner;
+    private GameDto gameDto;
 
     public DuelResponseDTO() {
     }
@@ -44,5 +47,13 @@ public class DuelResponseDTO {
 
     public void setPlayerWinner(UserDTO playerWinner) {
         this.playerWinner = playerWinner;
+    }
+
+    public GameDto getGameDto() {
+        return gameDto;
+    }
+
+    public void setGameDto(GameDto gameDto) {
+        this.gameDto = gameDto;
     }
 }

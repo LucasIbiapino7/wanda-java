@@ -24,6 +24,7 @@ public class TournamentCreateDTO {
     private int currentParticipants;
     private Long creatorId;
     private Long winnerId;
+    private String gameName;
 
     public TournamentCreateDTO() {
     }
@@ -40,7 +41,8 @@ public class TournamentCreateDTO {
         maxParticipants = entity.getMaxParticipants();
         currentParticipants = entity.getCurrentParticipants();
         creatorId = entity.getCreator().getId();
-        winnerId = (entity.getCreator().getId() != null) ? entity.getWinner().getId() : null;
+        winnerId = null;
+        gameName = entity.getGame().getName();
     }
 
     public Long getId() {
@@ -121,5 +123,13 @@ public class TournamentCreateDTO {
 
     public void setCurrentParticipants(int currentParticipants) {
         this.currentParticipants = currentParticipants;
+    }
+
+    public String getGameName() {
+        return gameName;
+    }
+
+    public void setGameName(String gameName) {
+        this.gameName = gameName;
     }
 }

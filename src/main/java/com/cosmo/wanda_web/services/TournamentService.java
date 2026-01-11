@@ -1,10 +1,9 @@
 package com.cosmo.wanda_web.services;
 
-import com.cosmo.wanda_web.dto.match.PlayedMatchDTO;
 import com.cosmo.wanda_web.dto.tournament.*;
-import com.cosmo.wanda_web.entities.Tournament;
-import com.cosmo.wanda_web.entities.TournamentStatus;
-import com.cosmo.wanda_web.entities.User;
+import com.cosmo.wanda_web.entities.*;
+import com.cosmo.wanda_web.infra.MatchOrchestrator;
+import com.cosmo.wanda_web.repositories.GameRepository;
 import com.cosmo.wanda_web.repositories.TournamentRepository;
 import com.cosmo.wanda_web.services.exceptions.ResourceNotFoundException;
 import com.cosmo.wanda_web.services.exceptions.TournamentException;
@@ -17,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,6 +40,12 @@ public class TournamentService {
     @Autowired
     private PlayerService playerService;
 
+    @Autowired
+    private GameRepository gameRepository;
+
+    @Autowired
+    private MatchOrchestrator matchOrchestrator;
+
     @Transactional
     public TournamentCreateDTO create(TournamentCreateDTO dto) {
         User user = userService.authenticated(); // Pega o usuário autenticado
@@ -47,6 +53,12 @@ public class TournamentService {
 //        if (count >= 1){
 //            throw new TournamentException("O usuário já tem um torneio criado!");
 //        }
+        Game game = gameRepository.findByNameIgnoreCase(dto.getGameName()).orElseThrow(
+                () -> new ResourceNotFoundException("O jogo nao foi encontrado!")
+        );
+        if (dto.getStartTime().isBefore(LocalDateTime.now().plusMinutes(15))){
+            throw new ResourceNotFoundException("Start Time inválido! Coloque uma de pelo menos 15min acima do momento atual.");
+        }
         Tournament tournament = new Tournament();
         tournament.setName(dto.getName());
         tournament.setDescription(dto.getDescription());
@@ -61,6 +73,7 @@ public class TournamentService {
         if (dto.getAsPrivate()){
             tournament.setPassword(dto.getPassword());
         }
+        tournament.setGame(game);
         tournament = tournamentRepository.save(tournament);
         return new TournamentCreateDTO(tournament);
     }
@@ -91,8 +104,8 @@ public class TournamentService {
             throw new TournamentException("Torneio não está aberto");
         }
         User participant = userService.authenticated();
-        if (!functionService.verifyJokenpoFunctionsByUser(participant)){
-            throw new TournamentException("Você não tem as duas funções submetidas!");
+        if (!functionService.verifyFunctionsByGame(participant, tournament.getGame().getName())){
+            throw new TournamentException("Você não tem as funções necessárias submetidas para participar de um torneio desse jogo!");
         }
         if(tournamentRepository.isUserInTournament(dto.tournamentId(), participant.getId())){
             throw new TournamentException("Você já está participando desse torneio!");
@@ -113,7 +126,7 @@ public class TournamentService {
         Page<Tournament> result = tournamentRepository.findAllByUser(user.getId(), pageable);
         Page<TournamentMinDTO> mapDto = result.map(TournamentMinDTO::new);
         for (TournamentMinDTO dto : mapDto) {
-            if (dto.getStatus().toString().equals("OPEN") && Objects.equals(dto.getCreatorId(), user.getId()) && dto.getCurrentParticipants() >= dto.getMaxParticipants()){
+            if (dto.getStatus().toString().equals("OPEN") && Objects.equals(dto.getCreator().getId(), user.getId()) && dto.getCurrentParticipants() >= dto.getMaxParticipants()){
                 dto.setCanReady(true);
             }
         }
@@ -137,21 +150,33 @@ public class TournamentService {
         if (!Objects.equals(user.getId(), tournament.getCreator().getId())){
             throw new TournamentException("Voce nao eh o criador do torneio");
         }
+        int changed = tournamentRepository.tryStart(id);
+        if (changed == 0) {
+            throw new TournamentException("Este torneio já foi iniciado ou não está aberto.");
+        }
+        tournament = tournamentRepository.findById(id).orElseThrow(
+                () -> new ResourceNotFoundException("Torneio nao encontrado!"));
         running(tournament);
     }
 
     @Transactional
     public void startTournament(Long id) {
+        int changed = tournamentRepository.tryStart(id);
+        if (changed == 0) {
+            throw new TournamentException("Este torneio já foi iniciado ou não está aberto.");
+        }
         Tournament tournament = tournamentRepository.findById(id).orElseThrow(
                 () -> new ResourceNotFoundException("Torneio nao encontrado!"));
         running(tournament);
     }
 
     private void running(Tournament tournament){
-        Map<Long,String> nameMap = tournament.getUsers().stream()
-                .collect(Collectors.toMap(User::getId, User::getName));
+        Map<Long, User> players = tournament.getUsers().stream()
+                .collect(Collectors.toMap(User::getId, Function.identity()));
 
-        List<Long> participants = new ArrayList<>(nameMap.keySet());
+        Game game = tournament.getGame();
+
+        List<Long> participants = new ArrayList<>(players.keySet());
         Collections.shuffle(participants);
 
         BracketTournament bracket = new BracketTournament();
@@ -167,21 +192,17 @@ public class TournamentService {
             for (int i = 0; i < currentParticipants.size(); i += 2) {
                 Long player1 = currentParticipants.get(i);
                 Long player2 = currentParticipants.get(i + 1);
-                /*
-                A IDEIA AQUI É TER FUMA FUNÇÃO RUN PRA CADA JOGO, E AQUI TER UM IF PRA DECIDIR
-                PRA QUAL FUNÇÃO IR
-                 */
-                Long matchId = matchService.RunMatch(new PlayedMatchDTO(player1, player2));
+                Long matchId = matchOrchestrator.run(player1, player2, game);
                 Long winnerId = matchService.winnerOfMatch(matchId);
 
                 MatchResultTournamentDTO matchResult = new MatchResultTournamentDTO();
                 matchResult.setPlayer1Id(player1);
                 matchResult.setPlayer2Id(player2);
-                matchResult.setPlayer1Name(nameMap.get(player1));
-                matchResult.setPlayer2Name(nameMap.get(player2));
+                matchResult.setPlayer1Name(players.get(player1).getName());
+                matchResult.setPlayer2Name(players.get(player2).getName());
                 matchResult.setMatchId(matchId);
                 matchResult.setWinnerId(winnerId);
-                matchResult.setWinnerNameId(nameMap.get(winnerId));
+                matchResult.setWinnerNameId(players.get(winnerId).getName());
 
                 round.getMatches().add(matchResult);
                 nextRound.add(winnerId);
@@ -196,7 +217,7 @@ public class TournamentService {
         tournament.setBracketJson(jsonData);
         // Vou precisar mudar a lógica aqui! A ideia, é que agora setamos um User no Winner
         // e não mais apenas o Id
-        tournament.setWinner(null);
+        tournament.setWinner(players.get(currentParticipants.get(0)));
         playerService.updateWinnerTournament(currentParticipants.get(0));
         tournament.setStatus(TournamentStatus.FINISHED);
         tournamentRepository.save(tournament);

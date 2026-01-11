@@ -13,5 +13,4 @@ public class WandaWebApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(WandaWebApplication.class, args);
 	}
-
 }

@@ -2,11 +2,14 @@ package com.cosmo.wanda_web.services;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.cosmo.wanda_web.dto.users.UpdateProfileTypeDto;
 import com.cosmo.wanda_web.dto.users.UserDTO;
 import com.cosmo.wanda_web.dto.auth.AccessTokenDTO;
 import com.cosmo.wanda_web.dto.auth.AuthenticationDTO;
 import com.cosmo.wanda_web.dto.auth.RegisterDTO;
+import com.cosmo.wanda_web.dto.users.UserMinDto;
 import com.cosmo.wanda_web.entities.Player;
+import com.cosmo.wanda_web.entities.ProfileType;
 import com.cosmo.wanda_web.entities.Role;
 import com.cosmo.wanda_web.entities.User;
 import com.cosmo.wanda_web.infra.TokenService;
@@ -14,8 +17,11 @@ import com.cosmo.wanda_web.repositories.PlayerRepository;
 import com.cosmo.wanda_web.repositories.RoleRepository;
 import com.cosmo.wanda_web.repositories.UserRepository;
 import com.cosmo.wanda_web.services.exceptions.RegisterException;
+import com.cosmo.wanda_web.services.exceptions.ResourceNotFoundException;
 import com.cosmo.wanda_web.services.utils.PlayerWithCharacter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -68,6 +74,7 @@ public class UserService {
         String passwordEncode = passwordEncoder.encode(dto.getPassword());
         newUser.setEmail(dto.getEmail().toLowerCase().trim());
         newUser.setName(dto.getName());
+        newUser.setProfileType(ProfileType.STUDENT);
         newUser.setPassword(passwordEncode);
         Role roleUser = roleRepository.getReferenceById(1L);
         newUser.addRole(roleUser);
@@ -79,9 +86,9 @@ public class UserService {
     }
 
     @Transactional
-    public UserDTO getMe() {
+    public UserMinDto getMe() {
         User user = authenticated();
-        return new UserDTO(user);
+        return new UserMinDto(user);
     }
 
     protected User authenticated() {
@@ -101,5 +108,22 @@ public class UserService {
         } catch (Exception e) {
             throw new RuntimeException("Algum outro erro");
         }
+    }
+
+    public Page<UserMinDto> findAll(String q, Pageable pageable) {
+        User user = authenticated();
+        String qPrefix = null;
+        if (q != null && !q.isBlank()) {
+            qPrefix = q.trim().toLowerCase() + "%";
+        }
+        Page<User> users = userRepository.findAllByName(qPrefix, user.getId(), pageable);
+        return users.map(UserMinDto::new);
+    }
+
+    public void update(UpdateProfileTypeDto dto) {
+        User userUpdate = userRepository.findById(dto.getUserId()).orElseThrow(
+                () -> new ResourceNotFoundException("Usuário não encontrado"));
+        userUpdate.setProfileType(dto.getType());
+        userRepository.save(userUpdate);
     }
 }

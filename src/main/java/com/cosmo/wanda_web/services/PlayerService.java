@@ -151,7 +151,7 @@ public class PlayerService {
 
     /*
     @Transactional
-    public List<PlayerInformationDTO> findByName(String name) {
+    public List<PlayerInformationDTO> findByNameIgnoreCase(String name) {
         User user = userService.authenticated();
         List<Player> players = playerRepository.searchByName(name, user.getId());
         return players.stream().map(PlayerInformationDTO::new).toList();
