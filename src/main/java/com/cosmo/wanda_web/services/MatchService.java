@@ -89,7 +89,7 @@ public class MatchService {
                 () -> new ResourceNotFoundException("O aluno " + player2.getName() + " não tem função 2 cadastrada"));
 
         // Objeto que vai ajudar a controlar uma partida
-        Matches matches = new Matches(dto.getPlayerId1(), dto.getPlayerId2(), 51);
+        Matches matches = new Matches(dto.getPlayerId1(), dto.getPlayerId2(), 21);
 
         // Informações sobre o turno
         RoundInformation RoundInfo = new RoundInformation();
