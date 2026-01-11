@@ -188,6 +188,8 @@ VALUES (1, 0, 0, 'Admin', 'p1.png', 0);
 -- Game inicial: jokenpo
 INSERT INTO tb_game (name, description)
 VALUES ('jokenpo', 'Jogo clássico de pedra, papel e tesoura usado como base para desafios e torneios.');
+INSERT INTO tb_game (name, description)
+VALUES ('bits', 'Jogo de Bits, ideal para iniciantes');
 
 -- Badges Iniciais
 INSERT INTO tb_badges (name, icon_url) values ('Aprendiz condicional!', 'badge1.png');
