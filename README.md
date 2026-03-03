@@ -26,7 +26,7 @@ infra/
 
 ## ⚙️ Variáveis de Ambiente
 
-Crie um arquivo `.env` na **raiz** do projeto baseado no `.env.example`:
+Carregue as varíaveis de ambiente de acordo com o ambiente em que vai rodar.
 
 ```env
 ALLOWED_ORIGINS=http://localhost:5173
