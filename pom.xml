@@ -105,6 +105,29 @@
 			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+
+
+		<!-- OTel auto-instrumentação — traces HTTP, JDBC, gRPC automáticos -->
+		<dependency>
+			<groupId>io.opentelemetry.instrumentation</groupId>
+			<artifactId>opentelemetry-spring-boot-starter</artifactId>
+			<version>2.25.0</version>
+		</dependency>
+
+		<!-- Integração OTel + Logback — traceId no MDC automático -->
+		<dependency>
+			<groupId>io.opentelemetry.instrumentation</groupId>
+			<artifactId>opentelemetry-logback-mdc-1.0</artifactId>
+			<version>2.25.0-alpha</version>
+			<scope>runtime</scope>
+		</dependency>
+
+		<!-- Exportar para o Collector -->
+		<dependency>
+			<groupId>io.opentelemetry</groupId>
+			<artifactId>opentelemetry-exporter-otlp</artifactId>
+		</dependency>
+
 	</dependencies>
 
 	<dependencyManagement>
