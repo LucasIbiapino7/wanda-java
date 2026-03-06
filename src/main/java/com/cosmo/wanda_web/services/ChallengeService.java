@@ -12,6 +12,8 @@ import com.cosmo.wanda_web.repositories.MatchRepository;
 import com.cosmo.wanda_web.repositories.UserRepository;
 import com.cosmo.wanda_web.services.exceptions.ChallengeException;
 import com.cosmo.wanda_web.services.exceptions.ResourceNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,6 +24,8 @@ import java.time.LocalDateTime;
 
 @Service
 public class ChallengeService {
+
+    private static final Logger log = LoggerFactory.getLogger(ChallengeService.class);
 
     @Autowired
     private ChallengeRepository challengeRepository;
@@ -61,6 +65,9 @@ public class ChallengeService {
             throw new ChallengeException("Já existe um desafio pendente para este jogo!");
         }
 
+        log.info("Desafio enviado. desafiadorId={}, desafiadoId={}, jogo={}",
+                userChallenger.getId(), dto.getChallengedId(), dto.getGameName());
+
         Challenge challenge = new Challenge();
         challenge.setChallenger(userChallenger);
         challenge.setChallenged(userChallenged);
@@ -89,10 +96,16 @@ public class ChallengeService {
             throw new ChallengeException("Você não pode aceitar este desafio.");
         }
         if (!dto.getAccepted()){
+            log.info("Desafio recusado. challengeId={}", dto.getChallengeId());
             challengeUpdate(dto.getChallengeId(), ChallengeStatus.DECLINED, null);
             return null;
         }
+        log.info("Desafio aceito, iniciando partida. challengeId={}, desafiadorId={}, desafiadoId={}",
+                dto.getChallengeId(),
+                challenge.getChallenger().getId(),
+                challenge.getChallenged().getId());
         Long result = matchOrchestrator.run(challenge.getChallenger().getId(), challenge.getChallenged().getId(), challenge.getGame());
+        log.info("Partida do desafio finalizada. challengeId={}, matchId={}", dto.getChallengeId(), result);
         Match match = matchRepository.getReferenceById(result);
         challengeUpdate(dto.getChallengeId(), ChallengeStatus.ACCEPTED, match);
         return result;

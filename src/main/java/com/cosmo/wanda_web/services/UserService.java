@@ -19,6 +19,8 @@ import com.cosmo.wanda_web.repositories.UserRepository;
 import com.cosmo.wanda_web.services.exceptions.RegisterException;
 import com.cosmo.wanda_web.services.exceptions.ResourceNotFoundException;
 import com.cosmo.wanda_web.services.utils.PlayerWithCharacter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -33,6 +35,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class UserService {
+
+    private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
     @Autowired
     private AuthenticationManager authenticationManager;
@@ -59,7 +63,7 @@ public class UserService {
     public AccessTokenDTO login(AuthenticationDTO dto) {
         UsernamePasswordAuthenticationToken usernamePassword = new UsernamePasswordAuthenticationToken(dto.getEmail().toLowerCase().trim(), dto.getPassword());
         Authentication auth = authenticationManager.authenticate(usernamePassword);
-
+        log.info("Login realizado. email={}", dto.getEmail().toLowerCase().trim());
         String token = tokenService.generateToken((User) auth.getPrincipal());
         return new AccessTokenDTO(token);
     }
@@ -68,6 +72,7 @@ public class UserService {
     public void register(RegisterDTO dto) {
         User result = userRepository.findByEmail(dto.getEmail().toLowerCase().trim());
         if (result != null) {
+            log.warn("Tentativa de registro com email já existente. email={}", dto.getEmail());
             throw new RegisterException("Esse email já está sendo usado");
         }
         User newUser = new User();
@@ -81,7 +86,7 @@ public class UserService {
         newUser = userRepository.save(newUser);
 
         Player player = playerWithCharacter.createPlayer(newUser);
-
+        log.info("Novo usuário registrado. email={}, nome={}", dto.getEmail(), dto.getName());
         playerRepository.save(player);
     }
 
@@ -106,6 +111,7 @@ public class UserService {
             }
             return user;
         } catch (Exception e) {
+            log.error("Erro ao recuperar usuário autenticado do contexto de segurança", e);
             throw new RuntimeException("Algum outro erro");
         }
     }
@@ -125,5 +131,6 @@ public class UserService {
                 () -> new ResourceNotFoundException("Usuário não encontrado"));
         userUpdate.setProfileType(dto.getType());
         userRepository.save(userUpdate);
+        log.info("Perfil de usuário atualizado. usuarioId={}, novoPerfil={}", dto.getUserId(), dto.getType());
     }
 }

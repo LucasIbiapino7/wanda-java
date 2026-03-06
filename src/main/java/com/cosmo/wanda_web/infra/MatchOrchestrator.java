@@ -2,6 +2,9 @@ package com.cosmo.wanda_web.infra;
 
 import com.cosmo.wanda_web.entities.Challenge;
 import com.cosmo.wanda_web.entities.Game;
+import com.cosmo.wanda_web.services.ChallengeService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -9,6 +12,9 @@ import java.util.stream.Collectors;
 
 @Component
 public class MatchOrchestrator {
+
+    private static final Logger log = LoggerFactory.getLogger(ChallengeService.class);
+
     private final Map<String, GameEngine> enginesByName;
 
     // A lista é de todos os componentes que implementam essa interface
@@ -33,6 +39,8 @@ public class MatchOrchestrator {
         var gameName = String.valueOf(game.getName()).toLowerCase();
         var engine = enginesByName.get(gameName);
         if (engine == null) {
+            log.error("Engine não encontrada para o jogo. gameName={}, enginesDisponiveis={}",
+                    gameName, enginesByName.keySet());
             throw new IllegalArgumentException("Engine não encontrada para o jogo: " + gameName);
         }
         return engine.run(playerId1, playerId2);
