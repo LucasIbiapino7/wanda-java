@@ -8,6 +8,8 @@ import com.cosmo.wanda_web.repositories.TournamentRepository;
 import com.cosmo.wanda_web.services.exceptions.ResourceNotFoundException;
 import com.cosmo.wanda_web.services.exceptions.TournamentException;
 import com.cosmo.wanda_web.services.utils.JsonConverter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,6 +23,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class TournamentService {
+
+    private static final Logger log = LoggerFactory.getLogger(TournamentService.class);
 
     @Autowired
     private UserService userService;
@@ -75,6 +79,8 @@ public class TournamentService {
         }
         tournament.setGame(game);
         tournament = tournamentRepository.save(tournament);
+        log.info("Torneio criado. nome={}, jogo={}, maxParticipantes={}, privado={}",
+                dto.getName(), dto.getGameName(), dto.getMaxParticipants(), dto.getAsPrivate());
         return new TournamentCreateDTO(tournament);
     }
 
@@ -113,6 +119,10 @@ public class TournamentService {
         if (tournament.getAsPrivate() && !dto.password().equals(tournament.getPassword())){
             throw new TournamentException("A senha do torneio está incorreta!");
         }
+        log.info("Inscrição no torneio. torneiId={}, participantesAtuais={}, maxParticipantes={}",
+                tournament.getId(),
+                tournament.getCurrentParticipants(),
+                tournament.getMaxParticipants());
         tournament.getUsers().add(participant);
         participant.getTournaments().add(tournament);
         tournament.setCurrentParticipants(tournament.getCurrentParticipants() + 1);
@@ -171,6 +181,8 @@ public class TournamentService {
     }
 
     private void running(Tournament tournament){
+        log.info("Torneio iniciado. torneoId={}, jogo={}, participantes={}",
+                tournament.getId(), tournament.getGame().getName(), tournament.getUsers().size());
         Map<Long, User> players = tournament.getUsers().stream()
                 .collect(Collectors.toMap(User::getId, Function.identity()));
 
@@ -195,6 +207,8 @@ public class TournamentService {
                 Long matchId = matchOrchestrator.run(player1, player2, game);
                 Long winnerId = matchService.winnerOfMatch(matchId);
 
+                log.info("Rodada do torneio. fase={}, player1Id={}, player2Id={}, matchId={}, vencedorId={}", fase, player1, player2, matchId, winnerId);
+
                 MatchResultTournamentDTO matchResult = new MatchResultTournamentDTO();
                 matchResult.setPlayer1Id(player1);
                 matchResult.setPlayer2Id(player2);
@@ -217,6 +231,8 @@ public class TournamentService {
         tournament.setBracketJson(jsonData);
         // Vou precisar mudar a lógica aqui! A ideia, é que agora setamos um User no Winner
         // e não mais apenas o Id
+        log.info("Torneio finalizado. torneoId={}, vencedorId={}",
+                tournament.getId(), currentParticipants.get(0));
         tournament.setWinner(players.get(currentParticipants.get(0)));
         playerService.updateWinnerTournament(currentParticipants.get(0));
         tournament.setStatus(TournamentStatus.FINISHED);

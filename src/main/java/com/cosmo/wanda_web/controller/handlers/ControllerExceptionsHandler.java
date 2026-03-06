@@ -31,6 +31,7 @@ public class ControllerExceptionsHandler {
 
     @ExceptionHandler(FeignException.class)
     public ResponseEntity<CustomError> FeignException(FeignException e, HttpServletRequest request) {
+        log.error("Erro na chamada ao Python. uri={}, status={}", request.getRequestURI(), e.status(), e);
         HttpStatus status = HttpStatus.BAD_REQUEST;
         CustomError err = new CustomError(Instant.now(), status.value(), "tive um probleminha ao tentar processar sua função, peço desculpas por isso, tente novamente!", request.getRequestURI());
         return ResponseEntity.status(status).body(err);
@@ -61,6 +62,7 @@ public class ControllerExceptionsHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<CustomError> resourceNotFound(ResourceNotFoundException e, HttpServletRequest request) {
+        log.warn("Recurso não encontrado. uri={}, mensagem={}", request.getRequestURI(), e.getMessage());
         HttpStatus status = HttpStatus.NOT_FOUND;
         CustomError err = new CustomError(Instant.now(), status.value(), e.getMessage(), request.getRequestURI());
         return ResponseEntity.status(status).body(err);
@@ -68,6 +70,7 @@ public class ControllerExceptionsHandler {
 
     @ExceptionHandler(TournamentException.class)
     public ResponseEntity<CustomError> Tournament(TournamentException e, HttpServletRequest request) {
+        log.warn("Exceção de torneio. uri={}, mensagem={}", request.getRequestURI(), e.getMessage());
         HttpStatus status = HttpStatus.BAD_REQUEST;
         CustomError err = new CustomError(Instant.now(), status.value(), e.getMessage(), request.getRequestURI());
         return ResponseEntity.status(status).body(err);
@@ -85,6 +88,7 @@ public class ControllerExceptionsHandler {
 
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<CustomError> badCredentials(BadCredentialsException e, HttpServletRequest request) {
+        log.warn("Tentativa de login inválida. uri={}", request.getRequestURI());
         var status = HttpStatus.UNAUTHORIZED;
         var body = new CustomError(Instant.now(), status.value(), "Credenciais inválidas", request.getRequestURI());
         return ResponseEntity.status(status).body(body);

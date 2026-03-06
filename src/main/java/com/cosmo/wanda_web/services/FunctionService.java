@@ -1,5 +1,6 @@
 package com.cosmo.wanda_web.services;
 
+import com.cosmo.wanda_web.config.SecurityFilter;
 import com.cosmo.wanda_web.dto.function.FeedbackResponseDTO;
 import com.cosmo.wanda_web.dto.function.FunctionRequestDTO;
 import com.cosmo.wanda_web.dto.function.FunctionResponseDto;
@@ -16,6 +17,8 @@ import com.cosmo.wanda_web.services.client.PythonClient;
 import com.cosmo.wanda_web.services.exceptions.DatabaseException;
 import com.cosmo.wanda_web.services.exceptions.ResourceNotFoundException;
 import com.cosmo.wanda_web.services.utils.AssistantStyle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -27,6 +30,8 @@ import java.util.Optional;
 
 @Service
 public class FunctionService {
+
+    private static final Logger log = LoggerFactory.getLogger(FunctionService.class);
 
     @Autowired
     private PythonClient pythonClient;
@@ -49,10 +54,14 @@ public class FunctionService {
     @Transactional
     public FeedbackResponseDTO feedback(FunctionRequestDTO dto) {
         User user = userService.authenticated();
+        log.info("Feedback solicitado. game={}, functionName={}, assistantStyle={}",
+                dto.getGameName(), dto.getFunctionName(), dto.getAssistantStyle());
         Game game = gameRepository.findByNameIgnoreCase(dto.getGameName()).orElseThrow(
                 () -> new ResourceNotFoundException("Jogo ao encontrado!")
         );
         ValidateResponseDTO response = pythonClient.feedback(dto);
+        log.info("Feedback retornado. valid={}, game={}, functionName={}",
+                response.getValid(), dto.getGameName(), dto.getFunctionName());
         Long feedbackId = saveLogAnswer(dto, response, user, game);
         return new FeedbackResponseDTO(response, feedbackId);
     }
@@ -60,10 +69,13 @@ public class FunctionService {
     @Transactional
     public FeedbackResponseDTO runTests(FunctionRequestDTO dto) {
         User user = userService.authenticated();
+        log.info("Run tests iniciado. game={}, functionName={}", dto.getGameName(), dto.getFunctionName());
         Game game = gameRepository.findByNameIgnoreCase(dto.getGameName()).orElseThrow(
                 () -> new ResourceNotFoundException("Jogo nao encontrado!")
         );
         ValidateResponseDTO response = pythonClient.run(dto);
+        log.info("Run tests concluído. valid={}, game={}, functionName={}",
+                response.getValid(), dto.getGameName(), dto.getFunctionName());
         Long feedbackId = saveLogAnswer(dto, response, user, game);
         return new FeedbackResponseDTO(response, feedbackId);
     }
@@ -73,6 +85,7 @@ public class FunctionService {
     public FeedbackResponseDTO validate(FunctionRequestDTO dto){
         // Verifica se usuário existe pelo contexto
         User user = userService.authenticated();
+        log.info("Validação iniciada. game={}, functionName={}", dto.getGameName(), dto.getFunctionName());
         Game game = gameRepository.findByNameIgnoreCase(dto.getGameName()).orElseThrow(
                 () -> new ResourceNotFoundException("Jogo ao encontrado!")
         );
@@ -81,8 +94,10 @@ public class FunctionService {
         Long feedbackId = saveLogAnswer(dto, response, user, game);
         // Verifica se a função é válida
         if (!response.getValid()){
+            log.info("Função inválida. game={}, functionName={}", dto.getGameName(), dto.getFunctionName());
             return new FeedbackResponseDTO(response, feedbackId); // Early return caso a funcao seja invalida
         }
+        log.info("Função válida, salvando. game={}, functionName={}", dto.getGameName(), dto.getFunctionName());
         // Adiciona no Banco de dados a função aprovada
         saveOrUpdateFunction(dto, user, game);
         return new FeedbackResponseDTO(response, feedbackId);

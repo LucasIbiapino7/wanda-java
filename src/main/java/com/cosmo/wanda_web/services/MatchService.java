@@ -18,6 +18,8 @@ import com.cosmo.wanda_web.repositories.UserRepository;
 import com.cosmo.wanda_web.services.client.PythonClient;
 import com.cosmo.wanda_web.services.utils.*;
 import com.cosmo.wanda_web.services.exceptions.ResourceNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +32,8 @@ import java.util.List;
 
 @Service
 public class MatchService {
+
+    private static final Logger log = LoggerFactory.getLogger(MatchService.class);
 
     @Autowired
     private UserRepository userRepository;
@@ -58,6 +62,8 @@ public class MatchService {
     // ENGINE DO JOKENPO
     @Transactional
     public Long RunMatch(PlayedMatchDTO dto){
+
+        log.info("Partida Jokenpo iniciada. player1Id={}, player2Id={}", dto.getPlayerId1(), dto.getPlayerId2());
 
         DuelResponseDTO duelResponseDTO = new DuelResponseDTO();
 
@@ -268,11 +274,19 @@ public class MatchService {
 
         playerService.updateWinners(player1, player2, match);
 
+        log.info("Partida Jokenpo finalizada. matchId={}, vencedor={}, player1Vitorias={}, player2Vitorias={}",
+                match.getId(),
+                winner != null ? winner.getName() : "empate",
+                matches.getPlayer1RoundsVictories(),
+                matches.getPlayer2RoundsVictories());
+
         return match.getId();
     }
 
     @Transactional
     public Long RunMatchBits(PlayedMatchDTO dto){
+
+        log.info("Partida BITS iniciada. player1Id={}, player2Id={}", dto.getPlayerId1(), dto.getPlayerId2());
         DuelDTO duelDto = new DuelDTO();
 
         // Verifica se o Id do primeiro aluno é válido
@@ -379,6 +393,12 @@ public class MatchService {
         matchRepository.save(matchResult);
 
         playerService.updateWinners(player1, player2, matchResult);
+
+        log.info("Partida BITS finalizada. matchId={}, vencedor={}, player1Vitorias={}, player2Vitorias={}",
+                matchResult.getId(),
+                winner != null ? winner.getName() : "empate",
+                match.getPlayer1RoundsVictories(),
+                match.getPlayer2RoundsVictories());
 
         return matchResult.getId();
     }
