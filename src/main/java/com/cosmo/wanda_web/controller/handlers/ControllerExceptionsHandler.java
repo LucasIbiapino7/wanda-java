@@ -4,6 +4,8 @@ import com.cosmo.wanda_web.dto.errors.CustomError;
 import com.cosmo.wanda_web.dto.errors.ValidationError;
 import com.cosmo.wanda_web.services.exceptions.*;
 import feign.FeignException;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +34,7 @@ public class ControllerExceptionsHandler {
     @ExceptionHandler(FeignException.class)
     public ResponseEntity<CustomError> FeignException(FeignException e, HttpServletRequest request) {
         log.error("Erro na chamada ao Python. uri={}, status={}", request.getRequestURI(), e.status(), e);
+        captureExceptionWithOtel(e);
         HttpStatus status = HttpStatus.BAD_REQUEST;
         CustomError err = new CustomError(Instant.now(), status.value(), "tive um probleminha ao tentar processar sua função, peço desculpas por isso, tente novamente!", request.getRequestURI());
         return ResponseEntity.status(status).body(err);
@@ -97,10 +100,21 @@ public class ControllerExceptionsHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<CustomError> unexpectedException(Exception e, HttpServletRequest request) {
         log.error("Exceção não mapeada. uri={}, erro={}", request.getRequestURI(), e.getMessage(), e);
+        captureExceptionWithOtel(e);
         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
         CustomError err = new CustomError(Instant.now(), status.value(),
                 "Ocorreu um erro inesperado. Tente novamente.", request.getRequestURI());
         return ResponseEntity.status(status).body(err);
+    }
+
+    private void captureExceptionWithOtel(Exception e) {
+        Span span = Span.current();
+        if (span != null && span.getSpanContext().isValid()) {
+            span.recordException(e);
+            span.setStatus(StatusCode.ERROR);
+        } else {
+            log.warn("Nenhum span ativo para capturar a exceção.");
+        }
     }
 
 }
