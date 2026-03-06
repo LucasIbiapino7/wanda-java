@@ -4,6 +4,10 @@
     <appender name="OTEL"
               class="io.opentelemetry.instrumentation.logback.mdc.v1_0.OpenTelemetryAppender"/>
 
+    <!-- Appender que vincula logs como eventos do span no Jaeger -->
+    <appender name="OTEL_SPAN"
+              class="com.cosmo.wanda_web.config.OtelLogAppender"/>
+
     <!-- DEV — texto legível no terminal -->
     <springProfile name="dev,default">
         <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
@@ -13,6 +17,7 @@
         </appender>
         <root level="INFO">
             <appender-ref ref="OTEL"/>
+            <appender-ref ref="OTEL_SPAN"/>
             <appender-ref ref="CONSOLE"/>
         </root>
     </springProfile>
@@ -24,6 +29,7 @@
         </appender>
         <root level="INFO">
             <appender-ref ref="OTEL"/>
+            <appender-ref ref="OTEL_SPAN"/>
             <appender-ref ref="CONSOLE"/>
         </root>
     </springProfile>
