@@ -7,6 +7,9 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,6 +22,8 @@ import java.io.IOException;
 @Component
 public class SecurityFilter extends OncePerRequestFilter {
 
+    private static final Logger log = LoggerFactory.getLogger(SecurityFilter.class);
+
     @Autowired
     private TokenService tokenService;
 
@@ -26,19 +31,28 @@ public class SecurityFilter extends OncePerRequestFilter {
     private AuthorizationService authorizationService;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        String token = recoverToken(request);
-        if (token != null){
-            String login = tokenService.validateToken(token);
-            if(login != null && !login.isBlank()){
-                UserDetails user = authorizationService.loadUserByUsername(login);
-                var authentication = new UsernamePasswordAuthenticationToken(user, token, user.getAuthorities());
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
+        try {
+            String token = recoverToken(request);
+            if (token != null) {
+                String login = tokenService.validateToken(token);
+                if (login != null && !login.isBlank()) {
+                    UserDetails user = authorizationService.loadUserByUsername(login);
+                    var authentication = new UsernamePasswordAuthenticationToken(user, token, user.getAuthorities());
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                    // Enriquece o MDC com dados do usuário autenticado
+                    MDC.put("usuario_email", login);
+                    MDC.put("usuario_perfil", user.getAuthorities().toString());
+                }
             }
-            // Se o token for invalido passa direto!
+            filterChain.doFilter(request, response);
+        } finally {
+            MDC.clear();
         }
-        filterChain.doFilter(request, response);
     }
+
 
     private String recoverToken(HttpServletRequest request){
         var authHeader = request.getHeader("Authorization");
