@@ -5,6 +5,8 @@ import com.cosmo.wanda_web.dto.errors.ValidationError;
 import com.cosmo.wanda_web.services.exceptions.*;
 import feign.FeignException;
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -17,6 +19,8 @@ import java.time.Instant;
 
 @ControllerAdvice
 public class ControllerExceptionsHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(ControllerExceptionsHandler.class);
 
     @ExceptionHandler(InvalidFunctionException.class)
     public ResponseEntity<CustomError> InvalidFunction(InvalidFunctionException e, HttpServletRequest request) {
@@ -84,6 +88,15 @@ public class ControllerExceptionsHandler {
         var status = HttpStatus.UNAUTHORIZED;
         var body = new CustomError(Instant.now(), status.value(), "Credenciais inválidas", request.getRequestURI());
         return ResponseEntity.status(status).body(body);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<CustomError> unexpectedException(Exception e, HttpServletRequest request) {
+        log.error("Exceção não mapeada. uri={}, erro={}", request.getRequestURI(), e.getMessage(), e);
+        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+        CustomError err = new CustomError(Instant.now(), status.value(),
+                "Ocorreu um erro inesperado. Tente novamente.", request.getRequestURI());
+        return ResponseEntity.status(status).body(err);
     }
 
 }
