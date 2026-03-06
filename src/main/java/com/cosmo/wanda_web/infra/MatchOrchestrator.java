@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 @Component
 public class MatchOrchestrator {
 
-    private static final Logger log = LoggerFactory.getLogger(ChallengeService.class);
+    private static final Logger log = LoggerFactory.getLogger(ChallengeService.class);  
 
     private final Map<String, GameEngine> enginesByName;
 
