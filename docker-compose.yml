@@ -16,7 +16,7 @@ services:
       - ALLOWED_ORIGINS=https://wanda.telemidia-ma.com.br
       - PYTHON_BASE_URL=http://wanda-python:8000/api
       - OTEL_ENDPOINT=http://otel-collector:4318
-      - SPRING_PROFILE=prod
+      - SPRING_PROFILES_ACTIVE=prod
     logging:
       driver: json-file
       options:
