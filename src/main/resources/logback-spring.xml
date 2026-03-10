@@ -2,7 +2,10 @@
 <configuration>
     <!-- OTel Appender — envia logs ao Collector em qualquer profile -->
     <appender name="OTEL"
-              class="io.opentelemetry.instrumentation.logback.mdc.v1_0.OpenTelemetryAppender"/>
+              class="io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender">
+        <captureExperimentalAttributes>false</captureExperimentalAttributes>
+        <captureKeyValuePairAttributes>true</captureKeyValuePairAttributes>
+    </appender>
 
     <!-- Appender que vincula logs como eventos do span no Jaeger -->
     <appender name="OTEL_SPAN"
@@ -21,6 +24,8 @@
             <appender-ref ref="CONSOLE"/>
         </root>
     </springProfile>
+
+    <springProperty scope="context" name="appName" source="spring.application.name"/>
 
     <!-- PROD — JSON -->
     <springProfile name="prod">

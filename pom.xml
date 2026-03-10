@@ -121,6 +121,13 @@
 			<scope>runtime</scope>
 		</dependency>
 
+		<dependency>
+			<groupId>io.opentelemetry.instrumentation</groupId>
+			<artifactId>opentelemetry-logback-appender-1.0</artifactId>
+			<version>2.25.0-alpha</version>
+			<scope>runtime</scope>
+		</dependency>
+
 		<!-- Exportar para o Collector -->
 		<dependency>
 			<groupId>io.opentelemetry</groupId>
