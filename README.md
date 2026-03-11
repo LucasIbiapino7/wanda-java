@@ -1,138 +1,101 @@
-# Wanda Web — Backend (Spring Boot)
+# wanda-java
 
-Backend em **Spring Boot** com **PostgreSQL** e **Flyway** (migrations automáticas).
-
----
-
-## ✅ Requisitos
-
-- Java 17+
-- Maven (ou `./mvnw`)
-- PostgreSQL (via **Docker Compose** ou local)
+API principal da plataforma Wanda. Responsável por autenticação, gerenciamento de funções dos alunos, execução de partidas e integração com o wanda-python.
 
 ---
 
-## 📁 Estrutura de Infraestrutura
+## Pré-requisitos
 
-O Postgres via Docker fica em `infra/` para não confundir com o `Dockerfile` do projeto:
+**Para rodar com Docker:**
+- Docker
+- Docker Compose
 
-```
-infra/
-  docker-compose.yml
-  .env.docker
-```
-
----
-
-## ⚙️ Variáveis de Ambiente
-
-Carregue as varíaveis de ambiente de acordo com o ambiente em que vai rodar.
-
-```env
-ALLOWED_ORIGINS=http://localhost:5173
-DB_URL=jdbc:postgresql://localhost:5433/wanda_web
-DB_USER=postgres
-DB_PASS=postgres
-JWT_SECRET=o_valor_que_quiser
-PYTHON_BASE_URL=http://localhost:8000/api
-```
-
-> **Observação:** o Spring Boot não lê `.env` automaticamente. Carregue as variáveis via sua IDE (Run/Debug env vars) ou exporte no terminal antes de rodar.
+**Para rodar manualmente:**
+- Java 17
+- Maven (ou usar o `./mvnw` incluso no projeto)
+- PostgreSQL rodando localmente com o database `wanda_web` criado
 
 ---
 
-## 🗄️ Banco de Dados e Flyway
+## Configuração
 
-Ao subir a aplicação, o Flyway:
-
-- Cria a tabela `flyway_schema_history`
-- Aplica as migrations em `src/main/resources/db/migration`
-- Cria tabelas e seeds iniciais (ex.: usuário admin)
-
----
-
-## 🐳 Opção 1 — Postgres com Docker
-
-### 1. Configurar arquivos do Docker
-
-**`infra/docker-compose.yml`**
-
-```yaml
-services:
-  postgres:
-    image: postgres:16
-    container_name: wanda_postgres
-    restart: unless-stopped
-    env_file:
-      - .env.docker
-    ports:
-      - "${POSTGRES_PORT:-5433}:5432"
-    volumes:
-      - wanda_pg_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-
-volumes:
-  wanda_pg_data:
-```
-
-**`infra/.env.docker`**
-
-```env
-POSTGRES_DB=wanda_web
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_PORT=5433
-```
-
-### 2. Subir o Postgres
+Copie o arquivo de exemplo e preencha os valores:
 
 ```bash
-cd infra
-docker compose --env-file .env.docker up -d
+cp .env.example .env
 ```
 
-- Postgres disponível em `localhost:5433`
-- Database `wanda_web` criado automaticamente
+### Variáveis de ambiente
 
-### 3. Subir o backend
+| Variável | Descrição | Exemplo |
+|---|---|---|
+| `JWT_SECRET` | Chave secreta para geração dos tokens JWT | `sua_chave_secreta` |
+| `DB_URL` | URL de conexão com o PostgreSQL | `jdbc:postgresql://localhost:5432/wanda_web` |
+| `DB_USER` | Usuário do banco de dados | `postgres` |
+| `DB_PASS` | Senha do banco de dados | `sua_senha` |
+| `ALLOWED_ORIGINS` | Origem permitida pelo CORS | `http://localhost:5173` |
+| `PYTHON_BASE_URL` | URL base do wanda-python | `http://localhost:8000/api` |
+| `OTEL_ENDPOINT` | Endpoint do OpenTelemetry Collector | `http://localhost:4318` |
+| `SPRING_PROFILES_ACTIVE` | Perfil ativo do Spring | `prod` |
 
-Na raiz do projeto:
-
-```bash
-./mvnw spring-boot:run
-```
-
-API disponível em `http://localhost:8080`
+> **Sobre o `OTEL_ENDPOINT`:** o endpoint padrão do OpenTelemetry Collector é `http://localhost:4318`. Essa variável não é obrigatória para o funcionamento da aplicação, mas se o collector não estiver rodando, erros de conexão aparecerão no terminal continuamente.
 
 ---
 
-## 🖥️ Opção 2 — Postgres Local (sem Docker)
+## Banco de dados
 
-1. Certifique-se de ter um Postgres rodando (ex.: `localhost:5432`)
-
-2. Crie o banco de dados:
+O projeto usa **Flyway** para gerenciamento do schema. As tabelas são criadas automaticamente na primeira execução — basta ter o database criado no PostgreSQL:
 
 ```sql
 CREATE DATABASE wanda_web;
 ```
 
-3. Ajuste o `.env` para apontar para o Postgres local:
+Após isso, o Flyway aplica todas as migrations automaticamente ao subir a aplicação.
 
-```env
-DB_URL=jdbc:postgresql://localhost:5432/wanda_web
-DB_USER=seu_usuario
-DB_PASS=sua_senha
+---
+
+## Perfis do Spring
+
+| Perfil | Uso | Banco | Show SQL |
+|---|---|---|---|
+| `prod` | Produção | PostgreSQL | Não |
+| `dev` | Desenvolvimento local | PostgreSQL | Sim |
+| `test` | Testes automatizados | H2 (in-memory) | Sim |
+
+> **Dica:** use `SPRING_PROFILES_ACTIVE=dev` localmente para ver as queries SQL no terminal. Em produção use `prod` para evitar ruído nos logs.
+
+---
+
+## Rodando com Docker
+
+```bash
+# Sobe o container (builda a imagem na primeira vez)
+docker-compose up --build
+
+# Rodar em background
+docker-compose up --build -d
+
+# Parar
+docker-compose down
 ```
 
-4. Rode o backend:
+A aplicação estará disponível em `http://localhost:8088`.
+
+> **Atenção:** o compose usa a rede externa `wanda-network`. Se ela não existir, crie antes:
+> ```bash
+> docker network create wanda-network
+> ```
+
+---
+
+## Rodando manualmente
+
+O projeto usa **dotenv** como dependência — as variáveis são lidas automaticamente do `.env` na raiz do projeto. Basta configurar o `.env` e rodar:
 
 ```bash
 ./mvnw spring-boot:run
 ```
 
+A aplicação estará disponível em `http://localhost:8080`.
 
-
+> **Atenção:** ao rodar manualmente, a porta é `8080` (padrão do Spring). Com Docker, é `8088` conforme mapeado no compose.
