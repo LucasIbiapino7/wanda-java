@@ -3,7 +3,9 @@ package com.cosmo.wanda_web.services;
 import com.cosmo.wanda_web.dto.tournament.*;
 import com.cosmo.wanda_web.entities.*;
 import com.cosmo.wanda_web.infra.MatchOrchestrator;
+import com.cosmo.wanda_web.infra.dtos.MatchResult;
 import com.cosmo.wanda_web.repositories.GameRepository;
+import com.cosmo.wanda_web.repositories.MatchRepository;
 import com.cosmo.wanda_web.repositories.TournamentRepository;
 import com.cosmo.wanda_web.services.exceptions.ResourceNotFoundException;
 import com.cosmo.wanda_web.services.exceptions.TournamentException;
@@ -49,6 +51,9 @@ public class TournamentService {
 
     @Autowired
     private MatchOrchestrator matchOrchestrator;
+
+    @Autowired
+    private MatchRepository matchRepository;
 
     @Transactional
     public TournamentCreateDTO create(TournamentCreateDTO dto) {
@@ -204,8 +209,17 @@ public class TournamentService {
             for (int i = 0; i < currentParticipants.size(); i += 2) {
                 Long player1 = currentParticipants.get(i);
                 Long player2 = currentParticipants.get(i + 1);
-                Long matchId = matchOrchestrator.run(player1, player2, game);
-                Long winnerId = matchService.winnerOfMatch(matchId);
+                User userPlayer1 = players.get(player1);
+                User userPlayer2 = players.get(player2);
+                MatchResult result = matchOrchestrator.run(userPlayer1, userPlayer2, game);
+
+                Match match = new Match(userPlayer1, userPlayer2, LocalDateTime.now(),
+                        result.getWinner(), result.getReplayJson(), game);
+                matchRepository.save(match);
+                playerService.updateWinners(userPlayer1, userPlayer2, match);
+
+                Long matchId = match.getId();
+                Long winnerId = result.getWinner().getId();
 
                 log.info("Rodada do torneio. fase={}, player1Id={}, player2Id={}, matchId={}, vencedorId={}", fase, player1, player2, matchId, winnerId);
 

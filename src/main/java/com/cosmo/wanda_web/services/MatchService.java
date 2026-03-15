@@ -11,6 +11,8 @@ import com.cosmo.wanda_web.entities.Function;
 import com.cosmo.wanda_web.entities.Game;
 import com.cosmo.wanda_web.entities.Match;
 import com.cosmo.wanda_web.entities.User;
+import com.cosmo.wanda_web.infra.GameEngine;
+import com.cosmo.wanda_web.infra.MatchOrchestrator;
 import com.cosmo.wanda_web.repositories.FunctionRepository;
 import com.cosmo.wanda_web.repositories.GameRepository;
 import com.cosmo.wanda_web.repositories.MatchRepository;
@@ -58,6 +60,9 @@ public class MatchService {
 
     @Autowired
     private JsonConverter jsonConverter;
+
+    @Autowired
+    private MatchOrchestrator matchOrchestrator;
 
     // ENGINE DO JOKENPO
     @Transactional
@@ -412,36 +417,44 @@ public class MatchService {
     public ReplayDto getReplayById(Long id) {
         Match match = matchRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
+
         String matchData = match.getMatchData();
         if (matchData == null || matchData.isBlank()) {
             throw new IllegalStateException("MatchData está vazio para o match " + id);
         }
+
         String gameName = match.getGame() != null ? match.getGame().getName() : null;
         if (gameName == null || gameName.isBlank()) {
             throw new IllegalStateException("Match sem game associado (match " + id + ")");
         }
+
         GameDto gameDto = new GameDto(match.getGame());
+        GameEngine engine = matchOrchestrator.getEngine(gameName);
+        Object replay = engine.parseReplay(matchData);
+
         var fillCharacter = (java.util.function.Consumer<UserDTO>) (u) -> {
             if (u == null || u.getId() == null) return;
             String character = playerService.findCharacterByUser(u.getId());
             u.setCharacter_url(character);
         };
 
-        if ("bits".equalsIgnoreCase(gameName)) {
-            DuelDTO bitsDto = jsonConverter.converterToBitsDuelDto(matchData);
+        if (replay instanceof DuelDTO bitsDto) {
             fillCharacter.accept(bitsDto.getPlayer1());
             fillCharacter.accept(bitsDto.getPlayer2());
             if (bitsDto.getDuelWInner() != null) {
                 fillCharacter.accept(bitsDto.getDuelWInner());
             }
-
             return new ReplayDto(gameDto, bitsDto);
         }
-        DuelResponseDTO jokenpoDto = jsonConverter.converterToDuelResponseDto(matchData);
-        fillCharacter.accept(jokenpoDto.getPlayer1());
-        fillCharacter.accept(jokenpoDto.getPlayer2());
-        jokenpoDto.setGameDto(gameDto);
-        return new ReplayDto(gameDto, jokenpoDto);
+
+        if (replay instanceof DuelResponseDTO jokenpoDto) {
+            fillCharacter.accept(jokenpoDto.getPlayer1());
+            fillCharacter.accept(jokenpoDto.getPlayer2());
+            jokenpoDto.setGameDto(gameDto);
+            return new ReplayDto(gameDto, jokenpoDto);
+        }
+
+        throw new IllegalStateException("Formato de replay desconhecido para o jogo: " + gameName);
     }
 
     public Long winnerOfMatch(Long matchId) {
