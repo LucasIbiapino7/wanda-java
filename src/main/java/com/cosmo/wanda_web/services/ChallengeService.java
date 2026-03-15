@@ -52,6 +52,9 @@ public class ChallengeService {
     @Autowired
     private PlayerService playerService;
 
+    @Autowired
+    private FunctionService functionService;
+
     @Transactional
     public void challenge(ChallengeDTO dto) {
         User userChallenger = userService.authenticated(); // Usuário Logado
@@ -67,6 +70,10 @@ public class ChallengeService {
         if (challengeRepository.checkIfChallengePendingExists(
                 userChallenger.getId(), userChallenged.getId(), game.getId()).isPresent()) {
             throw new ChallengeException("Já existe um desafio pendente para este jogo!");
+        }
+
+        if (!functionService.verifyFunctionsByGame(userChallenger, dto.getGameName())) {
+            throw new ChallengeException("Você não tem as funções necessárias para desafiar nesse jogo!");
         }
 
         log.info("Desafio enviado. desafiadorId={}, desafiadoId={}, jogo={}",
