@@ -5,6 +5,7 @@ import com.cosmo.wanda_web.dto.challengers.ChallengeFIndAllPendingDTO;
 import com.cosmo.wanda_web.dto.challengers.ChallengeIsAcceptedDTO;
 import com.cosmo.wanda_web.entities.*;
 import com.cosmo.wanda_web.infra.MatchOrchestrator;
+import com.cosmo.wanda_web.infra.dtos.MatchResult;
 import com.cosmo.wanda_web.projections.FindAllPendingChallengerProjection;
 import com.cosmo.wanda_web.repositories.ChallengeRepository;
 import com.cosmo.wanda_web.repositories.GameRepository;
@@ -48,6 +49,12 @@ public class ChallengeService {
     @Autowired
     private MatchOrchestrator matchOrchestrator;
 
+    @Autowired
+    private PlayerService playerService;
+
+    @Autowired
+    private FunctionService functionService;
+
     @Transactional
     public void challenge(ChallengeDTO dto) {
         User userChallenger = userService.authenticated(); // Usuário Logado
@@ -63,6 +70,10 @@ public class ChallengeService {
         if (challengeRepository.checkIfChallengePendingExists(
                 userChallenger.getId(), userChallenged.getId(), game.getId()).isPresent()) {
             throw new ChallengeException("Já existe um desafio pendente para este jogo!");
+        }
+
+        if (!functionService.verifyFunctionsByGame(userChallenger, dto.getGameName())) {
+            throw new ChallengeException("Você não tem as funções necessárias para desafiar nesse jogo!");
         }
 
         log.info("Desafio enviado. desafiadorId={}, desafiadoId={}, jogo={}",
@@ -95,20 +106,27 @@ public class ChallengeService {
         if (!challenge.getChallenged().getId().equals(currentUserId)) {
             throw new ChallengeException("Você não pode aceitar este desafio.");
         }
-        if (!dto.getAccepted()){
+        if (!dto.getAccepted()) {
             log.info("Desafio recusado. challengeId={}", dto.getChallengeId());
             challengeUpdate(dto.getChallengeId(), ChallengeStatus.DECLINED, null);
             return null;
         }
+
         log.info("Desafio aceito, iniciando partida. challengeId={}, desafiadorId={}, desafiadoId={}",
                 dto.getChallengeId(),
                 challenge.getChallenger().getId(),
                 challenge.getChallenged().getId());
-        Long result = matchOrchestrator.run(challenge.getChallenger().getId(), challenge.getChallenged().getId(), challenge.getGame());
-        log.info("Partida do desafio finalizada. challengeId={}, matchId={}", dto.getChallengeId(), result);
-        Match match = matchRepository.getReferenceById(result);
+
+        MatchResult result = matchOrchestrator.run(challenge.getChallenger(), challenge.getChallenged(), challenge.getGame());
+
+        Match match = new Match(challenge.getChallenger(),challenge.getChallenged(),LocalDateTime.now(),result.getWinner(),result.getReplayJson(),
+                challenge.getGame());
+        matchRepository.save(match);
+        playerService.updateWinners(challenge.getChallenger(), challenge.getChallenged(), match);
+
+        log.info("Partida do desafio finalizada. challengeId={}, matchId={}", dto.getChallengeId(), match.getId());
         challengeUpdate(dto.getChallengeId(), ChallengeStatus.ACCEPTED, match);
-        return result;
+        return match.getId();
     }
 
     @Transactional

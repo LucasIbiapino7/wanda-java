@@ -9,6 +9,8 @@ import com.cosmo.wanda_web.entities.Function;
 import com.cosmo.wanda_web.entities.Game;
 import com.cosmo.wanda_web.entities.LogAnswersAgents;
 import com.cosmo.wanda_web.entities.User;
+import com.cosmo.wanda_web.infra.GameEngine;
+import com.cosmo.wanda_web.infra.MatchOrchestrator;
 import com.cosmo.wanda_web.repositories.FunctionRepository;
 import com.cosmo.wanda_web.repositories.GameRepository;
 import com.cosmo.wanda_web.repositories.LogAnswersAgentsRepository;
@@ -50,6 +52,9 @@ public class FunctionService {
 
     @Autowired
     private GameRepository gameRepository;
+
+    @Autowired
+    private MatchOrchestrator matchOrchestrator;
 
     @Transactional
     public FeedbackResponseDTO feedback(FunctionRequestDTO dto) {
@@ -177,23 +182,9 @@ public class FunctionService {
         }
     }
 
-    public boolean verifyFunctionsByGame(User user, String gameName){
-        if (gameName.equalsIgnoreCase("jokenpo")){
-            Optional<Function> jokenpo1ByPlayerId = functionRepository.findJokenpo1ByPlayerId(user.getId());
-            if (jokenpo1ByPlayerId.isEmpty()){
-                return false;
-            }
-            Optional<Function> jokenpo2ByPlayerId = functionRepository.findJokenpo2ByPlayerId(user.getId());
-            if (jokenpo2ByPlayerId.isEmpty()){
-                return false;
-            }
-        }else if (gameName.equalsIgnoreCase("bits")){
-            Optional<Function> bitsByPlayerId = functionRepository.findBitsByPlayerId(user.getId());
-            if (bitsByPlayerId.isEmpty()){
-                return false;
-            }
-        }
-        return true;
+    public boolean verifyFunctionsByGame(User user, String gameName) {
+        GameEngine engine = matchOrchestrator.getEngine(gameName);
+        return engine.hasAllFunctions(user.getId(), functionRepository);
     }
 
     @Transactional
