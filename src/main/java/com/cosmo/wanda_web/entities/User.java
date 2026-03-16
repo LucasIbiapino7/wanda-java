@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Entity
@@ -18,6 +19,9 @@ public class User implements UserDetails {
     @Column(unique = true)
     private String email;
     private String password;
+
+    @Column(name = "created_at", columnDefinition = "TIMESTAMP WITHOUT TIME ZONE")
+    private LocalDateTime createdAt;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "profile_type", nullable = false)
@@ -145,6 +149,14 @@ public class User implements UserDetails {
 
     public void setPlayer(Player player) {
         this.player = player;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
     public List<Function> getFunctions() {
