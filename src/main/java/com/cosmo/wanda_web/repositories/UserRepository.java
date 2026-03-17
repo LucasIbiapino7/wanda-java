@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface UserRepository extends JpaRepository<User, Long> {
@@ -34,4 +35,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Page<User> findAllByName(@Param("q") String q,
                              @Param("currentUserId") Long currentUserId,
                              Pageable pageable);
+
+    @Query("""
+    SELECT u 
+    FROM User u
+    WHERE (CAST(:from AS timestamp) IS NULL OR u.createdAt >= :from) AND (CAST(:to AS timestamp) IS NULL OR u.createdAt <= :to)
+    ORDER BY u.createdAt DESC
+    """)
+    Page<User> findForAudit(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to, Pageable pageable);
 }
