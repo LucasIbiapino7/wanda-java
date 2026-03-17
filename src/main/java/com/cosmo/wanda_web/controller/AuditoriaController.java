@@ -1,6 +1,7 @@
 package com.cosmo.wanda_web.controller;
 
 import com.cosmo.wanda_web.dto.auditoria.AuditFunctionDTO;
+import com.cosmo.wanda_web.dto.auditoria.AuditMatchDTO;
 import com.cosmo.wanda_web.dto.auditoria.AuditUserDTO;
 import com.cosmo.wanda_web.services.AuditoriaService;
 import org.springframework.data.domain.Page;
@@ -49,6 +50,15 @@ public class AuditoriaController {
                                                                 @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
                                                                 Pageable pageable){
         return ResponseEntity.ok(auditoriaService.findFunctionsByUpdateAt(from, to, pageable));
+    }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @GetMapping("/partidas")
+    public ResponseEntity<Page<AuditMatchDTO>> findMatches(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
+            Pageable pageable) {
+        return ResponseEntity.ok(auditoriaService.findMatches(from, to, pageable));
     }
 
 }
