@@ -1,5 +1,6 @@
 package com.cosmo.wanda_web.controller;
 
+import com.cosmo.wanda_web.dto.auditoria.AuditFunctionDTO;
 import com.cosmo.wanda_web.dto.auditoria.AuditUserDTO;
 import com.cosmo.wanda_web.services.AuditoriaService;
 import org.springframework.data.domain.Page;
@@ -32,6 +33,22 @@ public class AuditoriaController {
             Pageable pageable) {
         Page<AuditUserDTO> result = auditoriaService.findUsers(from, to, pageable);
         return ResponseEntity.ok(result);
+    }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @GetMapping("/funcoes")
+    public ResponseEntity<Page<AuditFunctionDTO>> findFunctionsByCreatedAt(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
+                                                          @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
+                                                          Pageable pageable){
+        return ResponseEntity.ok(auditoriaService.findFunctionsByCreatedAt(from, to, pageable));
+    }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @GetMapping("/funcoes/atualizadas")
+    public ResponseEntity<Page<AuditFunctionDTO>> findFunctionsByUpdateAt(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
+                                                                @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
+                                                                Pageable pageable){
+        return ResponseEntity.ok(auditoriaService.findFunctionsByUpdateAt(from, to, pageable));
     }
 
 }

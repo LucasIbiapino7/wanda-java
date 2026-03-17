@@ -101,6 +101,14 @@ public class Function {
         this.updatedAt = updatedAt;
     }
 
+    public User getPlayer() {
+        return player;
+    }
+
+    public void setPlayer(User player) {
+        this.player = player;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
