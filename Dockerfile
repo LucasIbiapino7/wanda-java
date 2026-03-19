@@ -6,7 +6,7 @@ WORKDIR /app
 COPY . .
 
 # Compila o jar
-RUN ./mvnw -B -DskipTests clean package
+RUN chmod +x mvnw && ./mvnw -B -DskipTests clean package
 
 
 # 2 etapa: runtime     #
