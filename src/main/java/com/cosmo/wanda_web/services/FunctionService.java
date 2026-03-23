@@ -115,8 +115,10 @@ public class FunctionService {
         if (result.isPresent()){
             function = result.get();
             function.setFunction(dto.getCode());
+            function.setUpdatedAt(LocalDateTime.now());
         }else {
             function = new Function(dto.getFunctionName(), dto.getCode(), user, game);
+            function.setCreatedAt(LocalDateTime.now());
         }
         functionRepository.save(function);
     }

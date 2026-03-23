@@ -33,6 +33,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
 @Service
 public class UserService {
 
@@ -83,6 +85,7 @@ public class UserService {
         newUser.setPassword(passwordEncode);
         Role roleUser = roleRepository.getReferenceById(1L);
         newUser.addRole(roleUser);
+        newUser.setCreatedAt(LocalDateTime.now());
         newUser = userRepository.save(newUser);
 
         Player player = playerWithCharacter.createPlayer(newUser);

@@ -2,6 +2,7 @@ package com.cosmo.wanda_web.entities;
 
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Entity
@@ -15,6 +16,12 @@ public class Function {
 
     @Column(columnDefinition = "TEXT")
     private String function;
+
+    @Column(name = "created_at", columnDefinition = "TIMESTAMP WITHOUT TIME ZONE")
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at", columnDefinition = "TIMESTAMP WITHOUT TIME ZONE")
+    private LocalDateTime updatedAt;
 
     @ManyToOne
     @JoinColumn(name = "player_id")
@@ -76,6 +83,30 @@ public class Function {
 
     public void setGame(Game game) {
         this.game = game;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public User getPlayer() {
+        return player;
+    }
+
+    public void setPlayer(User player) {
+        this.player = player;
     }
 
     @Override
