@@ -2,6 +2,9 @@ package com.cosmo.wanda_web.infra;
 
 import com.cosmo.wanda_web.dto.bits.*;
 import com.cosmo.wanda_web.dto.function.FunctionResponseDto;
+import com.cosmo.wanda_web.dto.python.SessionCreateRequest;
+import com.cosmo.wanda_web.dto.python.SessionExecuteRequest;
+import com.cosmo.wanda_web.dto.python.SessionExecuteResponse;
 import com.cosmo.wanda_web.dto.python.TurnResponseDTO;
 import com.cosmo.wanda_web.dto.users.UserDTO;
 import com.cosmo.wanda_web.entities.User;
@@ -10,6 +13,7 @@ import com.cosmo.wanda_web.infra.dtos.MatchResult;
 import com.cosmo.wanda_web.repositories.FunctionRepository;
 import com.cosmo.wanda_web.services.MatchService;
 import com.cosmo.wanda_web.services.client.PythonClient;
+import com.cosmo.wanda_web.services.exceptions.MatchExecutionException;
 import com.cosmo.wanda_web.services.exceptions.ResourceNotFoundException;
 import com.cosmo.wanda_web.services.utils.CurrentScore;
 import com.cosmo.wanda_web.services.utils.JsonConverter;
@@ -75,48 +79,65 @@ public class BitsEngine implements GameEngine {
         List<String> cardsPlayedPlayer1 = new ArrayList<>();
         List<String> cardsPlayedPlayer2 = new ArrayList<>();
 
-        int countMatch = 1;
-        while (match.endMatch(countMatch)) {
-            match.instanceInitialCards();
-            MatchBitsDTO matchBitsDTO = new MatchBitsDTO();
-            matchBitsDTO.setNumberMatch(countMatch);
+        // abre a sessão no Python. container sobe com os códigos dos dois jogadores
+        String sessionId = pythonClient.createSession(new SessionCreateRequest(player1function.getCode(), player2function.getCode())
+        ).getSessionId();
 
-            for (int i = 0; i <= 3; i++) {
-                PlaysBitsDTO playsDto = new PlaysBitsDTO(i + 1);
-                RoundBitsRequestDTO request = new RoundBitsRequestDTO(
-                        player1function.getCode(), match.getParamsPlayer1(),
-                        player2function.getCode(), match.getParamsPlayer2());
+        try {
+            int countMatch = 1;
+            while (match.endMatch(countMatch)) {
+                match.instanceInitialCards();
+                MatchBitsDTO matchBitsDTO = new MatchBitsDTO();
+                matchBitsDTO.setNumberMatch(countMatch);
 
-                TurnResponseDTO round = pythonClient.roundBits(request);
+                for (int i = 0; i <= 3; i++) {
+                    PlaysBitsDTO playsDto = new PlaysBitsDTO(i + 1);
 
-                String cardPlayer1 = match.validateChoice(match.getCardsPlayer1(), round.getPlayer1Choice());
-                String cardPlayer2 = match.validateChoice(match.getCardsPlayer2(), round.getPlayer2Choice());
+                    // monta o request com sessionId e parâmetros do round — sem reenviar os códigos
+                    SessionExecuteRequest request = new SessionExecuteRequest(sessionId,match.getParamsPlayer1(),
+                            match.getParamsPlayer2());
 
-                playsDto.resolveReturnedPlayer1(MatchesBits.ORDEM_MAO, round.getPlayer1Choice(), cardPlayer1);
-                playsDto.resolveReturnedPlayer2(MatchesBits.ORDEM_MAO, round.getPlayer2Choice(), cardPlayer2);
+                    // executa o round no container da sessão
+                    SessionExecuteResponse round = pythonClient.executeRound(request);
 
-                Integer roundWinner = match.conflict(cardPlayer1, cardPlayer2);
-                match.updatePlayerCards(cardPlayer1, cardPlayer2);
-                roundInformation.update(roundWinner);
-                cardsPlayedPlayer1.add(cardPlayer1);
-                cardsPlayedPlayer2.add(cardPlayer2);
-                playsDto.updateResolved(cardPlayer1, cardPlayer2, roundWinner);
-                matchBitsDTO.getPlays().add(playsDto);
+                    // verifica se houve erro no container. timeout ou exception na estratégia do aluno
+                    if (round.getError() != null) {
+                        throw new MatchExecutionException("Erro durante a partida: " + round.getError() + " — " + round.getErrorDetail());
+                    }
+
+                    String cardPlayer1 = match.validateChoice(match.getCardsPlayer1(), round.getPlayer1Choice());
+                    String cardPlayer2 = match.validateChoice(match.getCardsPlayer2(), round.getPlayer2Choice());
+
+                    playsDto.resolveReturnedPlayer1(MatchesBits.ORDEM_MAO, round.getPlayer1Choice(), cardPlayer1);
+                    playsDto.resolveReturnedPlayer2(MatchesBits.ORDEM_MAO, round.getPlayer2Choice(), cardPlayer2);
+
+                    Integer roundWinner = match.conflict(cardPlayer1, cardPlayer2);
+                    match.updatePlayerCards(cardPlayer1, cardPlayer2);
+                    roundInformation.update(roundWinner);
+                    cardsPlayedPlayer1.add(cardPlayer1);
+                    cardsPlayedPlayer2.add(cardPlayer2);
+                    playsDto.updateResolved(cardPlayer1, cardPlayer2, roundWinner);
+                    matchBitsDTO.getPlays().add(playsDto);
+                }
+
+                matchBitsDTO.setPlayer1Plays(new ArrayList<>(cardsPlayedPlayer1));
+                cardsPlayedPlayer1.clear();
+                matchBitsDTO.setPlayer2Plays(new ArrayList<>(cardsPlayedPlayer2));
+                cardsPlayedPlayer2.clear();
+
+                MatchDecisionBitsDTO decision = match.roundWinner(roundInformation, currentScore, matchBitsDTO.getPlays());
+                matchBitsDTO.setDecision(decision);
+                matchBitsDTO.setSummary(new SummaryBitsDTO(roundInformation));
+                matchBitsDTO.setCumulativeScore(new ScoreBitsDTO(currentScore));
+
+                duelDto.getMatches().add(matchBitsDTO);
+                roundInformation.restart();
+                countMatch++;
             }
 
-            matchBitsDTO.setPlayer1Plays(new ArrayList<>(cardsPlayedPlayer1));
-            cardsPlayedPlayer1.clear();
-            matchBitsDTO.setPlayer2Plays(new ArrayList<>(cardsPlayedPlayer2));
-            cardsPlayedPlayer2.clear();
-
-            MatchDecisionBitsDTO decision = match.roundWinner(roundInformation, currentScore, matchBitsDTO.getPlays());
-            matchBitsDTO.setDecision(decision);
-            matchBitsDTO.setSummary(new SummaryBitsDTO(roundInformation));
-            matchBitsDTO.setCumulativeScore(new ScoreBitsDTO(currentScore));
-
-            duelDto.getMatches().add(matchBitsDTO);
-            roundInformation.restart();
-            countMatch++;
+        } finally {
+            // encerra a sessão, container é destruído independente de sucesso ou erro
+            pythonClient.closeSession(sessionId);
         }
 
         // determina o vencedor

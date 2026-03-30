@@ -41,6 +41,13 @@ public class ControllerExceptionsHandler {
         return ResponseEntity.status(status).body(err);
     }
 
+    @ExceptionHandler(MatchExecutionException.class)
+    public ResponseEntity<CustomError> matchExecution(MatchExecutionException e, HttpServletRequest request) {
+        log.error("Erro durante execução da partida. uri={}, mensagem={}", request.getRequestURI(), e.getMessage());
+        HttpStatus status = HttpStatus.UNPROCESSABLE_ENTITY;
+        CustomError err = new CustomError(Instant.now(), status.value(), e.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(status).body(err);
+    }
 
     @ExceptionHandler(AuthorizationDeniedException.class)
     public ResponseEntity<CustomError> authorizationDenied(AuthorizationDeniedException e, HttpServletRequest request) {

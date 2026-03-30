@@ -1,8 +1,7 @@
 package com.cosmo.wanda_web.infra;
 
 import com.cosmo.wanda_web.dto.match.*;
-import com.cosmo.wanda_web.dto.python.RoundRequestDTO;
-import com.cosmo.wanda_web.dto.python.TurnResponseDTO;
+import com.cosmo.wanda_web.dto.python.*;
 import com.cosmo.wanda_web.dto.users.UserDTO;
 import com.cosmo.wanda_web.entities.Challenge;
 import com.cosmo.wanda_web.entities.Function;
@@ -12,6 +11,7 @@ import com.cosmo.wanda_web.infra.dtos.MatchResult;
 import com.cosmo.wanda_web.repositories.FunctionRepository;
 import com.cosmo.wanda_web.services.MatchService;
 import com.cosmo.wanda_web.services.client.PythonClient;
+import com.cosmo.wanda_web.services.exceptions.MatchExecutionException;
 import com.cosmo.wanda_web.services.exceptions.ResourceNotFoundException;
 import com.cosmo.wanda_web.services.utils.CurrentScore;
 import com.cosmo.wanda_web.services.utils.Matches;
@@ -81,90 +81,119 @@ public class JokenpoEngine implements GameEngine {
         List<String> cardsPlayer1 = new ArrayList<>();
         List<String> cardsPlayer2 = new ArrayList<>();
 
-        int countMatch = 1;
-        while (countMatch <= matches.getMatches()) {
+        // abre duas sessões — uma pra cada função (round 1 e round 2)
+        // round 3 é calculado internamente, não chama o Python
+        String sessionIdRound1 = pythonClient.createSession(
+                new SessionCreateRequest(functionJokenpo1Player1.getFunction(), functionJokenpo1Player2.getFunction())
+        ).getSessionId();
 
-            matches.instanceCards();
-            MatchInformationDTO matchInformationDTO = new MatchInformationDTO();
-            matchInformationDTO.setMatchNumber(countMatch);
-            int round = 1;
+        String sessionIdRound2 = pythonClient.createSession(
+                new SessionCreateRequest(functionJokenpo2Player1.getFunction(), functionJokenpo2Player2.getFunction())
+        ).getSessionId();
 
-            // Round 1 — função 1
-            matches.updateParametersRound1();
-            RoundRequestDTO roundRequestDTO = new RoundRequestDTO(
-                    functionJokenpo1Player1.getFunction(), matches.getParametersPlayer1(),
-                    functionJokenpo1Player2.getFunction(), matches.getParametersPlayer2());
-            TurnResponseDTO round1 = pythonClient.round(roundRequestDTO);
+        try {
+            int countMatch = 1;
+            while (countMatch <= matches.getMatches()) {
 
-            String cardRound1Player1 = matches.validateCardPlayer(matches.getCardsPlayer1(), round1.getPlayer1Choice());
-            String cardRound1Player2 = matches.validateCardPlayer(matches.getCardsPlayer2(), round1.getPlayer2Choice());
-            cardsPlayer1.add(cardRound1Player1);
-            cardsPlayer2.add(cardRound1Player2);
+                matches.instanceCards();
+                MatchInformationDTO matchInformationDTO = new MatchInformationDTO();
+                matchInformationDTO.setMatchNumber(countMatch);
+                int round = 1;
 
-            Integer winnerTurn = matches.conflict(cardRound1Player1, cardRound1Player2);
-            RoundsDTO playsDTO = new RoundsDTO();
-            playsDTO.setRoundNumber(round);
-            playsDTO.setPlayerCard1(cardRound1Player1);
-            playsDTO.setPlayerCard2(cardRound1Player2);
-            playsDTO.setWinnerOfPlay(winnerTurn);
-            matchInformationDTO.getPlays().add(playsDTO);
-            roundInfo.update(winnerTurn);
+                // Round 1 — função 1 via sessão dedicada
+                matches.updateParametersRound1();
+                SessionExecuteResponse round1 = pythonClient.executeRound(
+                        new SessionExecuteRequest(sessionIdRound1, new ArrayList<>(matches.getParametersPlayer1()), new ArrayList<>(matches.getParametersPlayer2()))
+                );
 
-            matches.updateCardsPlayer(matches.getCardsPlayer1(), cardRound1Player1);
-            matches.updateCardsPlayer(matches.getCardsPlayer2(), cardRound1Player2);
+                // verifica se houve erro no container — timeout ou exception na estratégia do aluno
+                if (round1.getError() != null) {
+                    throw new MatchExecutionException(
+                            "Erro no round 1: " + round1.getError() + " — " + round1.getErrorDetail()
+                    );
+                }
 
-            // Round 2 — função 2
-            matches.updateParametersRound2();
-            RoundRequestDTO roundRequestDTORound2 = new RoundRequestDTO(
-                    functionJokenpo2Player1.getFunction(), matches.getParametersPlayer1(),
-                    functionJokenpo2Player2.getFunction(), matches.getParametersPlayer2());
-            TurnResponseDTO round2 = pythonClient.round(roundRequestDTORound2);
+                String cardRound1Player1 = matches.validateCardPlayer(matches.getCardsPlayer1(), round1.getPlayer1Choice());
+                String cardRound1Player2 = matches.validateCardPlayer(matches.getCardsPlayer2(), round1.getPlayer2Choice());
+                cardsPlayer1.add(cardRound1Player1);
+                cardsPlayer2.add(cardRound1Player2);
 
-            String cardRound2Player1 = matches.validateCardPlayer(matches.getCardsPlayer1(), round2.getPlayer1Choice());
-            String cardRound2Player2 = matches.validateCardPlayer(matches.getCardsPlayer2(), round2.getPlayer2Choice());
-            cardsPlayer1.add(cardRound2Player1);
-            cardsPlayer2.add(cardRound2Player2);
+                Integer winnerTurn = matches.conflict(cardRound1Player1, cardRound1Player2);
+                RoundsDTO playsDTO = new RoundsDTO();
+                playsDTO.setRoundNumber(round);
+                playsDTO.setPlayerCard1(cardRound1Player1);
+                playsDTO.setPlayerCard2(cardRound1Player2);
+                playsDTO.setWinnerOfPlay(winnerTurn);
+                matchInformationDTO.getPlays().add(playsDTO);
+                roundInfo.update(winnerTurn);
 
-            winnerTurn = matches.conflict(cardRound2Player1, cardRound2Player2);
-            RoundsDTO playsDTORound2 = new RoundsDTO();
-            round++;
-            playsDTORound2.setRoundNumber(round);
-            playsDTORound2.setPlayerCard1(cardRound2Player1);
-            playsDTORound2.setPlayerCard2(cardRound2Player2);
-            playsDTORound2.setWinnerOfPlay(winnerTurn);
-            matchInformationDTO.getPlays().add(playsDTORound2);
-            roundInfo.update(winnerTurn);
+                matches.updateCardsPlayer(matches.getCardsPlayer1(), cardRound1Player1);
+                matches.updateCardsPlayer(matches.getCardsPlayer2(), cardRound1Player2);
 
-            matches.updateCardsPlayer(matches.getCardsPlayer1(), cardRound2Player1);
-            matches.updateCardsPlayer(matches.getCardsPlayer2(), cardRound2Player2);
+                // Round 2 — função 2 via sessão dedicada
+                matches.updateParametersRound2();
+                SessionExecuteResponse round2 = pythonClient.executeRound(
+                        new SessionExecuteRequest(sessionIdRound2, new ArrayList<>(matches.getParametersPlayer1()), new ArrayList<>(matches.getParametersPlayer2()))
+                );
 
-            // Round 3 — carta restante
-            String cardRound3Player1 = matches.getRound3Player1();
-            String cardRound3Player2 = matches.getRound3Player2();
-            cardsPlayer1.add(cardRound3Player1);
-            cardsPlayer2.add(cardRound3Player2);
+                // verifica se houve erro no container — timeout ou exception na estratégia do aluno
+                if (round2.getError() != null) {
+                    throw new MatchExecutionException(
+                            "Erro no round 2: " + round2.getError() + " — " + round2.getErrorDetail()
+                    );
+                }
 
-            winnerTurn = matches.conflict(cardRound3Player1, cardRound3Player2);
-            RoundsDTO playsDTORound3 = new RoundsDTO();
-            round++;
-            playsDTORound3.setRoundNumber(round);
-            playsDTORound3.setPlayerCard1(cardRound3Player1);
-            playsDTORound3.setPlayerCard2(cardRound3Player2);
-            playsDTORound3.setWinnerOfPlay(winnerTurn);
-            matchInformationDTO.getPlays().add(playsDTORound3);
-            roundInfo.update(winnerTurn);
+                String cardRound2Player1 = matches.validateCardPlayer(matches.getCardsPlayer1(), round2.getPlayer1Choice());
+                String cardRound2Player2 = matches.validateCardPlayer(matches.getCardsPlayer2(), round2.getPlayer2Choice());
+                cardsPlayer1.add(cardRound2Player1);
+                cardsPlayer2.add(cardRound2Player2);
 
-            matches.roundWinner(roundInfo, score);
-            matchInformationDTO.update(roundInfo);
-            matchInformationDTO.getPlayer1cards().addAll(cardsPlayer1);
-            cardsPlayer1.clear();
-            matchInformationDTO.getPlayer2cards().addAll(cardsPlayer2);
-            cardsPlayer2.clear();
-            matchInformationDTO.setCurrentScore(new CurrentScoreDTO(score));
-            duelResponseDTO.getMatches().add(matchInformationDTO);
+                winnerTurn = matches.conflict(cardRound2Player1, cardRound2Player2);
+                RoundsDTO playsDTORound2 = new RoundsDTO();
+                round++;
+                playsDTORound2.setRoundNumber(round);
+                playsDTORound2.setPlayerCard1(cardRound2Player1);
+                playsDTORound2.setPlayerCard2(cardRound2Player2);
+                playsDTORound2.setWinnerOfPlay(winnerTurn);
+                matchInformationDTO.getPlays().add(playsDTORound2);
+                roundInfo.update(winnerTurn);
 
-            roundInfo.restart();
-            countMatch++;
+                matches.updateCardsPlayer(matches.getCardsPlayer1(), cardRound2Player1);
+                matches.updateCardsPlayer(matches.getCardsPlayer2(), cardRound2Player2);
+
+                // Round 3 — carta restante, calculado internamente sem chamar o Python
+                String cardRound3Player1 = matches.getRound3Player1();
+                String cardRound3Player2 = matches.getRound3Player2();
+                cardsPlayer1.add(cardRound3Player1);
+                cardsPlayer2.add(cardRound3Player2);
+
+                winnerTurn = matches.conflict(cardRound3Player1, cardRound3Player2);
+                RoundsDTO playsDTORound3 = new RoundsDTO();
+                round++;
+                playsDTORound3.setRoundNumber(round);
+                playsDTORound3.setPlayerCard1(cardRound3Player1);
+                playsDTORound3.setPlayerCard2(cardRound3Player2);
+                playsDTORound3.setWinnerOfPlay(winnerTurn);
+                matchInformationDTO.getPlays().add(playsDTORound3);
+                roundInfo.update(winnerTurn);
+
+                matches.roundWinner(roundInfo, score);
+                matchInformationDTO.update(roundInfo);
+                matchInformationDTO.getPlayer1cards().addAll(cardsPlayer1);
+                cardsPlayer1.clear();
+                matchInformationDTO.getPlayer2cards().addAll(cardsPlayer2);
+                cardsPlayer2.clear();
+                matchInformationDTO.setCurrentScore(new CurrentScoreDTO(score));
+                duelResponseDTO.getMatches().add(matchInformationDTO);
+
+                roundInfo.restart();
+                countMatch++;
+            }
+
+        } finally {
+            // encerra as duas sessões — containers são destruídos independente de sucesso ou erro
+            pythonClient.closeSession(sessionIdRound1);
+            pythonClient.closeSession(sessionIdRound2);
         }
 
         // determina o vencedor
