@@ -210,7 +210,23 @@ public class TournamentService {
                 Long player2 = currentParticipants.get(i + 1);
                 User userPlayer1 = players.get(player1);
                 User userPlayer2 = players.get(player2);
-                MatchResult result = matchOrchestrator.run(userPlayer1, userPlayer2, game);
+                MatchResult result;
+                try {
+                    result = matchOrchestrator.run(userPlayer1, userPlayer2, game);
+                } catch (Exception e) {
+                    String errorContext = String.format(
+                            "Erro na fase %d | %s (id=%d) vs %s (id=%d) | %s", fase, userPlayer1.getName(), player1,
+                            userPlayer2.getName(), player2,e.getMessage()
+                    );
+                    log.error("Falha durante execução do torneio. torneoId={}, errorContext={}",tournament.getId(), errorContext, e);
+                    if (!bracket.getRounds().isEmpty()) {
+                        tournament.setBracketJson(jsonConverter.converterBracket(bracket));
+                    }
+                    tournament.setStatus(TournamentStatus.ERROR);
+                    tournament.setErrorContext(errorContext);
+                    tournamentRepository.save(tournament);
+                    return;
+                }
 
                 Match match = new Match(userPlayer1, userPlayer2, LocalDateTime.now(),
                         result.getWinner(), result.getReplayJson(), game);
@@ -285,8 +301,8 @@ public class TournamentService {
         if (!Objects.equals(user.getId(), tournament.getCreator().getId())) {
             throw new TournamentException("Você não é o criador deste torneio.");
         }
-        if (tournament.getStatus() != TournamentStatus.OPEN) {
-            throw new TournamentException("Só é possível cancelar torneios com status OPEN.");
+        if (tournament.getStatus() != TournamentStatus.OPEN && tournament.getStatus() != TournamentStatus.ERROR) {
+            throw new TournamentException("Só é possível cancelar torneios com status OPEN ou ERROR.");
         }
         tournament.setStatus(TournamentStatus.CANCELLED);
         tournamentRepository.save(tournament);

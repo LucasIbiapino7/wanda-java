@@ -4,5 +4,6 @@ public enum TournamentStatus {
     OPEN,
     RUNNING,
     FINISHED,
-    CANCELLED
+    CANCELLED,
+    ERROR
 }

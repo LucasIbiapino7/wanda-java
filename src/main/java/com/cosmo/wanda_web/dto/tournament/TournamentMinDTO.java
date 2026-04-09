@@ -24,6 +24,7 @@ public class TournamentMinDTO {
     private UserDTO winnerId;
     private Boolean canReady;
     private GameDto game;
+    private String errorContext;
 
     public TournamentMinDTO() {
     }
@@ -45,6 +46,7 @@ public class TournamentMinDTO {
         winnerId = (entity.getWinner() != null) ? new UserDTO(entity.getWinner()) : null;
         canReady = false;
         game = new GameDto(entity.getGame());
+        errorContext = entity.getErrorContext();
     }
 
     public Long getId() {
@@ -93,6 +95,10 @@ public class TournamentMinDTO {
 
     public GameDto getGame() {
         return game;
+    }
+
+    public String getErrorContext() {
+        return errorContext;
     }
 
     public UserDTO getWinnerId() {
