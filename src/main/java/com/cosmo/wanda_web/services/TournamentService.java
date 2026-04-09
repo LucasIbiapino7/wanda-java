@@ -252,6 +252,47 @@ public class TournamentService {
         tournamentRepository.save(tournament);
     }
 
+    @Transactional
+    public TournamentMinDTO update(Long id, TournamentUpdateDTO dto) {
+        Tournament tournament = tournamentRepository.findById(id).orElseThrow(
+                () -> new ResourceNotFoundException("Torneio não encontrado!"));
+        User user = userService.authenticated();
+        if (!Objects.equals(user.getId(), tournament.getCreator().getId())) {
+            throw new TournamentException("Você não é o criador deste torneio.");
+        }
+        if (tournament.getStatus() != TournamentStatus.OPEN) {
+            throw new TournamentException("Só é possível editar torneios com status OPEN.");
+        }
+        if (dto.getStartTime() != null && dto.getStartTime().isBefore(LocalDateTime.now().plusMinutes(15))) {
+            throw new TournamentException("Start Time inválido! Coloque uma data de pelo menos 15min acima do momento atual.");
+        }
+        tournament.setName(dto.getName());
+        tournament.setDescription(dto.getDescription());
+        if (dto.getStartTime() != null) {
+            tournament.setStartTime(dto.getStartTime());
+        }
+        tournament = tournamentRepository.save(tournament);
+        log.info("Torneio atualizado. torneoId={}, novoNome={}, novoStartTime={}",
+                tournament.getId(), tournament.getName(), tournament.getStartTime());
+        return new TournamentMinDTO(tournament);
+    }
+
+    @Transactional
+    public void cancel(Long id) {
+        Tournament tournament = tournamentRepository.findById(id).orElseThrow(
+                () -> new ResourceNotFoundException("Torneio não encontrado!"));
+        User user = userService.authenticated();
+        if (!Objects.equals(user.getId(), tournament.getCreator().getId())) {
+            throw new TournamentException("Você não é o criador deste torneio.");
+        }
+        if (tournament.getStatus() != TournamentStatus.OPEN) {
+            throw new TournamentException("Só é possível cancelar torneios com status OPEN.");
+        }
+        tournament.setStatus(TournamentStatus.CANCELLED);
+        tournamentRepository.save(tournament);
+        log.info("Torneio cancelado. torneoId={}", tournament.getId());
+    }
+
     private String describeRound(int players) {
         return switch (players) {
             case 32 -> "Primeiras Fases";
