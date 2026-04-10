@@ -108,9 +108,7 @@ public class TournamentService {
     public TournamentMinDTO subscribeTournament(SubscribeTournamentDTO dto) {
         Tournament tournament = tournamentRepository.findById(dto.tournamentId()).orElseThrow(
                 () -> new TournamentException("Torneio nao encontrado!"));
-        if (tournament.getCurrentParticipants() >= tournament.getMaxParticipants()){
-            throw new TournamentException("Torneio com o número máximo de participantes!");
-        }
+
         if (!tournament.getStatus().toString().equals("OPEN")){
             throw new TournamentException("Torneio não está aberto");
         }
@@ -124,13 +122,14 @@ public class TournamentService {
         if (tournament.getAsPrivate() && !dto.password().equals(tournament.getPassword())){
             throw new TournamentException("A senha do torneio está incorreta!");
         }
-        log.info("Inscrição no torneio. torneiId={}, participantesAtuais={}, maxParticipantes={}",
-                tournament.getId(),
-                tournament.getCurrentParticipants(),
-                tournament.getMaxParticipants());
+
+        int inscrito = tournamentRepository.trySubscribe(dto.tournamentId());
+        if (inscrito == 0) {
+            throw new TournamentException("Torneio com o número máximo de participantes!");
+        }
+
         tournament.getUsers().add(participant);
         participant.getTournaments().add(tournament);
-        tournament.setCurrentParticipants(tournament.getCurrentParticipants() + 1);
         tournament = tournamentRepository.save(tournament);
         return new TournamentMinDTO(tournament);
     }
@@ -211,7 +210,23 @@ public class TournamentService {
                 Long player2 = currentParticipants.get(i + 1);
                 User userPlayer1 = players.get(player1);
                 User userPlayer2 = players.get(player2);
-                MatchResult result = matchOrchestrator.run(userPlayer1, userPlayer2, game);
+                MatchResult result;
+                try {
+                    result = matchOrchestrator.run(userPlayer1, userPlayer2, game);
+                } catch (Exception e) {
+                    String errorContext = String.format(
+                            "Erro na fase %d | %s (id=%d) vs %s (id=%d) | %s", fase, userPlayer1.getName(), player1,
+                            userPlayer2.getName(), player2,e.getMessage()
+                    );
+                    log.error("Falha durante execução do torneio. torneoId={}, errorContext={}",tournament.getId(), errorContext, e);
+                    if (!bracket.getRounds().isEmpty()) {
+                        tournament.setBracketJson(jsonConverter.converterBracket(bracket));
+                    }
+                    tournament.setStatus(TournamentStatus.ERROR);
+                    tournament.setErrorContext(errorContext);
+                    tournamentRepository.save(tournament);
+                    return;
+                }
 
                 Match match = new Match(userPlayer1, userPlayer2, LocalDateTime.now(),
                         result.getWinner(), result.getReplayJson(), game);
@@ -251,6 +266,47 @@ public class TournamentService {
         playerService.updateWinnerTournament(currentParticipants.get(0));
         tournament.setStatus(TournamentStatus.FINISHED);
         tournamentRepository.save(tournament);
+    }
+
+    @Transactional
+    public TournamentMinDTO update(Long id, TournamentUpdateDTO dto) {
+        Tournament tournament = tournamentRepository.findById(id).orElseThrow(
+                () -> new ResourceNotFoundException("Torneio não encontrado!"));
+        User user = userService.authenticated();
+        if (!Objects.equals(user.getId(), tournament.getCreator().getId())) {
+            throw new TournamentException("Você não é o criador deste torneio.");
+        }
+        if (tournament.getStatus() != TournamentStatus.OPEN) {
+            throw new TournamentException("Só é possível editar torneios com status OPEN.");
+        }
+        if (dto.getStartTime() != null && dto.getStartTime().isBefore(LocalDateTime.now().plusMinutes(15))) {
+            throw new TournamentException("Start Time inválido! Coloque uma data de pelo menos 15min acima do momento atual.");
+        }
+        tournament.setName(dto.getName());
+        tournament.setDescription(dto.getDescription());
+        if (dto.getStartTime() != null) {
+            tournament.setStartTime(dto.getStartTime());
+        }
+        tournament = tournamentRepository.save(tournament);
+        log.info("Torneio atualizado. torneoId={}, novoNome={}, novoStartTime={}",
+                tournament.getId(), tournament.getName(), tournament.getStartTime());
+        return new TournamentMinDTO(tournament);
+    }
+
+    @Transactional
+    public void cancel(Long id) {
+        Tournament tournament = tournamentRepository.findById(id).orElseThrow(
+                () -> new ResourceNotFoundException("Torneio não encontrado!"));
+        User user = userService.authenticated();
+        if (!Objects.equals(user.getId(), tournament.getCreator().getId())) {
+            throw new TournamentException("Você não é o criador deste torneio.");
+        }
+        if (tournament.getStatus() != TournamentStatus.OPEN && tournament.getStatus() != TournamentStatus.ERROR) {
+            throw new TournamentException("Só é possível cancelar torneios com status OPEN ou ERROR.");
+        }
+        tournament.setStatus(TournamentStatus.CANCELLED);
+        tournamentRepository.save(tournament);
+        log.info("Torneio cancelado. torneoId={}", tournament.getId());
     }
 
     private String describeRound(int players) {

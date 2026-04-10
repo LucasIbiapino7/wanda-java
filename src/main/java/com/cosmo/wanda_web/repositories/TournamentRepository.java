@@ -77,4 +77,14 @@ public interface TournamentRepository extends JpaRepository<Tournament, Long> {
            AND t.status = com.cosmo.wanda_web.entities.TournamentStatus.OPEN
       """)
     int tryStart(@Param("id") Long id);
+
+    @Modifying
+    @Query("""
+    UPDATE Tournament t
+    SET t.currentParticipants = t.currentParticipants + 1
+    WHERE t.id = :id
+    AND t.currentParticipants < t.maxParticipants
+    AND t.status = 'OPEN'
+""")
+    int trySubscribe(@Param("id") Long id);
 }

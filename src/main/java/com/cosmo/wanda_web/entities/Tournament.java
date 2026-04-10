@@ -29,6 +29,8 @@ public class Tournament {
     private int currentParticipants;
     @Column(name = "bracket_json", columnDefinition = "TEXT")
     private String bracketJson;
+    @Column(name = "error_context", columnDefinition = "TEXT")
+    private String errorContext;
     @ManyToOne
     @JoinColumn(name = "creator_id")
     private User creator;
@@ -149,6 +151,14 @@ public class Tournament {
 
     public void setBracketJson(String bracketJson) {
         this.bracketJson = bracketJson;
+    }
+
+    public String getErrorContext() {
+        return errorContext;
+    }
+
+    public void setErrorContext(String errorContext) {
+        this.errorContext = errorContext;
     }
 
     public Set<User> getUsers() {

@@ -59,6 +59,28 @@ public class TournamentController {
         return ResponseEntity.ok(result);
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
+    @PatchMapping("/{id}")
+    public ResponseEntity<TournamentMinDTO> update(@PathVariable(name = "id") Long id,
+                                                   @Valid @RequestBody TournamentUpdateDTO dto) {
+        TournamentMinDTO result = tournamentService.update(id, dto);
+        return ResponseEntity.ok(result);
+    }
+
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> cancel(@PathVariable(name = "id") Long id) {
+        tournamentService.cancel(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
+    @GetMapping("/{id}/participants")
+    public ResponseEntity<TournamentWithParticipantsDTO> getParticipants(@PathVariable(name = "id") Long id) {
+        TournamentWithParticipantsDTO result = tournamentService.findByIdWithParticipants(id);
+        return ResponseEntity.ok(result);
+    }
+
 //    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
 //    @GetMapping("/{id}")
 //    public ResponseEntity<TournamentWithParticipantsDTO> getById(@PathVariable(name = "id") Long id){
