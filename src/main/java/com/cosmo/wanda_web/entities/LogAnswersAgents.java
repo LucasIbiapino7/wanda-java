@@ -1,6 +1,7 @@
 package com.cosmo.wanda_web.entities;
 
 import com.cosmo.wanda_web.services.utils.AssistantStyle;
+import com.cosmo.wanda_web.services.utils.InteractionType;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -29,6 +30,9 @@ public class LogAnswersAgents {
     private Boolean valid;
     private String feedbackUser;
     private String functionName;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "interaction_type")
+    private InteractionType interactionType;
 
     @ManyToOne
     @JoinColumn(name = "game_id")
@@ -135,6 +139,14 @@ public class LogAnswersAgents {
 
     public void setGame(Game game) {
         this.game = game;
+    }
+
+    public InteractionType getInteractionType() {
+        return interactionType;
+    }
+
+    public void setInteractionType(InteractionType interactionType) {
+        this.interactionType = interactionType;
     }
 
     @Override
