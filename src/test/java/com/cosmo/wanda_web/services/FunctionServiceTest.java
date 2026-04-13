@@ -2,14 +2,8 @@ package com.cosmo.wanda_web.services;
 
 import com.cosmo.wanda_web.dto.function.FunctionRequestDTO;
 import com.cosmo.wanda_web.dto.python.ValidateResponseDTO;
-import com.cosmo.wanda_web.entities.Game;
-import com.cosmo.wanda_web.entities.LogAnswersAgents;
-import com.cosmo.wanda_web.entities.ProfileType;
-import com.cosmo.wanda_web.entities.User;
-import com.cosmo.wanda_web.repositories.FunctionRepository;
-import com.cosmo.wanda_web.repositories.GameRepository;
-import com.cosmo.wanda_web.repositories.LogAnswersAgentsRepository;
-import com.cosmo.wanda_web.repositories.UserRepository;
+import com.cosmo.wanda_web.entities.*;
+import com.cosmo.wanda_web.repositories.*;
 import com.cosmo.wanda_web.services.client.PythonClient;
 import com.cosmo.wanda_web.services.utils.InteractionType;
 import com.cosmo.wanda_web.infra.MatchOrchestrator;
@@ -35,6 +29,9 @@ class FunctionServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private FunctionHistoryRepository functionHistoryRepository;
 
     @Mock
     private FunctionRepository functionRepository;
@@ -146,5 +143,83 @@ class FunctionServiceTest {
         verify(logAnswersAgentsRepository).save(captor.capture());
 
         assertThat(captor.getValue().getInteractionType()).isEqualTo(InteractionType.SUBMIT);
+    }
+
+    @Test
+    void validate_deveSalvarHistoricoQuandoFuncaoJaExiste() {
+        Function funcaoExistente = new Function();
+        funcaoExistente.setId(10L);
+        funcaoExistente.setName("jokenpo1");
+        funcaoExistente.setFunction("def func_antiga(): pass");
+        funcaoExistente.setPlayer(user);
+        funcaoExistente.setGame(game);
+
+        when(pythonClient.validate(any())).thenReturn(responseValida);
+        when(functionRepository.findByUserIdAndName(any(), any()))
+                .thenReturn(Optional.of(funcaoExistente));
+        when(functionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(functionHistoryRepository.findMaxVersionByFunctionId(10L))
+                .thenReturn(Optional.empty()); // primeira versão
+        when(functionHistoryRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        functionService.validate(dto);
+
+        ArgumentCaptor<FunctionHistory> captor = ArgumentCaptor.forClass(FunctionHistory.class);
+        verify(functionHistoryRepository).save(captor.capture());
+
+        FunctionHistory historico = captor.getValue();
+        assertThat(historico.getCode()).isEqualTo("def func_antiga(): pass"); // código antigo
+        assertThat(historico.getVersionNumber()).isEqualTo(1); // primeira versão
+        assertThat(historico.getPlayer()).isEqualTo(user);
+        assertThat(historico.getGame()).isEqualTo(game);
+        assertThat(historico.getFunction()).isEqualTo(funcaoExistente);
+    }
+
+    @Test
+    void validate_deveIncrementarVersionNumberQuandoJaExisteHistorico() {
+        Function funcaoExistente = new Function();
+        funcaoExistente.setId(10L);
+        funcaoExistente.setName("jokenpo1");
+        funcaoExistente.setFunction("def func_v2(): pass");
+        funcaoExistente.setPlayer(user);
+        funcaoExistente.setGame(game);
+
+        when(pythonClient.validate(any())).thenReturn(responseValida);
+        when(functionRepository.findByUserIdAndName(any(), any()))
+                .thenReturn(Optional.of(funcaoExistente));
+        when(functionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(functionHistoryRepository.findMaxVersionByFunctionId(10L))
+                .thenReturn(Optional.of(2)); // já existe versão 2
+        when(functionHistoryRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        functionService.validate(dto);
+
+        ArgumentCaptor<FunctionHistory> captor = ArgumentCaptor.forClass(FunctionHistory.class);
+        verify(functionHistoryRepository).save(captor.capture());
+
+        assertThat(captor.getValue().getVersionNumber()).isEqualTo(3); // incrementou
+    }
+
+    @Test
+    void validate_naoDeveSalvarHistoricoQuandoFuncaoEhNova() {
+        when(pythonClient.validate(any())).thenReturn(responseValida);
+        when(functionRepository.findByUserIdAndName(any(), any()))
+                .thenReturn(Optional.empty()); // função nova
+        when(functionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        functionService.validate(dto);
+
+        verify(functionHistoryRepository, never()).save(any());
+    }
+
+    @Test
+    void validate_naoDeveSalvarHistoricoQuandoFuncaoInvalida() {
+        ValidateResponseDTO responseInvalida = new ValidateResponseDTO(false, "erro");
+        responseInvalida.setThought("");
+        when(pythonClient.validate(any())).thenReturn(responseInvalida);
+
+        functionService.validate(dto);
+
+        verify(functionHistoryRepository, never()).save(any());
     }
 }

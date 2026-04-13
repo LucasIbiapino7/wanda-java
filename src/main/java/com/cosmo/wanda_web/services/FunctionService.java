@@ -5,16 +5,10 @@ import com.cosmo.wanda_web.dto.function.FeedbackResponseDTO;
 import com.cosmo.wanda_web.dto.function.FunctionRequestDTO;
 import com.cosmo.wanda_web.dto.function.FunctionResponseDto;
 import com.cosmo.wanda_web.dto.python.ValidateResponseDTO;
-import com.cosmo.wanda_web.entities.Function;
-import com.cosmo.wanda_web.entities.Game;
-import com.cosmo.wanda_web.entities.LogAnswersAgents;
-import com.cosmo.wanda_web.entities.User;
+import com.cosmo.wanda_web.entities.*;
 import com.cosmo.wanda_web.infra.GameEngine;
 import com.cosmo.wanda_web.infra.MatchOrchestrator;
-import com.cosmo.wanda_web.repositories.FunctionRepository;
-import com.cosmo.wanda_web.repositories.GameRepository;
-import com.cosmo.wanda_web.repositories.LogAnswersAgentsRepository;
-import com.cosmo.wanda_web.repositories.UserRepository;
+import com.cosmo.wanda_web.repositories.*;
 import com.cosmo.wanda_web.services.client.PythonClient;
 import com.cosmo.wanda_web.services.exceptions.DatabaseException;
 import com.cosmo.wanda_web.services.exceptions.ResourceNotFoundException;
@@ -38,6 +32,9 @@ public class FunctionService {
 
     @Autowired
     private PythonClient pythonClient;
+
+    @Autowired
+    private FunctionHistoryRepository functionHistoryRepository;
 
     @Autowired
     private UserRepository userRepository;
@@ -113,11 +110,27 @@ public class FunctionService {
     private void saveOrUpdateFunction(FunctionRequestDTO dto, User user, Game game) {
         Optional<Function> result = functionRepository.findByUserIdAndName(user.getId(), dto.getFunctionName());
         Function function;
-        if (result.isPresent()){
+        if (result.isPresent()) {
             function = result.get();
+
+            // Salva o código atual como histórico antes de sobrescrever
+            int nextVersion = functionHistoryRepository
+                    .findMaxVersionByFunctionId(function.getId())
+                    .map(v -> v + 1)
+                    .orElse(1);
+
+            FunctionHistory history = new FunctionHistory();
+            history.setFunction(function);
+            history.setPlayer(user);
+            history.setGame(game);
+            history.setCode(function.getFunction());
+            history.setSubmittedAt(LocalDateTime.now());
+            history.setVersionNumber(nextVersion);
+            functionHistoryRepository.save(history);
+
             function.setFunction(dto.getCode());
             function.setUpdatedAt(LocalDateTime.now());
-        }else {
+        } else {
             function = new Function(dto.getFunctionName(), dto.getCode(), user, game);
             function.setCreatedAt(LocalDateTime.now());
         }
