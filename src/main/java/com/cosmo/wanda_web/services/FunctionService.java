@@ -19,6 +19,7 @@ import com.cosmo.wanda_web.services.client.PythonClient;
 import com.cosmo.wanda_web.services.exceptions.DatabaseException;
 import com.cosmo.wanda_web.services.exceptions.ResourceNotFoundException;
 import com.cosmo.wanda_web.services.utils.AssistantStyle;
+import com.cosmo.wanda_web.services.utils.InteractionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,7 +68,7 @@ public class FunctionService {
         ValidateResponseDTO response = pythonClient.feedback(dto);
         log.info("Feedback retornado. valid={}, game={}, functionName={}",
                 response.getValid(), dto.getGameName(), dto.getFunctionName());
-        Long feedbackId = saveLogAnswer(dto, response, user, game);
+        Long feedbackId = saveLogAnswer(dto, response, user, game, InteractionType.FEEDBACK);
         return new FeedbackResponseDTO(response, feedbackId);
     }
 
@@ -81,7 +82,7 @@ public class FunctionService {
         ValidateResponseDTO response = pythonClient.run(dto);
         log.info("Run tests concluído. valid={}, game={}, functionName={}",
                 response.getValid(), dto.getGameName(), dto.getFunctionName());
-        Long feedbackId = saveLogAnswer(dto, response, user, game);
+        Long feedbackId = saveLogAnswer(dto, response, user, game, InteractionType.RUN);
         return new FeedbackResponseDTO(response, feedbackId);
     }
 
@@ -96,7 +97,7 @@ public class FunctionService {
         );
         // Validar a função com o microservice Python
         ValidateResponseDTO response = pythonClient.validate(dto);
-        Long feedbackId = saveLogAnswer(dto, response, user, game);
+        Long feedbackId = saveLogAnswer(dto, response, user, game, InteractionType.SUBMIT);
         // Verifica se a função é válida
         if (!response.getValid()){
             log.info("Função inválida. game={}, functionName={}", dto.getGameName(), dto.getFunctionName());
@@ -190,7 +191,7 @@ public class FunctionService {
     }
 
     @Transactional
-    private Long saveLogAnswer(FunctionRequestDTO dto, ValidateResponseDTO response, User user, Game game) {
+    private Long saveLogAnswer(FunctionRequestDTO dto, ValidateResponseDTO response, User user, Game game, InteractionType interactionType) {
         LogAnswersAgents log = new LogAnswersAgents();
         log.setCode(dto.getCode());
         log.setAnswer(response.getAnswer());
@@ -202,6 +203,7 @@ public class FunctionService {
         log.setUser(user);
         log.setFunctionName(dto.getFunctionName());
         log.setGame(game);
+        log.setInteractionType(interactionType);
         LogAnswersAgents save = logAnswersAgentsRepository.save(log);
         return save.getId();
     }
