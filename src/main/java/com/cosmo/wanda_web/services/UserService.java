@@ -8,13 +8,11 @@ import com.cosmo.wanda_web.dto.auth.AccessTokenDTO;
 import com.cosmo.wanda_web.dto.auth.AuthenticationDTO;
 import com.cosmo.wanda_web.dto.auth.RegisterDTO;
 import com.cosmo.wanda_web.dto.users.UserMinDto;
-import com.cosmo.wanda_web.entities.Player;
-import com.cosmo.wanda_web.entities.ProfileType;
-import com.cosmo.wanda_web.entities.Role;
-import com.cosmo.wanda_web.entities.User;
+import com.cosmo.wanda_web.entities.*;
 import com.cosmo.wanda_web.infra.TokenService;
 import com.cosmo.wanda_web.repositories.PlayerRepository;
 import com.cosmo.wanda_web.repositories.RoleRepository;
+import com.cosmo.wanda_web.repositories.SessionEventRepository;
 import com.cosmo.wanda_web.repositories.UserRepository;
 import com.cosmo.wanda_web.services.exceptions.RegisterException;
 import com.cosmo.wanda_web.services.exceptions.ResourceNotFoundException;
@@ -61,12 +59,19 @@ public class UserService {
     @Autowired
     private TokenService tokenService;
 
-    @Transactional(readOnly = true)
+    @Autowired
+    private SessionEventRepository sessionEventRepository;
+
+    @Transactional()
     public AccessTokenDTO login(AuthenticationDTO dto) {
         UsernamePasswordAuthenticationToken usernamePassword = new UsernamePasswordAuthenticationToken(dto.getEmail().toLowerCase().trim(), dto.getPassword());
         Authentication auth = authenticationManager.authenticate(usernamePassword);
         log.info("Login realizado. email={}", dto.getEmail().toLowerCase().trim());
         String token = tokenService.generateToken((User) auth.getPrincipal());
+        User userLogado = userRepository.findByEmail(dto.getEmail().toLowerCase());
+        if (userLogado != null) {
+            sessionEventRepository.save(new SessionEvent(userLogado, "LOGIN"));
+        }
         return new AccessTokenDTO(token);
     }
 
