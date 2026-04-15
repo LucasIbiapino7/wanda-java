@@ -3,6 +3,7 @@ package com.cosmo.wanda_web.projections;
 import com.cosmo.wanda_web.entities.ProfileType;
 
 public interface UserDetailsProjection {
+    Long getId();
     String getUsername();
     String getPassword();
     Long getRoleId();

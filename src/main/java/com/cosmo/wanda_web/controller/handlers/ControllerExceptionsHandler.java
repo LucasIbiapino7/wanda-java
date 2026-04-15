@@ -2,6 +2,7 @@ package com.cosmo.wanda_web.controller.handlers;
 
 import com.cosmo.wanda_web.dto.errors.CustomError;
 import com.cosmo.wanda_web.dto.errors.ValidationError;
+import com.cosmo.wanda_web.infra.TelegramNotifier;
 import com.cosmo.wanda_web.services.exceptions.*;
 import feign.FeignException;
 import io.opentelemetry.api.trace.Span;
@@ -9,6 +10,7 @@ import io.opentelemetry.api.trace.StatusCode;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -25,6 +27,9 @@ public class ControllerExceptionsHandler {
 
     private static final Logger log = LoggerFactory.getLogger(ControllerExceptionsHandler.class);
 
+    @Autowired
+    private TelegramNotifier telegramNotifier;
+
     @ExceptionHandler(InvalidFunctionException.class)
     public ResponseEntity<CustomError> InvalidFunction(InvalidFunctionException e, HttpServletRequest request) {
         HttpStatus status = HttpStatus.BAD_REQUEST;
@@ -36,6 +41,7 @@ public class ControllerExceptionsHandler {
     public ResponseEntity<CustomError> FeignException(FeignException e, HttpServletRequest request) {
         log.error("Erro na chamada ao Python. uri={}, status={}", request.getRequestURI(), e.status(), e);
         captureExceptionWithOtel(e);
+        telegramNotifier.sendError(e, request);
         HttpStatus status = HttpStatus.BAD_REQUEST;
         CustomError err = new CustomError(Instant.now(), status.value(), "tive um probleminha ao tentar processar sua função, peço desculpas por isso, tente novamente!", request.getRequestURI());
         return ResponseEntity.status(status).body(err);
@@ -116,6 +122,7 @@ public class ControllerExceptionsHandler {
     public ResponseEntity<CustomError> unexpectedException(Exception e, HttpServletRequest request) {
         log.error("Exceção não mapeada. uri={}, erro={}", request.getRequestURI(), e.getMessage(), e);
         captureExceptionWithOtel(e);
+        telegramNotifier.sendError(e, request);
         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
         CustomError err = new CustomError(Instant.now(), status.value(),
                 "Ocorreu um erro inesperado. Tente novamente.", request.getRequestURI());
