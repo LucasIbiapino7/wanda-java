@@ -17,6 +17,8 @@ services:
       - PYTHON_BASE_URL=${PYTHON_BASE_URL}
       - OTEL_ENDPOINT=${OTEL_ENDPOINT}
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
     logging:
       driver: json-file
       options:
