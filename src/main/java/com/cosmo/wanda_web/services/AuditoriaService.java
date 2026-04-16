@@ -1,6 +1,7 @@
 package com.cosmo.wanda_web.services;
 
 import com.cosmo.wanda_web.dto.auditoria.*;
+import com.cosmo.wanda_web.entities.User;
 import com.cosmo.wanda_web.projections.auditoria.AgenteSummaryProjection;
 import com.cosmo.wanda_web.projections.auditoria.FuncaoSummaryProjection;
 import com.cosmo.wanda_web.projections.auditoria.JogoSummaryProjection;
@@ -8,6 +9,7 @@ import com.cosmo.wanda_web.repositories.FunctionRepository;
 import com.cosmo.wanda_web.repositories.LogAnswersAgentsRepository;
 import com.cosmo.wanda_web.repositories.MatchRepository;
 import com.cosmo.wanda_web.repositories.UserRepository;
+import com.cosmo.wanda_web.services.exceptions.ResourceNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -73,5 +75,17 @@ public class AuditoriaService {
                 .toList();
 
         return new AuditAgentesDTO(totalInteracoes, totalAlunosAtivos, porAgente, porJogo, porFuncao);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AdminFunctionDTO> findFunctionsByUserEmail(String email) {
+        User user = userRepository.findByEmail(email.toLowerCase());
+        if (user == null) {
+            throw new ResourceNotFoundException("Usuário não encontrado: " + email);
+        }
+        return functionRepository.findAllByUserId(user.getId())
+                .stream()
+                .map(AdminFunctionDTO::new)
+                .toList();
     }
 }

@@ -76,4 +76,10 @@ public interface FunctionRepository extends JpaRepository<Function, Long> {
     """)
     Page<Function> findForAuditByUpdateAt(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to, Pageable pageable);
 
+    @Query("""
+            SELECT obj
+            FROM Function obj
+            WHERE obj.player.id = :userId
+            ORDER BY obj.game.name ASC, obj.name ASC""")
+    List<Function> findAllByUserId(@Param("userId") Long userId);
 }
