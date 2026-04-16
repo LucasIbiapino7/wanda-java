@@ -1,9 +1,6 @@
 package com.cosmo.wanda_web.controller;
 
-import com.cosmo.wanda_web.dto.auditoria.AuditAgentesDTO;
-import com.cosmo.wanda_web.dto.auditoria.AuditFunctionDTO;
-import com.cosmo.wanda_web.dto.auditoria.AuditMatchDTO;
-import com.cosmo.wanda_web.dto.auditoria.AuditUserDTO;
+import com.cosmo.wanda_web.dto.auditoria.*;
 import com.cosmo.wanda_web.services.AuditoriaService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @RestController
 @RequestMapping("/admin/auditoria")
@@ -68,6 +66,12 @@ public class AuditoriaController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to) {
         return ResponseEntity.ok(auditoriaService.findAgentes(from, to));
+    }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @GetMapping("/funcoes/usuario")
+    public ResponseEntity<List<AdminFunctionDTO>> findFunctionsByUser(@RequestParam String email) {
+        return ResponseEntity.ok(auditoriaService.findFunctionsByUserEmail(email));
     }
 
 }

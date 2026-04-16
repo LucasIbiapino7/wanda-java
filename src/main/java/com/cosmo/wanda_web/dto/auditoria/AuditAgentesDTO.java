@@ -9,19 +9,23 @@ public class AuditAgentesDTO {
     private List<AgenteDTO> porAgente;
     private List<JogoDTO> porJogo;
     private List<FuncaoDTO> porFuncao;
+    private List<InteractionTypeDTO> porInteractionType;
 
     public AuditAgentesDTO() {
 
     }
 
-    public AuditAgentesDTO(Long totalInteracoes, Long totalAlunosAtivos, List<AgenteDTO> porAgente, List<JogoDTO> porJogo,
-            List<FuncaoDTO> porFuncao) {
+    public AuditAgentesDTO(Long totalInteracoes, Long totalAlunosAtivos,
+                           List<AgenteDTO> porAgente, List<JogoDTO> porJogo,
+                           List<FuncaoDTO> porFuncao, List<InteractionTypeDTO> porInteractionType) {
         this.totalInteracoes = totalInteracoes;
         this.totalAlunosAtivos = totalAlunosAtivos;
-        this.mediaInteracoesPorAluno = totalAlunosAtivos > 0 ? Math.round((totalInteracoes * 10.0 / totalAlunosAtivos)) / 10.0 : 0.0;
+        this.mediaInteracoesPorAluno = totalAlunosAtivos > 0
+                ? Math.round((totalInteracoes * 10.0 / totalAlunosAtivos)) / 10.0 : 0.0;
         this.porAgente = porAgente;
         this.porJogo = porJogo;
         this.porFuncao = porFuncao;
+        this.porInteractionType = porInteractionType;
     }
 
     public Long getTotalInteracoes() {
@@ -70,5 +74,13 @@ public class AuditAgentesDTO {
 
     public void setPorFuncao(List<FuncaoDTO> porFuncao) {
         this.porFuncao = porFuncao;
+    }
+
+    public List<InteractionTypeDTO> getPorInteractionType() {
+        return porInteractionType;
+    }
+
+    public void setPorInteractionType(List<InteractionTypeDTO> porInteractionType) {
+        this.porInteractionType = porInteractionType;
     }
 }
