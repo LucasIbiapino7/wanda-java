@@ -4,6 +4,7 @@ import com.cosmo.wanda_web.dto.auditoria.*;
 import com.cosmo.wanda_web.entities.User;
 import com.cosmo.wanda_web.projections.auditoria.AgenteSummaryProjection;
 import com.cosmo.wanda_web.projections.auditoria.FuncaoSummaryProjection;
+import com.cosmo.wanda_web.projections.auditoria.InteractionTypeSummaryProjection;
 import com.cosmo.wanda_web.projections.auditoria.JogoSummaryProjection;
 import com.cosmo.wanda_web.repositories.FunctionRepository;
 import com.cosmo.wanda_web.repositories.LogAnswersAgentsRepository;
@@ -61,6 +62,8 @@ public class AuditoriaService {
         List<AgenteSummaryProjection> porAgenteRaw = logAnswersAgentsRepository.groupByAgente(from, to);
         List<JogoSummaryProjection> porJogoRaw = logAnswersAgentsRepository.groupByJogo(from, to);
         List<FuncaoSummaryProjection> porFuncaoRaw = logAnswersAgentsRepository.groupByFuncao(from, to);
+        List<InteractionTypeSummaryProjection> porInteractionTypeRaw =
+                logAnswersAgentsRepository.groupByInteractionType(from, to);
 
         List<AgenteDTO> porAgente = porAgenteRaw.stream()
                 .map(p -> new AgenteDTO(p, totalInteracoes))
@@ -74,7 +77,16 @@ public class AuditoriaService {
                 .map(p -> new FuncaoDTO(p, totalInteracoes))
                 .toList();
 
-        return new AuditAgentesDTO(totalInteracoes, totalAlunosAtivos, porAgente, porJogo, porFuncao);
+        Long totalComInteractionType = porInteractionTypeRaw.stream()
+                .mapToLong(InteractionTypeSummaryProjection::getTotal)
+                .sum();
+
+        List<InteractionTypeDTO> porInteractionType = porInteractionTypeRaw.stream()
+                .map(p -> new InteractionTypeDTO(p, totalComInteractionType))
+                .toList();
+
+        return new AuditAgentesDTO(totalInteracoes, totalAlunosAtivos,
+                porAgente, porJogo, porFuncao, porInteractionType);
     }
 
     @Transactional(readOnly = true)

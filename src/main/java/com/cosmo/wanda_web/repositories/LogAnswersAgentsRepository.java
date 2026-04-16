@@ -3,6 +3,7 @@ package com.cosmo.wanda_web.repositories;
 import com.cosmo.wanda_web.entities.LogAnswersAgents;
 import com.cosmo.wanda_web.projections.auditoria.AgenteSummaryProjection;
 import com.cosmo.wanda_web.projections.auditoria.FuncaoSummaryProjection;
+import com.cosmo.wanda_web.projections.auditoria.InteractionTypeSummaryProjection;
 import com.cosmo.wanda_web.projections.auditoria.JogoSummaryProjection;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -59,4 +60,15 @@ public interface LogAnswersAgentsRepository extends JpaRepository<LogAnswersAgen
             @Param("from") LocalDateTime from,
             @Param("to")   LocalDateTime to
     );
+
+    @Query("""
+    SELECT l.interactionType AS interactionType, COUNT(l) AS total
+    FROM LogAnswersAgents l
+    WHERE l.interactionType IS NOT NULL
+    AND (CAST(:from AS timestamp) IS NULL OR l.moment >= :from)
+    AND (CAST(:from AS timestamp) IS NULL OR l.moment <= :to)
+    GROUP BY l.interactionType
+    ORDER BY total DESC
+""")
+    List<InteractionTypeSummaryProjection> groupByInteractionType(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
 }
