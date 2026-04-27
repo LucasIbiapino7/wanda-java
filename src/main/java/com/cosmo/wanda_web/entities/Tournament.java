@@ -42,6 +42,10 @@ public class Tournament {
     @JoinColumn(name = "game_id")
     private Game game;
 
+    @ManyToOne
+    @JoinColumn(name = "classroom_id")
+    private Classroom classroom;
+
     @ManyToMany(mappedBy = "tournaments")
     private Set<User> users = new HashSet<>();
 
@@ -159,6 +163,14 @@ public class Tournament {
 
     public void setErrorContext(String errorContext) {
         this.errorContext = errorContext;
+    }
+
+    public Classroom getClassroom() {
+        return classroom;
+    }
+
+    public void setClassroom(Classroom classroom) {
+        this.classroom = classroom;
     }
 
     public Set<User> getUsers() {
