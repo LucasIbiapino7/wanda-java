@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
@@ -39,4 +40,13 @@ public interface ChallengeRepository extends JpaRepository<Challenge, Long> {
             "SET obj.status = :status, obj.match = :match " +
             "WHERE obj.id = :challengeId")
     void updateChallenge(Long challengeId, ChallengeStatus status, Match match);
+
+    // Desafios de uma turma específica
+    @Query("""
+       SELECT c
+       FROM Challenge c
+       WHERE c.classroom.id = :classroomId
+       ORDER BY c.createdAt DESC
+       """)
+    Page<Challenge> findByClassroomId(@Param("classroomId") Long classroomId, Pageable pageable);
 }

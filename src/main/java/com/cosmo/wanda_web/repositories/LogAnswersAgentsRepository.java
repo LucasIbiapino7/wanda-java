@@ -71,4 +71,44 @@ public interface LogAnswersAgentsRepository extends JpaRepository<LogAnswersAgen
     ORDER BY total DESC
 """)
     List<InteractionTypeSummaryProjection> groupByInteractionType(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
+
+    // Distribuição de interaction_type por aluno — base do dashboard
+    @Query("""
+       SELECT l.user.id, l.interactionType, COUNT(l)
+       FROM LogAnswersAgents l
+       WHERE l.user.id IN :userIds
+         AND l.moment BETWEEN :from AND :to
+       GROUP BY l.user.id, l.interactionType
+       """)
+    List<Object[]> groupByUserAndInteractionType(@Param("userIds") List<Long> userIds, @Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
+
+    // Ratio valid/invalid por aluno
+    @Query("""
+       SELECT l.user.id, l.valid, COUNT(l)
+       FROM LogAnswersAgents l
+       WHERE l.user.id IN :userIds
+         AND l.moment BETWEEN :from AND :to
+       GROUP BY l.user.id, l.valid
+       """)
+    List<Object[]> groupByUserAndValidity(@Param("userIds") List<Long> userIds, @Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
+
+    // IDs de alunos com pelo menos uma interação no período
+    @Query("""
+       SELECT DISTINCT l.user.id
+       FROM LogAnswersAgents l
+       WHERE l.user.id IN :userIds
+         AND l.moment BETWEEN :from AND :to
+       """)
+    List<Long> findActiveUserIds(@Param("userIds") List<Long> userIds, @Param("from") LocalDateTime from, @Param("to") LocalDateTime to );
+
+    // Total de interações por aluno no período
+    @Query("""
+       SELECT l.user.id, COUNT(l)
+       FROM LogAnswersAgents l
+       WHERE l.user.id IN :userIds
+         AND l.moment BETWEEN :from AND :to
+       GROUP BY l.user.id
+       """)
+    List<Object[]> countByUserIds(@Param("userIds") List<Long> userIds, @Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
+
 }

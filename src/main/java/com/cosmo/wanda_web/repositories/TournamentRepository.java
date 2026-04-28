@@ -87,4 +87,26 @@ public interface TournamentRepository extends JpaRepository<Tournament, Long> {
     AND t.status = 'OPEN'
 """)
     int trySubscribe(@Param("id") Long id);
+
+    // Torneios de uma turma específica
+    @Query("""
+       SELECT t
+       FROM Tournament t
+       WHERE t.classroom.id = :classroomId
+       ORDER BY t.createdAt DESC
+       """)
+    Page<Tournament> findByClassroomId(@Param("classroomId") Long classroomId, Pageable pageable);
+
+    // Cancela torneios ativos de uma turma (chamado no arquivamento)
+    @Modifying
+    @Query("""
+       UPDATE Tournament t
+       SET t.status = com.cosmo.wanda_web.entities.TournamentStatus.CANCELLED
+       WHERE t.classroom.id = :classroomId
+         AND t.status IN (
+             com.cosmo.wanda_web.entities.TournamentStatus.OPEN,
+             com.cosmo.wanda_web.entities.TournamentStatus.RUNNING
+         )
+       """)
+    int cancelActiveByClassroom(@Param("classroomId") Long classroomId);
 }
