@@ -2,11 +2,19 @@ package com.cosmo.wanda_web.config;
 
 import com.cosmo.wanda_web.entities.ProfileType;
 import com.cosmo.wanda_web.entities.User;
+import com.cosmo.wanda_web.repositories.ClassroomRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
 @Component("authz")
 public class AuthorizationBean {
+
+    private final ClassroomRepository classroomRepository;
+
+    public AuthorizationBean(ClassroomRepository classroomRepository) {
+        this.classroomRepository = classroomRepository;
+    }
+
     public boolean isInstructorOrAdmin(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) return false;
 
@@ -26,5 +34,25 @@ public class AuthorizationBean {
         // fallback: só checa admin pelas roles
         return authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+    }
+
+    public boolean isClassroomInstructor(Authentication authentication, Long classroomId) {
+        if (authentication == null || !authentication.isAuthenticated()) return false;
+
+        Object principal = authentication.getPrincipal();
+
+        if (principal instanceof User u) {
+            // Admin sempre pode
+            boolean isAdmin = u.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+            if (isAdmin) return true;
+
+            // Verifica se é o instructor dono desta turma
+            return classroomRepository.findById(classroomId)
+                    .map(c -> c.getInstructor().getId().equals(u.getId()))
+                    .orElse(false);
+        }
+
+        return false;
     }
 }
