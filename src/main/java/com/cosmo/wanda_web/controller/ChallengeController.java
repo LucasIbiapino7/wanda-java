@@ -38,4 +38,13 @@ public class ChallengeController {
         Long result = challengeService.isAccepted(dto);
         return ResponseEntity.ok(result);
     }
+
+    @PreAuthorize("@authz.isClassroomMemberOrInstructor(authentication, #classroomId)")
+    @GetMapping("/classroom/{classroomId}")
+    public ResponseEntity<Page<ChallengeFIndAllPendingDTO>> findByClassroom(
+            @PathVariable Long classroomId,
+            Pageable pageable) {
+        Page<ChallengeFIndAllPendingDTO> result = challengeService.findByClassroom(classroomId, pageable);
+        return ResponseEntity.ok(result);
+    }
 }

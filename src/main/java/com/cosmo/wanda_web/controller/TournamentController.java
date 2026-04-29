@@ -81,6 +81,15 @@ public class TournamentController {
         return ResponseEntity.ok(result);
     }
 
+    @PreAuthorize("@authz.isClassroomMemberOrInstructor(authentication, #classroomId)")
+    @GetMapping("/classroom/{classroomId}")
+    public ResponseEntity<Page<TournamentMinDTO>> findByClassroom(
+            @PathVariable Long classroomId,
+            Pageable pageable) {
+        Page<TournamentMinDTO> result = tournamentService.findByClassroom(classroomId, pageable);
+        return ResponseEntity.ok(result);
+    }
+
 //    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
 //    @GetMapping("/{id}")
 //    public ResponseEntity<TournamentWithParticipantsDTO> getById(@PathVariable(name = "id") Long id){

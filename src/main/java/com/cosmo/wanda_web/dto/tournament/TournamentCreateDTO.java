@@ -25,6 +25,7 @@ public class TournamentCreateDTO {
     private Long creatorId;
     private Long winnerId;
     private String gameName;
+    private Long classroomId;
 
     public TournamentCreateDTO() {
     }
@@ -43,6 +44,7 @@ public class TournamentCreateDTO {
         creatorId = entity.getCreator().getId();
         winnerId = null;
         gameName = entity.getGame().getName();
+        classroomId = (entity.getClassroom() != null) ? entity.getClassroom().getId() : null;
     }
 
     public Long getId() {
@@ -131,5 +133,13 @@ public class TournamentCreateDTO {
 
     public void setGameName(String gameName) {
         this.gameName = gameName;
+    }
+
+    public Long getClassroomId() {
+        return classroomId;
+    }
+
+    public void setClassroomId(Long classroomId) {
+        this.classroomId = classroomId;
     }
 }

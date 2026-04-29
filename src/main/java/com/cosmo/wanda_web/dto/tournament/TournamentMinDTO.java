@@ -25,6 +25,7 @@ public class TournamentMinDTO {
     private Boolean canReady;
     private GameDto game;
     private String errorContext;
+    private Long classroomId;
 
     public TournamentMinDTO() {
     }
@@ -47,6 +48,7 @@ public class TournamentMinDTO {
         canReady = false;
         game = new GameDto(entity.getGame());
         errorContext = entity.getErrorContext();
+        classroomId = (entity.getClassroom() != null) ? entity.getClassroom().getId() : null;
     }
 
     public Long getId() {
@@ -111,5 +113,9 @@ public class TournamentMinDTO {
 
     public void setCanReady(Boolean canReady) {
         this.canReady = canReady;
+    }
+
+    public Long getClassroomId() {
+        return classroomId;
     }
 }

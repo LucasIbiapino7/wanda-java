@@ -3,6 +3,7 @@ package com.cosmo.wanda_web.config;
 import com.cosmo.wanda_web.entities.ProfileType;
 import com.cosmo.wanda_web.entities.User;
 import com.cosmo.wanda_web.repositories.ClassroomRepository;
+import com.cosmo.wanda_web.repositories.ClassroomStudentRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
@@ -10,9 +11,11 @@ import org.springframework.stereotype.Component;
 public class AuthorizationBean {
 
     private final ClassroomRepository classroomRepository;
+    private final ClassroomStudentRepository classroomStudentRepository;
 
-    public AuthorizationBean(ClassroomRepository classroomRepository) {
+    public AuthorizationBean(ClassroomRepository classroomRepository, ClassroomStudentRepository classroomStudentRepository) {
         this.classroomRepository = classroomRepository;
+        this.classroomStudentRepository = classroomStudentRepository;
     }
 
     public boolean isInstructorOrAdmin(Authentication authentication) {
@@ -51,6 +54,27 @@ public class AuthorizationBean {
             return classroomRepository.findById(classroomId)
                     .map(c -> c.getInstructor().getId().equals(u.getId()))
                     .orElse(false);
+        }
+
+        return false;
+    }
+
+    public boolean isClassroomMemberOrInstructor(Authentication authentication, Long classroomId) {
+        if (authentication == null || !authentication.isAuthenticated()) return false;
+
+        Object principal = authentication.getPrincipal();
+
+        if (principal instanceof User u) {
+            boolean isAdmin = u.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+            if (isAdmin) return true;
+
+            boolean isOwner = classroomRepository.findById(classroomId)
+                    .map(c -> c.getInstructor().getId().equals(u.getId()))
+                    .orElse(false);
+            if (isOwner) return true;
+
+            return classroomStudentRepository.existsByClassroomAndStudent(classroomId, u.getId());
         }
 
         return false;

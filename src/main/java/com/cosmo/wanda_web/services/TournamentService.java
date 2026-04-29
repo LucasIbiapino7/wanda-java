@@ -4,6 +4,7 @@ import com.cosmo.wanda_web.dto.tournament.*;
 import com.cosmo.wanda_web.entities.*;
 import com.cosmo.wanda_web.infra.MatchOrchestrator;
 import com.cosmo.wanda_web.infra.dtos.MatchResult;
+import com.cosmo.wanda_web.repositories.ClassroomRepository;
 import com.cosmo.wanda_web.repositories.GameRepository;
 import com.cosmo.wanda_web.repositories.MatchRepository;
 import com.cosmo.wanda_web.repositories.TournamentRepository;
@@ -55,19 +56,21 @@ public class TournamentService {
     @Autowired
     private MatchRepository matchRepository;
 
+    @Autowired
+    private ClassroomRepository classroomRepository;
+
     @Transactional
     public TournamentCreateDTO create(TournamentCreateDTO dto) {
-        User user = userService.authenticated(); // Pega o usuário autenticado
-//        Long count = tournamentRepository.countOpenTournaments(user.getId());
-//        if (count >= 1){
-//            throw new TournamentException("O usuário já tem um torneio criado!");
-//        }
+        User user = userService.authenticated();
+
         Game game = gameRepository.findByNameIgnoreCase(dto.getGameName()).orElseThrow(
                 () -> new ResourceNotFoundException("O jogo nao foi encontrado!")
         );
-        if (dto.getStartTime().isBefore(LocalDateTime.now().plusMinutes(15))){
+
+        if (dto.getStartTime().isBefore(LocalDateTime.now().plusMinutes(15))) {
             throw new ResourceNotFoundException("Start Time inválido! Coloque uma de pelo menos 15min acima do momento atual.");
         }
+
         Tournament tournament = new Tournament();
         tournament.setName(dto.getName());
         tournament.setDescription(dto.getDescription());
@@ -79,13 +82,30 @@ public class TournamentService {
         tournament.setStatus(TournamentStatus.OPEN);
         tournament.setAsPrivate(dto.getAsPrivate());
         tournament.setWinner(null);
-        if (dto.getAsPrivate()){
+        if (dto.getAsPrivate()) {
             tournament.setPassword(dto.getPassword());
         }
         tournament.setGame(game);
+
+        // vinculo com turma
+        if (dto.getClassroomId() != null) {
+            Classroom classroom = classroomRepository.findByIdWithDetails(dto.getClassroomId()).orElseThrow(
+                    () -> new ResourceNotFoundException("Turma não encontrada")
+            );
+            if (!classroom.getInstructor().getId().equals(user.getId())) {
+                throw new TournamentException("Você não é o instructor desta turma");
+            }
+            if (classroom.getStatus() != ClassroomStatus.ACTIVE) {
+                throw new TournamentException("Não é possível criar torneios em uma turma arquivada");
+            }
+            tournament.setClassroom(classroom);
+        }
+
         tournament = tournamentRepository.save(tournament);
-        log.info("Torneio criado. nome={}, jogo={}, maxParticipantes={}, privado={}",
-                dto.getName(), dto.getGameName(), dto.getMaxParticipants(), dto.getAsPrivate());
+
+        log.info("Torneio criado. nome={}, jogo={}, maxParticipantes={}, privado={}, turmaId={}",
+                dto.getName(), dto.getGameName(), dto.getMaxParticipants(), dto.getAsPrivate(), dto.getClassroomId());
+
         return new TournamentCreateDTO(tournament);
     }
 
@@ -307,6 +327,12 @@ public class TournamentService {
         tournament.setStatus(TournamentStatus.CANCELLED);
         tournamentRepository.save(tournament);
         log.info("Torneio cancelado. torneoId={}", tournament.getId());
+    }
+
+    @Transactional(readOnly = true)
+    public Page<TournamentMinDTO> findByClassroom(Long classroomId, Pageable pageable) {
+        Page<Tournament> result = tournamentRepository.findByClassroomId(classroomId, pageable);
+        return result.map(TournamentMinDTO::new);
     }
 
     private String describeRound(int players) {
