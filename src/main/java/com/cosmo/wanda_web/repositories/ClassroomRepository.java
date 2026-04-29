@@ -13,25 +13,43 @@ import java.util.Optional;
 public interface ClassroomRepository extends JpaRepository<Classroom, Long> {
 
     // Todas as turmas de um instructor (com filtro opcional de status)
-    @Query("""
-           SELECT c
-           FROM Classroom c
-           WHERE c.instructor.id = :instructorId
-             AND (:status IS NULL OR c.status = :status)
-           ORDER BY c.createdAt DESC
-           """)
-    Page<Classroom> findAllByInstructor(@Param("instructorId") Long instructorId,@Param("status") ClassroomStatus status,Pageable pageable);
-
+    @Query(
+            value = """
+            SELECT c
+            FROM Classroom c
+            JOIN FETCH c.game
+            JOIN FETCH c.instructor
+            WHERE c.instructor.id = :instructorId
+              AND (:status IS NULL OR c.status = :status)
+            ORDER BY c.createdAt DESC
+            """,
+            countQuery = """
+                 SELECT COUNT(c)
+                 FROM Classroom c
+                 WHERE c.instructor.id = :instructorId
+                   AND (:status IS NULL OR c.status = :status)
+                 """
+    )
+    Page<Classroom> findAllByInstructor(@Param("instructorId") Long instructorId, @Param("status") ClassroomStatus status, Pageable pageable);
     // Turmas onde o aluno participa
-    @Query("""
-           SELECT cs.classroom
-           FROM ClassroomStudent cs
-           WHERE cs.student.id = :studentId
-             AND (:status IS NULL OR cs.classroom.status = :status)
-           ORDER BY cs.joinedAt DESC
-           """)
+    @Query(
+            value = """
+            SELECT cs.classroom
+            FROM ClassroomStudent cs
+            JOIN FETCH cs.classroom.game
+            JOIN FETCH cs.classroom.instructor
+            WHERE cs.student.id = :studentId
+              AND (:status IS NULL OR cs.classroom.status = :status)
+            ORDER BY cs.joinedAt DESC
+            """,
+            countQuery = """
+                 SELECT COUNT(cs)
+                 FROM ClassroomStudent cs
+                 WHERE cs.student.id = :studentId
+                   AND (:status IS NULL OR cs.classroom.status = :status)
+                 """
+    )
     Page<Classroom> findAllByStudent(@Param("studentId") Long studentId, @Param("status") ClassroomStatus status, Pageable pageable);
-
     // Busca por codigo de acesso entre turmas ativas
     @Query("""
            SELECT c
@@ -61,4 +79,14 @@ public interface ClassroomRepository extends JpaRepository<Classroom, Long> {
              )
            """)
     Long countActiveTournamentsByClassroom(@Param("classroomId") Long classroomId);
+
+    @Query("""
+       SELECT c
+       FROM Classroom c
+       JOIN FETCH c.game
+       JOIN FETCH c.instructor
+       WHERE c.id = :id
+       """)
+    Optional<Classroom> findByIdWithDetails(@Param("id") Long id);
+
 }

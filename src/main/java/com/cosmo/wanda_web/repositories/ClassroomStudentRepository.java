@@ -2,6 +2,8 @@ package com.cosmo.wanda_web.repositories;
 
 import com.cosmo.wanda_web.entities.ClassroomStudent;
 import com.cosmo.wanda_web.entities.ClassroomStudentId;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -13,20 +15,30 @@ public interface ClassroomStudentRepository extends JpaRepository<ClassroomStude
 
     // Todos os membros de uma turma com joinedAt
     @Query("""
-           SELECT cs
-           FROM ClassroomStudent cs
-           WHERE cs.classroom.id = :classroomId
-           ORDER BY cs.joinedAt ASC
-           """)
+       SELECT cs
+       FROM ClassroomStudent cs
+       JOIN FETCH cs.student
+       WHERE cs.classroom.id = :classroomId
+       ORDER BY cs.joinedAt ASC
+       """)
     List<ClassroomStudent> findAllByClassroom(@Param("classroomId") Long classroomId);
 
     // IDs de todos os alunos de uma turma, usado como filtro nos dashboards
-    @Query("""
-           SELECT cs.student.id
-           FROM ClassroomStudent cs
-           WHERE cs.classroom.id = :classroomId
-           """)
-    List<Long> findStudentIdsByClassroom(@Param("classroomId") Long classroomId);
+    @Query(
+            value = """
+            SELECT cs
+            FROM ClassroomStudent cs
+            JOIN FETCH cs.student
+            WHERE cs.classroom.id = :classroomId
+            ORDER BY cs.joinedAt ASC
+            """,
+            countQuery = """
+                 SELECT COUNT(cs)
+                 FROM ClassroomStudent cs
+                 WHERE cs.classroom.id = :classroomId
+                 """
+    )
+    Page<ClassroomStudent> findAllByClassroom(@Param("classroomId") Long classroomId, Pageable pageable);
 
     // Verifica se aluno já é membro de uma turma
     @Query("""
