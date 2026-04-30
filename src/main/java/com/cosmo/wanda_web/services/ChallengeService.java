@@ -58,6 +58,9 @@ public class ChallengeService {
     @Autowired
     private ClassroomRepository classroomRepository;
 
+    @Autowired
+    private NotificationService notificationService;
+
     @Transactional
     public void challenge(ChallengeDTO dto) {
         User userChallenger = userService.authenticated();
@@ -109,6 +112,7 @@ public class ChallengeService {
         challenge.setClassroom(classroom);
 
         challengeRepository.save(challenge);
+        notificationService.create(userChallenged.getId(), NotificationType.CHALLENGE_RECEIVED, challenge.getId());
     }
 
     @Transactional(readOnly = true)
@@ -150,6 +154,8 @@ public class ChallengeService {
 
         log.info("Partida do desafio finalizada. challengeId={}, matchId={}", dto.getChallengeId(), match.getId());
         challengeUpdate(dto.getChallengeId(), ChallengeStatus.ACCEPTED, match);
+        notificationService.create(challenge.getChallenger().getId(), NotificationType.CHALLENGE_RESULT, match.getId());
+        notificationService.create(challenge.getChallenged().getId(), NotificationType.CHALLENGE_RESULT, match.getId());
         return match.getId();
     }
 

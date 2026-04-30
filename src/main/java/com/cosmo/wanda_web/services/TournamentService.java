@@ -59,6 +59,9 @@ public class TournamentService {
     @Autowired
     private ClassroomRepository classroomRepository;
 
+    @Autowired
+    private NotificationService notificationService;
+
     @Transactional
     public TournamentCreateDTO create(TournamentCreateDTO dto) {
         User user = userService.authenticated();
@@ -289,6 +292,9 @@ public class TournamentService {
         playerService.updateWinnerTournament(currentParticipants.get(0));
         tournament.setStatus(TournamentStatus.FINISHED);
         tournamentRepository.save(tournament);
+        tournament.getUsers().forEach(participant ->
+                notificationService.create(participant.getId(), NotificationType.TOURNAMENT_FINISHED, tournament.getId())
+        );
     }
 
     @Transactional

@@ -48,6 +48,9 @@ public class ClassroomService {
     @Autowired
     private FunctionRepository functionRepository;
 
+    @Autowired
+    private NotificationService notificationService;
+
     @Transactional
     public ClassroomResponseDTO create(ClassroomCreateDTO dto) {
         User instructor = userService.authenticated();
@@ -234,6 +237,7 @@ public class ClassroomService {
 
         ClassroomStudent member = new ClassroomStudent(classroom, student, LocalDateTime.now());
         classroomStudentRepository.save(member);
+        notificationService.create(student.getId(), NotificationType.NEW_CLASSROOM, id);
 
         log.info("Aluno adicionado à turma. turmaId={}, studentId={}, instructorId={}",
                 id, student.getId(), instructor.getId());
