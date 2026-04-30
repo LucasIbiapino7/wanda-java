@@ -85,10 +85,10 @@ public interface FunctionRepository extends JpaRepository<Function, Long> {
 
     // IDs dos alunos da turma que já têm função salva para o jogo
     @Query("""
-       SELECT f.player.id
+       SELECT DISTINCT f.player.id
        FROM Function f
        WHERE f.player.id IN :userIds
          AND f.game.id = :gameId
        """)
-    List<Long> findUserIdsWithFunctionByGame(@Param("userIds") List<Long> userIds, @Param("gameId") Long gameId);
+    List<Long> findUserIdsWithFunctionByGame(@Param("userIds") List<Long> userIds,@Param("gameId") Long gameId);
 }

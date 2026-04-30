@@ -1,6 +1,7 @@
 package com.cosmo.wanda_web.repositories;
 
 import com.cosmo.wanda_web.entities.Match;
+import com.cosmo.wanda_web.projections.dashboard.UserCountProjection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -39,7 +40,7 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
 
     // Contagem de vitórias por aluno dentro da turma
     @Query("""
-       SELECT m.winner.id, COUNT(m)
+       SELECT m.winner.id AS userId, COUNT(m) AS total
        FROM Match m
        WHERE m.player1.id IN :userIds
          AND m.player2.id IN :userIds
@@ -48,5 +49,5 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
        GROUP BY m.winner.id
        ORDER BY COUNT(m) DESC
        """)
-    List<Object[]> countWinsByUserIds(@Param("userIds") List<Long> userIds, @Param("gameId") Long gameId);
+    List<UserCountProjection> countWinsByUserIds(@Param("userIds") List<Long> userIds, @Param("gameId") Long gameId);
 }

@@ -57,4 +57,11 @@ public interface ClassroomStudentRepository extends JpaRepository<ClassroomStude
              AND cs.student.id = :studentId
            """)
     void deleteByClassroomAndStudent(@Param("classroomId") Long classroomId, @Param("studentId") Long studentId);
+
+    @Query("""
+       SELECT cs.student.id
+       FROM ClassroomStudent cs
+       WHERE cs.classroom.id = :classroomId
+       """)
+    List<Long> findStudentIdsByClassroom(@Param("classroomId") Long classroomId);
 }
