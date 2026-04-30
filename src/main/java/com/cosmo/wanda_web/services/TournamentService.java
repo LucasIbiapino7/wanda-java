@@ -250,6 +250,9 @@ public class TournamentService {
 
                 Match match = new Match(userPlayer1, userPlayer2, LocalDateTime.now(),
                         result.getWinner(), result.getReplayJson(), game);
+                if (tournament.getClassroom() != null) {
+                    match.setClassroom(tournament.getClassroom());
+                }
                 matchRepository.save(match);
                 playerService.updateWinners(userPlayer1, userPlayer2, match);
 

@@ -142,6 +142,9 @@ public class ChallengeService {
 
         Match match = new Match(challenge.getChallenger(),challenge.getChallenged(),LocalDateTime.now(),result.getWinner(),result.getReplayJson(),
                 challenge.getGame());
+        if (challenge.getClassroom() != null) {
+            match.setClassroom(challenge.getClassroom());
+        }
         matchRepository.save(match);
         playerService.updateWinners(challenge.getChallenger(), challenge.getChallenged(), match);
 
@@ -158,6 +161,14 @@ public class ChallengeService {
     @Transactional(readOnly = true)
     public Page<ChallengeFIndAllPendingDTO> findByClassroom(Long classroomId, Pageable pageable) {
         Page<FindAllPendingChallengerProjection> result = challengeRepository.findByClassroomId(classroomId, pageable);
+        return result.map(ChallengeFIndAllPendingDTO::new);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ChallengeFIndAllPendingDTO> findByClassroomAndUser(Long classroomId, Pageable pageable) {
+        User user = userService.authenticated();
+        Page<FindAllPendingChallengerProjection> result = challengeRepository
+                .findByClassroomAndUser(classroomId, user.getId(), pageable);
         return result.map(ChallengeFIndAllPendingDTO::new);
     }
 }

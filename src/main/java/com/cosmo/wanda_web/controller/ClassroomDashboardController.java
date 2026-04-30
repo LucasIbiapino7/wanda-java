@@ -1,6 +1,7 @@
 package com.cosmo.wanda_web.controller;
 
 import com.cosmo.wanda_web.dto.classroom.DashboardEngagementDTO;
+import com.cosmo.wanda_web.dto.classroom.DashboardMatchDTO;
 import com.cosmo.wanda_web.dto.classroom.DashboardOverviewDTO;
 import com.cosmo.wanda_web.dto.classroom.DashboardRankingDTO;
 import com.cosmo.wanda_web.services.ClassroomDashboardService;
@@ -45,4 +46,11 @@ public class ClassroomDashboardController {
         List<DashboardRankingDTO> response = dashboardService.getRanking(id);
         return ResponseEntity.ok(response);
     }
+    @GetMapping("/{id}/dashboard/matches")
+    @PreAuthorize("@authz.isClassroomInstructor(authentication, #id)")
+    public ResponseEntity<Page<DashboardMatchDTO>> getRecentMatches(@PathVariable Long id,Pageable pageable) {
+        Page<DashboardMatchDTO> response = dashboardService.getRecentMatches(id, pageable);
+        return ResponseEntity.ok(response);
+    }
+
 }

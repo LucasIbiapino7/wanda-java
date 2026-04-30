@@ -47,4 +47,11 @@ public class ChallengeController {
         Page<ChallengeFIndAllPendingDTO> result = challengeService.findByClassroom(classroomId, pageable);
         return ResponseEntity.ok(result);
     }
+
+    @PreAuthorize("@authz.isClassroomMemberOrInstructor(authentication, #classroomId)")
+    @GetMapping("/classroom/{classroomId}/me")
+    public ResponseEntity<Page<ChallengeFIndAllPendingDTO>> findByClassroomAndUser(@PathVariable Long classroomId, Pageable pageable) {
+        Page<ChallengeFIndAllPendingDTO> result = challengeService.findByClassroomAndUser(classroomId, pageable);
+        return ResponseEntity.ok(result);
+    }
 }

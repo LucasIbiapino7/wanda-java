@@ -54,4 +54,20 @@ public interface ChallengeRepository extends JpaRepository<Challenge, Long> {
        ORDER BY c.createdAt DESC
        """)
     Page<FindAllPendingChallengerProjection> findByClassroomId(@Param("classroomId") Long classroomId, Pageable pageable);
+
+    @Query("""
+       SELECT c.id AS id,
+              c.challenger.id AS challengerId,
+              c.challenged.name AS challengedName,
+              c.challenger.name AS challengerName,
+              c.createdAt AS createdAt,
+              c.game.name AS gameName
+       FROM Challenge c
+       WHERE c.classroom.id = :classroomId
+         AND (c.challenger.id = :userId OR c.challenged.id = :userId)
+         AND c.status = 'PENDING'
+       ORDER BY c.createdAt DESC
+       """)
+    Page<FindAllPendingChallengerProjection> findByClassroomAndUser(@Param("classroomId") Long classroomId, @Param("userId") Long userId, Pageable pageable);
+
 }

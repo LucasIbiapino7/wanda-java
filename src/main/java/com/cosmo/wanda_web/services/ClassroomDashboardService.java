@@ -1,10 +1,12 @@
 package com.cosmo.wanda_web.services;
 
 import com.cosmo.wanda_web.dto.classroom.DashboardEngagementDTO;
+import com.cosmo.wanda_web.dto.classroom.DashboardMatchDTO;
 import com.cosmo.wanda_web.dto.classroom.DashboardOverviewDTO;
 import com.cosmo.wanda_web.dto.classroom.DashboardRankingDTO;
 import com.cosmo.wanda_web.entities.Classroom;
 import com.cosmo.wanda_web.entities.ClassroomStudent;
+import com.cosmo.wanda_web.entities.Match;
 import com.cosmo.wanda_web.entities.StudentEngagementStatus;
 import com.cosmo.wanda_web.projections.dashboard.UserCountProjection;
 import com.cosmo.wanda_web.projections.dashboard.UserInteractionTypeProjection;
@@ -186,9 +188,7 @@ public class ClassroomDashboardService {
         List<ClassroomStudent> members = classroomStudentRepository.findAllByClassroom(classroomId);
 
         // Busca vitórias
-        List<UserCountProjection> wins = matchRepository.countWinsByUserIds(
-                studentIds, classroom.getGame().getId()
-        );
+        List<UserCountProjection> wins = matchRepository.countWinsByUserIds(classroomId);
 
         // Monta mapa userId -> wins para lookup rápido
         Map<Long, Long> winsMap = wins.stream()
@@ -215,6 +215,13 @@ public class ClassroomDashboardService {
 
         return ranking;
     }
+    @Transactional(readOnly = true)
+    public Page<DashboardMatchDTO> getRecentMatches(Long classroomId, Pageable pageable) {
+        getStudentIdsAndValidateAccess(classroomId);
+        Page<Match> matches = matchRepository.findByClassroomId(classroomId, pageable);
+        return matches.map(DashboardMatchDTO::new);
+    }
+
 
     private List<Long> getStudentIdsAndValidateAccess(Long classroomId) {
         var user = userService.authenticated();

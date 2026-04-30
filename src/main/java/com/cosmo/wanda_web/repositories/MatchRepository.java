@@ -42,12 +42,18 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
     @Query("""
        SELECT m.winner.id AS userId, COUNT(m) AS total
        FROM Match m
-       WHERE m.player1.id IN :userIds
-         AND m.player2.id IN :userIds
-         AND m.game.id = :gameId
+       WHERE m.classroom.id = :classroomId
          AND m.winner IS NOT NULL
        GROUP BY m.winner.id
        ORDER BY COUNT(m) DESC
        """)
-    List<UserCountProjection> countWinsByUserIds(@Param("userIds") List<Long> userIds, @Param("gameId") Long gameId);
+    List<UserCountProjection> countWinsByUserIds(@Param("classroomId") Long classroomId);
+
+    @Query("""
+       SELECT m
+       FROM Match m
+       WHERE m.classroom.id = :classroomId
+       ORDER BY m.moment DESC
+       """)
+    Page<Match> findByClassroomId(@Param("classroomId") Long classroomId,Pageable pageable);
 }
