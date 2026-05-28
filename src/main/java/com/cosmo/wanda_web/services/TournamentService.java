@@ -5,6 +5,7 @@ import com.cosmo.wanda_web.entities.*;
 import com.cosmo.wanda_web.infra.MatchOrchestrator;
 import com.cosmo.wanda_web.infra.dtos.MatchResult;
 import com.cosmo.wanda_web.repositories.ClassroomRepository;
+import com.cosmo.wanda_web.repositories.ClassroomStudentRepository;
 import com.cosmo.wanda_web.repositories.GameRepository;
 import com.cosmo.wanda_web.repositories.MatchRepository;
 import com.cosmo.wanda_web.repositories.TournamentRepository;
@@ -58,9 +59,72 @@ public class TournamentService {
 
     @Autowired
     private ClassroomRepository classroomRepository;
+    
+    @Autowired
+    private ClassroomStudentRepository classroomStudentRepository;
 
     @Autowired
     private NotificationService notificationService;
+
+    // Funções auxiliares
+    // Define nomes para as fases
+    private String describeRound(int players) {
+        return switch (players) {
+            case 32 -> "Primeiras Fases";
+            case 16 -> "Oitavas de Final";
+            case 8  -> "Quartas de Final";
+            case 4  -> "Semifinal";
+            case 2  -> "Final";
+            default -> players + " players";
+        };
+    }
+
+    // Cuida da formatação da descrição
+    private String normalizeDescription(String description) {
+        if (description == null || description.isBlank()) {
+            return null;
+        }
+
+        return description.trim();
+    }
+
+    // Valida quantidade de participantes
+    private void validateParticipantQuantity(int maxParticipants) {
+        List<Integer> allowedQuantities = List.of(4, 8, 16, 32);
+
+        if (!allowedQuantities.contains(maxParticipants)) {
+            throw new TournamentException("A quantidade de participantes deve ser 4, 8, 16 ou 32.");
+        }
+    }
+
+    // Valida quantidade de participantes para início de torneio
+    private void validateTournamentReadyToStart(Tournament tournament) {
+        if (tournament.getCurrentParticipants() < tournament.getMaxParticipants()) {
+            throw new TournamentException("O torneio ainda não possui a quantidade necessária de participantes.");
+        }
+
+        validateParticipantQuantity(tournament.getCurrentParticipants());
+    }
+
+    // Somente alunos e instrutores da turma podem acessar os torneios dela
+    private void validateUserCanAccessClassroomTournament(Tournament tournament, User user) {
+        Classroom classroom = tournament.getClassroom();
+
+        if (classroom == null) {
+            return;
+        }
+
+        boolean isInstructor = classroom.getInstructor().getId().equals(user.getId());
+
+        boolean isStudent = classroomStudentRepository.existsByClassroomAndStudent(
+                classroom.getId(),
+                user.getId()
+        );
+
+        if (!isInstructor && !isStudent) {
+            throw new TournamentException("Você não tem acesso a este torneio de turma.");
+        }
+    }
 
     @Transactional
     public TournamentCreateDTO create(TournamentCreateDTO dto) {
@@ -70,13 +134,15 @@ public class TournamentService {
                 () -> new ResourceNotFoundException("O jogo nao foi encontrado!")
         );
 
-        if (dto.getStartTime().isBefore(LocalDateTime.now().plusMinutes(15))) {
-            throw new ResourceNotFoundException("Start Time inválido! Coloque uma de pelo menos 15min acima do momento atual.");
+        validateParticipantQuantity(dto.getMaxParticipants());
+
+        if (dto.getStartTime().isBefore(LocalDateTime.now().plusMinutes(5))) {
+            throw new ResourceNotFoundException("Start Time inválido! Coloque uma de pelo menos 5 min acima do momento atual.");
         }
 
         Tournament tournament = new Tournament();
         tournament.setName(dto.getName());
-        tournament.setDescription(dto.getDescription());
+        tournament.setDescription(normalizeDescription(dto.getDescription()));
         tournament.setStartTime(dto.getStartTime());
         tournament.setMaxParticipants(dto.getMaxParticipants());
         tournament.setCreator(user);
@@ -118,12 +184,28 @@ public class TournamentService {
         if (tournament == null){
             throw new TournamentException("O torneio não existe!");
         }
+
+        User user = userService.authenticated();
+        validateUserCanAccessClassroomTournament(tournament, user);
+
         return new TournamentWithParticipantsDTO(tournament);
     }
 
     @Transactional(readOnly = true)
     public Page<TournamentMinDTO> findAll(String searchTerm, Pageable pageable) {
-        Page<Tournament> result = tournamentRepository.findByNameWithOrdering(searchTerm, pageable);
+        User user = userService.authenticated();
+
+        boolean isAdmin = user.getAuthorities()
+                .stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
+
+        Page<Tournament> result = tournamentRepository.findAvailableOpenTournaments(
+                searchTerm,
+                user.getId(),
+                isAdmin,
+                pageable
+        );
+
         return result.map(TournamentMinDTO::new);
     }
 
@@ -136,6 +218,9 @@ public class TournamentService {
             throw new TournamentException("Torneio não está aberto");
         }
         User participant = userService.authenticated();
+
+        validateUserCanAccessClassroomTournament(tournament, participant);
+
         if (!functionService.verifyFunctionsByGame(participant, tournament.getGame().getName())){
             throw new TournamentException("Você não tem as funções necessárias submetidas para participar de um torneio desse jogo!");
         }
@@ -187,6 +272,9 @@ public class TournamentService {
         if (!Objects.equals(user.getId(), tournament.getCreator().getId())){
             throw new TournamentException("Voce nao eh o criador do torneio");
         }
+
+        validateTournamentReadyToStart(tournament);
+
         int changed = tournamentRepository.tryStart(id);
         if (changed == 0) {
             throw new TournamentException("Este torneio já foi iniciado ou não está aberto.");
@@ -198,12 +286,16 @@ public class TournamentService {
 
     @Transactional
     public void startTournament(Long id) {
+        Tournament tournament = tournamentRepository.findById(id).orElseThrow(
+                () -> new ResourceNotFoundException("Torneio nao encontrado!"));
+
+        validateTournamentReadyToStart(tournament);
+
         int changed = tournamentRepository.tryStart(id);
         if (changed == 0) {
             throw new TournamentException("Este torneio já foi iniciado ou não está aberto.");
         }
-        Tournament tournament = tournamentRepository.findById(id).orElseThrow(
-                () -> new ResourceNotFoundException("Torneio nao encontrado!"));
+        
         running(tournament);
     }
 
@@ -308,11 +400,11 @@ public class TournamentService {
         if (tournament.getStatus() != TournamentStatus.OPEN) {
             throw new TournamentException("Só é possível editar torneios com status OPEN.");
         }
-        if (dto.getStartTime() != null && dto.getStartTime().isBefore(LocalDateTime.now().plusMinutes(15))) {
-            throw new TournamentException("Start Time inválido! Coloque uma data de pelo menos 15min acima do momento atual.");
+        if (dto.getStartTime() != null && dto.getStartTime().isBefore(LocalDateTime.now().plusMinutes(5))) {
+            throw new TournamentException("Start Time inválido! Coloque uma data de pelo menos 5 min acima do momento atual.");
         }
         tournament.setName(dto.getName());
-        tournament.setDescription(dto.getDescription());
+        tournament.setDescription(normalizeDescription(dto.getDescription()));
         if (dto.getStartTime() != null) {
             tournament.setStartTime(dto.getStartTime());
         }
@@ -340,18 +432,14 @@ public class TournamentService {
 
     @Transactional(readOnly = true)
     public Page<TournamentMinDTO> findByClassroom(Long classroomId, Pageable pageable) {
+        Classroom classroom = classroomRepository.findById(classroomId).orElseThrow(
+            () -> new ResourceNotFoundException("Turma não encontrada.")
+        );
+
+        if (classroom.getStatus() == ClassroomStatus.ARCHIVED){
+            return Page.empty(pageable);
+        }
         Page<Tournament> result = tournamentRepository.findByClassroomId(classroomId, pageable);
         return result.map(TournamentMinDTO::new);
-    }
-
-    private String describeRound(int players) {
-        return switch (players) {
-            case 32 -> "Primeiras Fases";
-            case 16 -> "Oitavas de Final";
-            case 8  -> "Quartas de Final";
-            case 4  -> "Semifinal";
-            case 2  -> "Final";
-            default -> players + " players";
-        };
     }
 }

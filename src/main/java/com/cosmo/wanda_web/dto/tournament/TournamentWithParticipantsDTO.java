@@ -4,10 +4,6 @@ import com.cosmo.wanda_web.dto.users.UserDTO;
 import com.cosmo.wanda_web.entities.Tournament;
 import com.cosmo.wanda_web.entities.TournamentStatus;
 import com.cosmo.wanda_web.entities.User;
-import jakarta.persistence.Column;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Lob;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

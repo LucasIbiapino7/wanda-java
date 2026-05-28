@@ -6,8 +6,6 @@ import com.cosmo.wanda_web.entities.Tournament;
 import com.cosmo.wanda_web.entities.TournamentStatus;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 public class TournamentMinDTO {
     private Long id;

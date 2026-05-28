@@ -4,6 +4,7 @@ import com.cosmo.wanda_web.entities.Tournament;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDateTime;
 
@@ -13,9 +14,9 @@ public class TournamentCreateDTO {
     @NotBlank(message = "campo requerido!")
     @Size(min = 3, max = 40, message = "O nome precisa ter entre 3 e 40 caracteres!")
     private String name;
-    @NotBlank(message = "campo requerido!")
-    @Size(min = 5, max = 80, message = "O nome precisa ter entre 5 e 80 caracteres!")
+    @Size(max = 80, message = "A descrição deve possuir no máximo 80 caracteres!")
     private String description;
+    @NotNull(message = "Data de início é obrigatória!")
     private LocalDateTime startTime;
     private Boolean asPrivate;
     private String password;
