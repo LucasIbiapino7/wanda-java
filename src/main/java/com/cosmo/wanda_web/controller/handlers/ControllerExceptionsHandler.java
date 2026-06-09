@@ -129,6 +129,20 @@ public class ControllerExceptionsHandler {
         return ResponseEntity.status(status).body(err);
     }
 
+    @ExceptionHandler(ClassroomException.class)
+    public ResponseEntity<CustomError> classroomException(ClassroomException e, HttpServletRequest request) {
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        CustomError err = new CustomError(Instant.now(), status.value(), e.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(status).body(err);
+    }
+
+    @ExceptionHandler(ClassroomAccessDeniedException.class)
+    public ResponseEntity<CustomError> classroomAccessDenied(ClassroomAccessDeniedException e, HttpServletRequest request) {
+        HttpStatus status = HttpStatus.FORBIDDEN;
+        CustomError err = new CustomError(Instant.now(), status.value(), e.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(status).body(err);
+    }
+
     private void captureExceptionWithOtel(Exception e) {
         Span span = Span.current();
         if (span != null && span.getSpanContext().isValid()) {

@@ -9,8 +9,7 @@ public class TournamentUpdateDTO {
     @NotBlank
     @Size(min = 3, max = 40)
     private String name;
-    @NotBlank
-    @Size(min = 5, max = 80)
+    @Size(max = 80)
     private String description;
     private LocalDateTime startTime;
 

@@ -37,6 +37,10 @@ public class Match {
     @JoinColumn(name = "game_id")
     private Game game;
 
+    @ManyToOne
+    @JoinColumn(name = "classroom_id")
+    private Classroom classroom;
+
     public Match() {
     }
 
@@ -111,6 +115,14 @@ public class Match {
 
     public void setGame(Game game) {
         this.game = game;
+    }
+
+    public Classroom getClassroom() {
+        return classroom;
+    }
+
+    public void setClassroom(Classroom classroom) {
+        this.classroom = classroom;
     }
 
     @Override

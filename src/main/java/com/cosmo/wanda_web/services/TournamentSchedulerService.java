@@ -42,11 +42,10 @@ public class TournamentSchedulerService {
                         tournament.getId(),
                         tournament.getCurrentParticipants(),
                         tournament.getMaxParticipants(),
-                        tournament.getStartTime().plusMinutes(15));
-                tournament.setStartTime(tournament.getStartTime().plusMinutes(15));
+                        tournament.getStartTime().plusMinutes(5));
+                tournament.setStartTime(tournament.getStartTime().plusMinutes(5));
                 tournamentRepository.save(tournament);
             }
         }
     }
-
 }

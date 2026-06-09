@@ -11,7 +11,6 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 public interface TournamentRepository extends JpaRepository<Tournament, Long> {
 
@@ -22,13 +21,59 @@ public interface TournamentRepository extends JpaRepository<Tournament, Long> {
            """)
     Long countOpenTournaments(@Param("creatorId") Long creatorId);
 
-    @Query("""
-    SELECT obj
-    FROM Tournament obj
-    WHERE lower(obj.name) LIKE lower(concat('%', :searchTerm, '%')) AND obj.status = 'OPEN'
-    ORDER BY obj.asPrivate ASC, obj.createdAt DESC
-    """)
-    Page<Tournament> findByNameWithOrdering(@Param("searchTerm") String searchTerm, Pageable pageable);
+    // Buscar torneios para um participantes
+    // Retorna torneios gerais abertos e torneios abertos das suas turmas
+    @Query(
+            value = """
+            SELECT DISTINCT t
+            FROM Tournament t
+            LEFT JOIN t.classroom c
+            LEFT JOIN ClassroomStudent cs
+                  ON cs.classroom.id = c.id
+                  AND cs.student.id = :userId
+            WHERE lower(t.name) LIKE lower(concat('%', :searchTerm, '%'))
+              AND t.status = com.cosmo.wanda_web.entities.TournamentStatus.OPEN
+              AND (
+                  t.classroom IS NULL
+                  OR (
+                      c.status = com.cosmo.wanda_web.entities.ClassroomStatus.ACTIVE
+                      AND (
+                          :isAdmin = true
+                          OR c.instructor.id = :userId
+                          OR cs.student.id IS NOT NULL
+                      )
+                  )
+              )
+            ORDER BY t.asPrivate ASC, t.createdAt DESC
+            """,
+            countQuery = """
+            SELECT COUNT(DISTINCT t)
+            FROM Tournament t
+            LEFT JOIN t.classroom c
+            LEFT JOIN ClassroomStudent cs
+                  ON cs.classroom.id = c.id
+                  AND cs.student.id = :userId
+            WHERE lower(t.name) LIKE lower(concat('%', :searchTerm, '%'))
+              AND t.status = com.cosmo.wanda_web.entities.TournamentStatus.OPEN
+              AND (
+                  t.classroom IS NULL
+                  OR (
+                      c.status = com.cosmo.wanda_web.entities.ClassroomStatus.ACTIVE
+                      AND (
+                          :isAdmin = true
+                          OR c.instructor.id = :userId
+                          OR cs.student.id IS NOT NULL
+                      )
+                  )
+              )
+            """
+    )
+    Page<Tournament> findAvailableOpenTournaments(
+            @Param("searchTerm") String searchTerm,
+            @Param("userId") Long userId,
+            @Param("isAdmin") boolean isAdmin,
+            Pageable pageable
+    );
 
     @Query("""
            SELECT obj
@@ -87,4 +132,26 @@ public interface TournamentRepository extends JpaRepository<Tournament, Long> {
     AND t.status = 'OPEN'
 """)
     int trySubscribe(@Param("id") Long id);
+
+    // Torneios de uma turma específica
+    @Query("""
+       SELECT t
+       FROM Tournament t
+       WHERE t.classroom.id = :classroomId
+       ORDER BY t.createdAt DESC
+       """)
+    Page<Tournament> findByClassroomId(@Param("classroomId") Long classroomId, Pageable pageable);
+
+    // Cancela torneios ativos de uma turma (chamado no arquivamento)
+    @Modifying
+    @Query("""
+       UPDATE Tournament t
+       SET t.status = com.cosmo.wanda_web.entities.TournamentStatus.CANCELLED
+       WHERE t.classroom.id = :classroomId
+         AND t.status IN (
+             com.cosmo.wanda_web.entities.TournamentStatus.OPEN,
+             com.cosmo.wanda_web.entities.TournamentStatus.RUNNING
+         )
+       """)
+    int cancelActiveByClassroom(@Param("classroomId") Long classroomId);
 }

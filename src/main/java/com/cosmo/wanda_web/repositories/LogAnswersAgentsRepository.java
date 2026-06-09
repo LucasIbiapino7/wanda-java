@@ -5,6 +5,9 @@ import com.cosmo.wanda_web.projections.auditoria.AgenteSummaryProjection;
 import com.cosmo.wanda_web.projections.auditoria.FuncaoSummaryProjection;
 import com.cosmo.wanda_web.projections.auditoria.InteractionTypeSummaryProjection;
 import com.cosmo.wanda_web.projections.auditoria.JogoSummaryProjection;
+import com.cosmo.wanda_web.projections.dashboard.UserCountProjection;
+import com.cosmo.wanda_web.projections.dashboard.UserInteractionTypeProjection;
+import com.cosmo.wanda_web.projections.dashboard.UserValidityProjection;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -71,4 +74,46 @@ public interface LogAnswersAgentsRepository extends JpaRepository<LogAnswersAgen
     ORDER BY total DESC
 """)
     List<InteractionTypeSummaryProjection> groupByInteractionType(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
+
+    // Distribuição de interaction_type por aluno — base do dashboard
+    @Query("""
+       SELECT l.user.id AS userId, l.interactionType AS interactionType, COUNT(l) AS total
+       FROM LogAnswersAgents l
+       WHERE l.user.id IN :userIds
+         AND l.moment BETWEEN :from AND :to
+         AND l.interactionType IS NOT NULL
+       GROUP BY l.user.id, l.interactionType
+       """)
+    List<UserInteractionTypeProjection> groupByUserAndInteractionType(@Param("userIds") List<Long> userIds, @Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
+    // Ratio valid/invalid por aluno
+    @Query("""
+       SELECT l.user.id AS userId, l.valid AS valid, COUNT(l) AS total
+       FROM LogAnswersAgents l
+       WHERE l.user.id IN :userIds
+         AND l.moment BETWEEN :from AND :to
+         AND l.interactionType IN (
+             com.cosmo.wanda_web.services.utils.InteractionType.RUN,
+             com.cosmo.wanda_web.services.utils.InteractionType.SUBMIT
+         )
+       GROUP BY l.user.id, l.valid
+       """)
+    List<UserValidityProjection> groupByUserAndValidity(@Param("userIds") List<Long> userIds, @Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
+    // IDs de alunos com pelo menos uma interação no período
+    @Query("""
+       SELECT DISTINCT l.user.id
+       FROM LogAnswersAgents l
+       WHERE l.user.id IN :userIds
+         AND l.moment BETWEEN :from AND :to
+       """)
+    List<Long> findActiveUserIds(@Param("userIds") List<Long> userIds, @Param("from") LocalDateTime from, @Param("to") LocalDateTime to );
+
+    // Total de interações por aluno no período
+    @Query("""
+       SELECT l.user.id AS userId, COUNT(l) AS total
+       FROM LogAnswersAgents l
+       WHERE l.user.id IN :userIds
+         AND l.moment BETWEEN :from AND :to
+       GROUP BY l.user.id
+       """)
+    List<UserCountProjection> countByUserIds(@Param("userIds") List<Long> userIds, @Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
 }
