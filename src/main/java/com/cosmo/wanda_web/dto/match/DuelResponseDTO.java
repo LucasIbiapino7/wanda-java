@@ -13,6 +13,8 @@ public class DuelResponseDTO {
     private List<MatchInformationDTO> matches = new ArrayList<>();
     private UserDTO playerWinner;
     private GameDto gameDto;
+    private String type;
+    private String reason;
 
     public DuelResponseDTO() {
     }
@@ -55,5 +57,21 @@ public class DuelResponseDTO {
 
     public void setGameDto(GameDto gameDto) {
         this.gameDto = gameDto;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
+    public void setReason(String reason) {
+        this.reason = reason;
     }
 }

@@ -222,4 +222,20 @@ public class JokenpoEngine implements GameEngine {
             throw new IllegalStateException("Erro ao deserializar replay do Jokenpo", e);
         }
     }
+    @Override
+    public String walkoverReplayJson(User player1, User player2, User winner, String reason) {
+        DuelResponseDTO duelResponseDTO = new DuelResponseDTO();
+        duelResponseDTO.setPlayer1(new UserDTO(player1));
+        duelResponseDTO.setPlayer2(new UserDTO(player2));
+        duelResponseDTO.setPlayerWinner(winner == null ? null : new UserDTO(winner));
+        duelResponseDTO.setType("WALKOVER");
+        duelResponseDTO.setReason(reason);
+        // matches fica vazio: nenhuma partida foi disputada
+        try {
+            return mapper.writeValueAsString(duelResponseDTO);
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("Erro ao serializar replay de WALKOVER do jokenpo", e);
+        }
+    }
+
 }
