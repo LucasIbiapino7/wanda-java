@@ -23,4 +23,4 @@ EXPOSE 8080
 ENV SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-dev}
 
 # Comando de inicialização
-ENTRYPOINT ["java","-jar","/app/app.jar"]
+ENTRYPOINT ["java","-Duser.timezone=America/Sao_Paulo","-jar","/app/app.jar"]
