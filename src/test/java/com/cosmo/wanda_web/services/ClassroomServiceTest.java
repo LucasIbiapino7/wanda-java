@@ -37,6 +37,7 @@ class ClassroomServiceTest {
     @Mock private FunctionRepository functionRepository;
     @Mock private TournamentRepository tournamentRepository;
     @Mock private UserService userService;
+    @Mock private NotificationService notificationService;
 
     @InjectMocks
     private ClassroomService classroomService;
