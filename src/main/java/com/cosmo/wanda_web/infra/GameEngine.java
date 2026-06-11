@@ -14,4 +14,5 @@ public interface GameEngine {
     MatchResult run(User player1, User player2);
     Object parseReplay(String replayJson);
 
+    String walkoverReplayJson(User player1, User player2, User winner, String reason);
 }

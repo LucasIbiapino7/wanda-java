@@ -168,4 +168,21 @@ public class BitsEngine implements GameEngine {
         }
     }
 
+    @Override
+    public String walkoverReplayJson(User player1, User player2, User winner, String reason) {
+        DuelDTO duelDto = new DuelDTO();
+        duelDto.setGame("bits");
+        duelDto.setPlayer1(new UserDTO(player1));
+        duelDto.setPlayer2(new UserDTO(player2));
+        duelDto.setDuelWInner(winner == null ? null : new UserDTO(winner));
+        duelDto.setType("WALKOVER");
+        duelDto.setReason(reason);
+        // matches fica vazio: nenhuma partida foi disputada
+        try {
+            return mapper.writeValueAsString(duelDto);
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("Erro ao serializar replay de WALKOVER do BITS", e);
+        }
+    }
+
 }

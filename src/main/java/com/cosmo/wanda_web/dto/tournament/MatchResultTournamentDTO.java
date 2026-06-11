@@ -8,6 +8,8 @@ public class MatchResultTournamentDTO {
     private Long matchId;
     private Long winnerId;
     private String winnerNameId;
+    private boolean walkover;  // true quando o confronto foi decidido por sorteio
+    private String reason;
 
     public MatchResultTournamentDTO() {
     }
@@ -76,5 +78,21 @@ public class MatchResultTournamentDTO {
 
     public void setWinnerNameId(String winnerNameId) {
         this.winnerNameId = winnerNameId;
+    }
+
+    public boolean isWalkover() {
+        return walkover;
+    }
+
+    public void setWalkover(boolean walkover) {
+        this.walkover = walkover;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
+    public void setReason(String reason) {
+        this.reason = reason;
     }
 }

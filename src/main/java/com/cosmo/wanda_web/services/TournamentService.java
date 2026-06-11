@@ -9,6 +9,7 @@ import com.cosmo.wanda_web.repositories.ClassroomStudentRepository;
 import com.cosmo.wanda_web.repositories.GameRepository;
 import com.cosmo.wanda_web.repositories.MatchRepository;
 import com.cosmo.wanda_web.repositories.TournamentRepository;
+import com.cosmo.wanda_web.services.exceptions.MatchExecutionException;
 import com.cosmo.wanda_web.services.exceptions.ResourceNotFoundException;
 import com.cosmo.wanda_web.services.exceptions.TournamentException;
 import com.cosmo.wanda_web.services.utils.JsonConverter;
@@ -29,6 +30,9 @@ import java.util.stream.Collectors;
 public class TournamentService {
 
     private static final Logger log = LoggerFactory.getLogger(TournamentService.class);
+
+    // Número de tentativas de uma partida antes de decidir por sorteio (W.O.)
+    private static final int MATCH_RETRY_ATTEMPTS = 3;
 
     @Autowired
     private UserService userService;
@@ -59,12 +63,16 @@ public class TournamentService {
 
     @Autowired
     private ClassroomRepository classroomRepository;
-    
+
     @Autowired
     private ClassroomStudentRepository classroomStudentRepository;
 
     @Autowired
     private NotificationService notificationService;
+
+    // Fonte de aleatoriedade do sorteio de W.O. Campo próprio para permitir
+    // que os testes controlem o resultado (ex.: via spy de sortearVencedor).
+    private final Random random = new Random();
 
     // Funções auxiliares
     // Define nomes para as fases
@@ -295,7 +303,7 @@ public class TournamentService {
         if (changed == 0) {
             throw new TournamentException("Este torneio já foi iniciado ou não está aberto.");
         }
-        
+
         running(tournament);
     }
 
@@ -325,15 +333,53 @@ public class TournamentService {
                 Long player2 = currentParticipants.get(i + 1);
                 User userPlayer1 = players.get(player1);
                 User userPlayer2 = players.get(player2);
-                MatchResult result;
+
+                Match match;
+                Long winnerId;
+                boolean walkover = false;
+                String walkoverReason = null;
+
                 try {
-                    result = matchOrchestrator.run(userPlayer1, userPlayer2, game);
+                    // tenta a partida até MATCH_RETRY_ATTEMPTS vezes — absorve falha transitória
+                    MatchResult result = runWithRetry(userPlayer1, userPlayer2, game, MATCH_RETRY_ATTEMPTS);
+
+                    match = new Match(userPlayer1, userPlayer2, LocalDateTime.now(),
+                            result.getWinner(), result.getReplayJson(), game);
+                    if (tournament.getClassroom() != null) {
+                        match.setClassroom(tournament.getClassroom());
+                    }
+                    matchRepository.save(match);
+                    playerService.updateWinners(userPlayer1, userPlayer2, match);
+                    winnerId = result.getWinner().getId();
+
+                } catch (MatchExecutionException e) {
+                    // a partida falhou em TODAS as tentativas → decide por sorteio e SEGUE
+                    User winner = sortearVencedor(userPlayer1, userPlayer2);
+                    walkover = true;
+                    walkoverReason = "Partida não pôde ser disputada após múltiplas tentativas; vencedor decidido por sorteio.";
+
+                    String replayJson = matchOrchestrator.getEngine(game.getName())
+                            .walkoverReplayJson(userPlayer1, userPlayer2, winner, walkoverReason);
+
+                    match = new Match(userPlayer1, userPlayer2, LocalDateTime.now(),
+                            winner, replayJson, game);
+                    if (tournament.getClassroom() != null) {
+                        match.setClassroom(tournament.getClassroom());
+                    }
+                    matchRepository.save(match);
+                    // NÃO chama updateWinners — W.O. não conta nas estatísticas dos alunos
+                    winnerId = winner.getId();
+
+                    log.warn("Confronto decidido por WALKOVER (sorteio). torneioId={}, player1Id={}, player2Id={}, vencedorSorteadoId={}, motivo={}",
+                            tournament.getId(), player1, player2, winnerId, e.getMessage());
+
                 } catch (Exception e) {
+                    // erro catastrófico (não é falha de partida) → última defesa: marca ERROR e aborta
                     String errorContext = String.format(
                             "Erro na fase %d | %s (id=%d) vs %s (id=%d) | %s", fase, userPlayer1.getName(), player1,
-                            userPlayer2.getName(), player2,e.getMessage()
+                            userPlayer2.getName(), player2, e.getMessage()
                     );
-                    log.error("Falha durante execução do torneio. torneoId={}, errorContext={}",tournament.getId(), errorContext, e);
+                    log.error("Falha catastrófica durante execução do torneio. torneoId={}, errorContext={}", tournament.getId(), errorContext, e);
                     if (!bracket.getRounds().isEmpty()) {
                         tournament.setBracketJson(jsonConverter.converterBracket(bracket));
                     }
@@ -343,18 +389,10 @@ public class TournamentService {
                     return;
                 }
 
-                Match match = new Match(userPlayer1, userPlayer2, LocalDateTime.now(),
-                        result.getWinner(), result.getReplayJson(), game);
-                if (tournament.getClassroom() != null) {
-                    match.setClassroom(tournament.getClassroom());
-                }
-                matchRepository.save(match);
-                playerService.updateWinners(userPlayer1, userPlayer2, match);
-
                 Long matchId = match.getId();
-                Long winnerId = result.getWinner().getId();
 
-                log.info("Rodada do torneio. fase={}, player1Id={}, player2Id={}, matchId={}, vencedorId={}", fase, player1, player2, matchId, winnerId);
+                log.info("Rodada do torneio. fase={}, player1Id={}, player2Id={}, matchId={}, vencedorId={}, walkover={}",
+                        fase, player1, player2, matchId, winnerId, walkover);
 
                 MatchResultTournamentDTO matchResult = new MatchResultTournamentDTO();
                 matchResult.setPlayer1Id(player1);
@@ -364,6 +402,8 @@ public class TournamentService {
                 matchResult.setMatchId(matchId);
                 matchResult.setWinnerId(winnerId);
                 matchResult.setWinnerNameId(players.get(winnerId).getName());
+                matchResult.setWalkover(walkover);
+                matchResult.setReason(walkoverReason);
 
                 round.getMatches().add(matchResult);
                 nextRound.add(winnerId);
@@ -387,6 +427,30 @@ public class TournamentService {
         tournament.getUsers().forEach(participant ->
                 notificationService.create(participant.getId(), NotificationType.TOURNAMENT_FINISHED, tournament.getId())
         );
+    }
+
+    // Tenta rodar a partida até `tentativas` vezes. Só desiste (relança) se TODAS as
+    // tentativas falharem por erro de execução da partida (MatchExecutionException).
+    // Qualquer outro erro (config/infra) sobe na hora, sem retry.
+    private MatchResult runWithRetry(User player1, User player2, Game game, int tentativas) {
+        MatchExecutionException ultimaFalha = null;
+        for (int tentativa = 1; tentativa <= tentativas; tentativa++) {
+            try {
+                return matchOrchestrator.run(player1, player2, game);
+            } catch (MatchExecutionException e) {
+                ultimaFalha = e;
+                log.warn("Falha na tentativa {}/{} da partida: {} (id={}) vs {} (id={}) — {}",
+                        tentativa, tentativas, player1.getName(), player1.getId(),
+                        player2.getName(), player2.getId(), e.getMessage());
+            }
+        }
+        throw ultimaFalha;
+    }
+
+    // Sorteia o vencedor de um confronto que não pôde ser disputado.
+    // protected para permitir spy/override nos testes (resultado determinístico).
+    protected User sortearVencedor(User player1, User player2) {
+        return random.nextBoolean() ? player1 : player2;
     }
 
     @Transactional
@@ -433,7 +497,7 @@ public class TournamentService {
     @Transactional(readOnly = true)
     public Page<TournamentMinDTO> findByClassroom(Long classroomId, Pageable pageable) {
         Classroom classroom = classroomRepository.findById(classroomId).orElseThrow(
-            () -> new ResourceNotFoundException("Turma não encontrada.")
+                () -> new ResourceNotFoundException("Turma não encontrada.")
         );
 
         if (classroom.getStatus() == ClassroomStatus.ARCHIVED){
