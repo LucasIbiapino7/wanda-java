@@ -8,6 +8,7 @@ import com.cosmo.wanda_web.entities.Classroom;
 import com.cosmo.wanda_web.entities.ClassroomStudent;
 import com.cosmo.wanda_web.entities.Match;
 import com.cosmo.wanda_web.entities.StudentEngagementStatus;
+import com.cosmo.wanda_web.infra.MatchOrchestrator;
 import com.cosmo.wanda_web.projections.dashboard.UserCountProjection;
 import com.cosmo.wanda_web.projections.dashboard.UserInteractionTypeProjection;
 import com.cosmo.wanda_web.projections.dashboard.UserValidityProjection;
@@ -42,6 +43,9 @@ public class ClassroomDashboardService {
 
     @Autowired
     private FunctionRepository functionRepository;
+
+    @Autowired
+    private MatchOrchestrator matchOrchestrator;
 
     @Autowired
     private LogAnswersAgentsRepository logAnswersAgentsRepository;
@@ -83,8 +87,7 @@ public class ClassroomDashboardService {
                 .groupByUserAndValidity(pageUserIds, from, to);
 
         // Quem submeteu
-        List<Long> submittedIds = functionRepository
-                .findUserIdsWithFunctionByGame(pageUserIds, classroom.getGame().getId());
+        List<Long> submittedIds = findSubmittedUserIdsForClassroomGame(pageUserIds, classroom);
 
         return members.map(cs -> {
             Long userId = cs.getStudent().getId();
@@ -152,9 +155,7 @@ public class ClassroomDashboardService {
 
         Long totalAlunos = (long) studentIds.size();
 
-        Long totalSubmeteram = (long) functionRepository
-                .findUserIdsWithFunctionByGame(studentIds, classroom.getGame().getId())
-                .size();
+        Long totalSubmeteram = (long) findSubmittedUserIdsForClassroomGame(studentIds, classroom).size();
 
         Long totalAtivos = (long) logAnswersAgentsRepository
                 .findActiveUserIds(studentIds, from, to)
@@ -238,6 +239,29 @@ public class ClassroomDashboardService {
         }
 
         return classroomStudentRepository.findStudentIdsByClassroom(classroomId);
+    }
+
+    private List<Long> findSubmittedUserIdsForClassroomGame(List<Long> userIds, Classroom classroom) {
+        if (userIds.isEmpty() || classroom.getGame() == null) {
+            return List.of();
+        }
+
+        List<String> requiredFunctions = matchOrchestrator.getEngine(classroom.getGame().getName())
+                .functions()
+                .stream()
+                .map(com.cosmo.wanda_web.infra.dtos.FunctionInfo::getName)
+                .toList();
+
+        if (requiredFunctions.isEmpty()) {
+            return List.of();
+        }
+
+        return functionRepository.findUserIdsWithAllFunctionsByGameAndNames(
+                userIds,
+                classroom.getGame().getId(),
+                requiredFunctions,
+                requiredFunctions.size()
+        );
     }
 
 }

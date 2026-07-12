@@ -1,7 +1,6 @@
 package com.cosmo.wanda_web.dto.users;
 
 import com.cosmo.wanda_web.entities.User;
-import com.cosmo.wanda_web.projections.PlayerInfo;
 
 public class UserDTO {
     private Long id;

@@ -1,0 +1,2 @@
+ALTER TABLE tb_challenge
+    ADD COLUMN answered_at TIMESTAMP WITHOUT TIME ZONE;

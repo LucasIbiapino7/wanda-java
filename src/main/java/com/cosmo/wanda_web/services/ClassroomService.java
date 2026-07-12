@@ -2,6 +2,7 @@ package com.cosmo.wanda_web.services;
 
 import com.cosmo.wanda_web.dto.classroom.*;
 import com.cosmo.wanda_web.entities.*;
+import com.cosmo.wanda_web.infra.MatchOrchestrator;
 import com.cosmo.wanda_web.repositories.*;
 import com.cosmo.wanda_web.services.exceptions.ClassroomAccessDeniedException;
 import com.cosmo.wanda_web.services.exceptions.ClassroomException;
@@ -47,6 +48,9 @@ public class ClassroomService {
 
     @Autowired
     private FunctionRepository functionRepository;
+
+    @Autowired
+    private MatchOrchestrator matchOrchestrator;
 
     @Autowired
     private NotificationService notificationService;
@@ -319,11 +323,32 @@ public class ClassroomService {
                 .toList();
 
         // Busca de uma vez quais já submeteram
-        List<Long> submittedIds = functionRepository.findUserIdsWithFunctionByGame(
-                userIds, classroom.getGame().getId()
-        );
+        List<Long> submittedIds = findSubmittedUserIdsForClassroomGame(userIds, classroom);
 
         return members.map(cs -> new ClassroomMemberDTO(cs, submittedIds.contains(cs.getStudent().getId())));
+    }
+
+    private List<Long> findSubmittedUserIdsForClassroomGame(List<Long> userIds, Classroom classroom) {
+        if (userIds.isEmpty() || classroom.getGame() == null) {
+            return List.of();
+        }
+
+        List<String> requiredFunctions = matchOrchestrator.getEngine(classroom.getGame().getName())
+                .functions()
+                .stream()
+                .map(com.cosmo.wanda_web.infra.dtos.FunctionInfo::getName)
+                .toList();
+
+        if (requiredFunctions.isEmpty()) {
+            return List.of();
+        }
+
+        return functionRepository.findUserIdsWithAllFunctionsByGameAndNames(
+                userIds,
+                classroom.getGame().getId(),
+                requiredFunctions,
+                requiredFunctions.size()
+        );
     }
 
     private String generateUniqueAccessCode() {

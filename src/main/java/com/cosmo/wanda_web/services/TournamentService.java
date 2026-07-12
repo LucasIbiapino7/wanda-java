@@ -114,6 +114,33 @@ public class TournamentService {
         validateParticipantQuantity(tournament.getCurrentParticipants());
     }
 
+    private boolean isAdmin(User user) {
+        return user.getAuthorities()
+                .stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
+    }
+
+    private boolean canUserManageTournament(Tournament tournament, User user) {
+        if (Objects.equals(tournament.getCreator().getId(), user.getId()) || isAdmin(user)) {
+            return true;
+        }
+
+        Classroom classroom = tournament.getClassroom();
+        return classroom != null && classroom.getInstructor().getId().equals(user.getId());
+    }
+
+    private boolean canUserStartTournament(Tournament tournament, User user) {
+        return tournament.getStatus() == TournamentStatus.OPEN
+                && tournament.getCurrentParticipants() == tournament.getMaxParticipants()
+                && canUserManageTournament(tournament, user);
+    }
+
+    private TournamentMinDTO toMinDtoWithCanReady(Tournament tournament, User user) {
+        TournamentMinDTO dto = new TournamentMinDTO(tournament);
+        dto.setCanReady(canUserStartTournament(tournament, user));
+        return dto;
+    }
+
     // Somente alunos e instrutores da turma podem acessar os torneios dela
     private void validateUserCanAccessClassroomTournament(Tournament tournament, User user) {
         Classroom classroom = tournament.getClassroom();
@@ -203,18 +230,14 @@ public class TournamentService {
     public Page<TournamentMinDTO> findAll(String searchTerm, Pageable pageable) {
         User user = userService.authenticated();
 
-        boolean isAdmin = user.getAuthorities()
-                .stream()
-                .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
-
         Page<Tournament> result = tournamentRepository.findAvailableOpenTournaments(
                 searchTerm,
                 user.getId(),
-                isAdmin,
+                isAdmin(user),
                 pageable
         );
 
-        return result.map(TournamentMinDTO::new);
+        return result.map(tournament -> toMinDtoWithCanReady(tournament, user));
     }
 
     @Transactional
@@ -254,13 +277,7 @@ public class TournamentService {
     public Page<TournamentMinDTO> findAllParticipating(Pageable pageable) {
         User user = userService.authenticated();
         Page<Tournament> result = tournamentRepository.findAllByUser(user.getId(), pageable);
-        Page<TournamentMinDTO> mapDto = result.map(TournamentMinDTO::new);
-        for (TournamentMinDTO dto : mapDto) {
-            if (dto.getStatus().toString().equals("OPEN") && Objects.equals(dto.getCreator().getId(), user.getId()) && dto.getCurrentParticipants() >= dto.getMaxParticipants()){
-                dto.setCanReady(true);
-            }
-        }
-        return mapDto;
+        return result.map(tournament -> toMinDtoWithCanReady(tournament, user));
     }
 
     @Transactional(readOnly = true)
@@ -277,8 +294,8 @@ public class TournamentService {
         Tournament tournament = tournamentRepository.findById(id).orElseThrow(
                 () -> new ResourceNotFoundException("Torneio nao encontrado!"));
         User user = userService.authenticated();
-        if (!Objects.equals(user.getId(), tournament.getCreator().getId())){
-            throw new TournamentException("Voce nao eh o criador do torneio");
+        if (!canUserManageTournament(tournament, user)){
+            throw new TournamentException("VocÃª nÃ£o tem permissÃ£o para iniciar este torneio");
         }
 
         validateTournamentReadyToStart(tournament);
@@ -504,6 +521,7 @@ public class TournamentService {
             return Page.empty(pageable);
         }
         Page<Tournament> result = tournamentRepository.findByClassroomId(classroomId, pageable);
-        return result.map(TournamentMinDTO::new);
+        User user = userService.authenticated();
+        return result.map(tournament -> toMinDtoWithCanReady(tournament, user));
     }
 }

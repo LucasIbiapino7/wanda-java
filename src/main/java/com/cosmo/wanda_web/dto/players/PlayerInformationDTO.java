@@ -1,6 +1,5 @@
 package com.cosmo.wanda_web.dto.players;
 
-import com.cosmo.wanda_web.entities.Function;
 import com.cosmo.wanda_web.entities.Player;
 
 import java.util.List;

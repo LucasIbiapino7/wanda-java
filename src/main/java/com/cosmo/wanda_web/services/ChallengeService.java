@@ -6,7 +6,6 @@ import com.cosmo.wanda_web.dto.challengers.ChallengeIsAcceptedDTO;
 import com.cosmo.wanda_web.entities.*;
 import com.cosmo.wanda_web.infra.MatchOrchestrator;
 import com.cosmo.wanda_web.infra.dtos.MatchResult;
-import com.cosmo.wanda_web.projections.FindAllPendingChallengerProjection;
 import com.cosmo.wanda_web.repositories.*;
 import com.cosmo.wanda_web.services.exceptions.ChallengeException;
 import com.cosmo.wanda_web.services.exceptions.ResourceNotFoundException;
@@ -118,8 +117,15 @@ public class ChallengeService {
     @Transactional(readOnly = true)
     public Page<ChallengeFIndAllPendingDTO> findAllPending(Pageable pageable) {
         User user = userService.authenticated();
-        Page<FindAllPendingChallengerProjection> allPending = challengeRepository.findAllPending(user.getId(), pageable);
+        Page<Challenge> allPending = challengeRepository.findAllPending(user.getId(), pageable);
         return allPending.map(ChallengeFIndAllPendingDTO::new);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ChallengeFIndAllPendingDTO> findMine(Pageable pageable) {
+        User user = userService.authenticated();
+        Page<Challenge> result = challengeRepository.findByUser(user.getId(), pageable);
+        return result.map(ChallengeFIndAllPendingDTO::new);
     }
 
     @Transactional
@@ -153,7 +159,7 @@ public class ChallengeService {
         playerService.updateWinners(challenge.getChallenger(), challenge.getChallenged(), match);
 
         log.info("Partida do desafio finalizada. challengeId={}, matchId={}", dto.getChallengeId(), match.getId());
-        challengeUpdate(dto.getChallengeId(), ChallengeStatus.ACCEPTED, match);
+        challengeUpdate(dto.getChallengeId(), ChallengeStatus.FINISHED, match);
         notificationService.create(challenge.getChallenger().getId(), NotificationType.CHALLENGE_RESULT, match.getId());
         notificationService.create(challenge.getChallenged().getId(), NotificationType.CHALLENGE_RESULT, match.getId());
         return match.getId();
@@ -161,19 +167,19 @@ public class ChallengeService {
 
     @Transactional
     private void challengeUpdate(Long challengeId, ChallengeStatus status, Match match) {
-        challengeRepository.updateChallenge(challengeId, status, match);
+        challengeRepository.updateChallenge(challengeId, status, match, LocalDateTime.now());
     }
 
     @Transactional(readOnly = true)
     public Page<ChallengeFIndAllPendingDTO> findByClassroom(Long classroomId, Pageable pageable) {
-        Page<FindAllPendingChallengerProjection> result = challengeRepository.findByClassroomId(classroomId, pageable);
+        Page<Challenge> result = challengeRepository.findByClassroomId(classroomId, pageable);
         return result.map(ChallengeFIndAllPendingDTO::new);
     }
 
     @Transactional(readOnly = true)
     public Page<ChallengeFIndAllPendingDTO> findByClassroomAndUser(Long classroomId, Pageable pageable) {
         User user = userService.authenticated();
-        Page<FindAllPendingChallengerProjection> result = challengeRepository
+        Page<Challenge> result = challengeRepository
                 .findByClassroomAndUser(classroomId, user.getId(), pageable);
         return result.map(ChallengeFIndAllPendingDTO::new);
     }

@@ -28,6 +28,9 @@ public class Challenge {
     @Column(columnDefinition = "TIMESTAMP WITHOUT TIME ZONE")
     private LocalDateTime createdAt;
 
+    @Column(columnDefinition = "TIMESTAMP WITHOUT TIME ZONE")
+    private LocalDateTime answeredAt;
+
     @OneToOne
     @JoinColumn(name = "match_id")
     private Match match;
@@ -90,6 +93,14 @@ public class Challenge {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getAnsweredAt() {
+        return answeredAt;
+    }
+
+    public void setAnsweredAt(LocalDateTime answeredAt) {
+        this.answeredAt = answeredAt;
     }
 
     public Match getMatch() {

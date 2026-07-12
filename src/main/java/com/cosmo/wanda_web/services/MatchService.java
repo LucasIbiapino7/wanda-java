@@ -439,22 +439,34 @@ public class MatchService {
         };
 
         if (replay instanceof DuelDTO bitsDto) {
+            bitsDto.setGame(gameName);
             fillCharacter.accept(bitsDto.getPlayer1());
             fillCharacter.accept(bitsDto.getPlayer2());
             if (bitsDto.getDuelWInner() != null) {
                 fillCharacter.accept(bitsDto.getDuelWInner());
             }
-            return new ReplayDto(gameDto, bitsDto);
+            return buildReplayDto(match, gameDto, bitsDto);
         }
 
         if (replay instanceof DuelResponseDTO jokenpoDto) {
             fillCharacter.accept(jokenpoDto.getPlayer1());
             fillCharacter.accept(jokenpoDto.getPlayer2());
             jokenpoDto.setGameDto(gameDto);
-            return new ReplayDto(gameDto, jokenpoDto);
+            return buildReplayDto(match, gameDto, jokenpoDto);
         }
 
         throw new IllegalStateException("Formato de replay desconhecido para o jogo: " + gameName);
+    }
+
+    private ReplayDto buildReplayDto(Match match, GameDto gameDto, Object payload) {
+        return new ReplayDto(
+                match.getId(),
+                gameDto,
+                new UserDTO(match.getPlayer1()),
+                new UserDTO(match.getPlayer2()),
+                match.getWinner() == null ? null : new UserDTO(match.getWinner()),
+                payload
+        );
     }
 
     public Long winnerOfMatch(Long matchId) {

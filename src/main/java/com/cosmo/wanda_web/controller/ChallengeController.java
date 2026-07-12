@@ -33,6 +33,13 @@ public class ChallengeController {
     }
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
+    @GetMapping("/me")
+    public ResponseEntity<Page<ChallengeFIndAllPendingDTO>> findMine(Pageable pageable){
+        Page<ChallengeFIndAllPendingDTO> result = challengeService.findMine(pageable);
+        return ResponseEntity.ok(result);
+    }
+
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
     @PostMapping("/isAccepted")
     public ResponseEntity<Long> isAccepted(@RequestBody ChallengeIsAcceptedDTO dto){
         Long result = challengeService.isAccepted(dto);

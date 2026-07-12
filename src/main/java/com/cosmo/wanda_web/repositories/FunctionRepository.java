@@ -91,4 +91,19 @@ public interface FunctionRepository extends JpaRepository<Function, Long> {
          AND f.game.id = :gameId
        """)
     List<Long> findUserIdsWithFunctionByGame(@Param("userIds") List<Long> userIds,@Param("gameId") Long gameId);
+
+    @Query("""
+       SELECT f.player.id
+       FROM Function f
+       WHERE f.player.id IN :userIds
+         AND f.game.id = :gameId
+         AND f.name IN :functionNames
+       GROUP BY f.player.id
+       HAVING COUNT(DISTINCT f.name) = :requiredCount
+       """)
+    List<Long> findUserIdsWithAllFunctionsByGameAndNames(
+            @Param("userIds") List<Long> userIds,
+            @Param("gameId") Long gameId,
+            @Param("functionNames") List<String> functionNames,
+            @Param("requiredCount") long requiredCount);
 }

@@ -3,7 +3,6 @@ package com.cosmo.wanda_web.dto.match;
 import com.cosmo.wanda_web.dto.game.GameDto;
 import com.cosmo.wanda_web.dto.users.UserDTO;
 import com.cosmo.wanda_web.entities.Match;
-import com.cosmo.wanda_web.projections.MatchSummary;
 
 public class MatchMinDTO {
     private Long id;

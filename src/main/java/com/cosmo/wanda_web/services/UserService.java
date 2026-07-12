@@ -3,7 +3,6 @@ package com.cosmo.wanda_web.services;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.cosmo.wanda_web.dto.users.UpdateProfileTypeDto;
-import com.cosmo.wanda_web.dto.users.UserDTO;
 import com.cosmo.wanda_web.dto.auth.AccessTokenDTO;
 import com.cosmo.wanda_web.dto.auth.AuthenticationDTO;
 import com.cosmo.wanda_web.dto.auth.RegisterDTO;

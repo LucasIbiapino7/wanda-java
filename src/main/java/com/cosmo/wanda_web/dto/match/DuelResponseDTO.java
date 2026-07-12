@@ -2,7 +2,6 @@ package com.cosmo.wanda_web.dto.match;
 
 import com.cosmo.wanda_web.dto.game.GameDto;
 import com.cosmo.wanda_web.dto.users.UserDTO;
-import com.cosmo.wanda_web.entities.Game;
 
 import java.util.ArrayList;
 import java.util.List;
