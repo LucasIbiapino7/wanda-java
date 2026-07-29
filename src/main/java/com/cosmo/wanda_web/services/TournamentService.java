@@ -13,6 +13,8 @@ import com.cosmo.wanda_web.services.exceptions.MatchExecutionException;
 import com.cosmo.wanda_web.services.exceptions.ResourceNotFoundException;
 import com.cosmo.wanda_web.services.exceptions.TournamentException;
 import com.cosmo.wanda_web.services.utils.JsonConverter;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,6 +71,9 @@ public class TournamentService {
 
     @Autowired
     private NotificationService notificationService;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     // Fonte de aleatoriedade do sorteio de W.O. Campo próprio para permitir
     // que os testes controlem o resultado (ex.: via spy de sortearVencedor).
@@ -135,9 +140,14 @@ public class TournamentService {
                 && canUserManageTournament(tournament, user);
     }
 
+    private boolean isUserParticipant(Tournament tournament, User user) {
+        return tournamentRepository.isUserInTournament(tournament.getId(), user.getId());
+    }
+
     private TournamentMinDTO toMinDtoWithCanReady(Tournament tournament, User user) {
         TournamentMinDTO dto = new TournamentMinDTO(tournament);
         dto.setCanReady(canUserStartTournament(tournament, user));
+        dto.setIsParticipant(isUserParticipant(tournament, user));
         return dto;
     }
 
@@ -270,7 +280,9 @@ public class TournamentService {
         tournament.getUsers().add(participant);
         participant.getTournaments().add(tournament);
         tournament = tournamentRepository.save(tournament);
-        return new TournamentMinDTO(tournament);
+        entityManager.flush();
+        entityManager.refresh(tournament);
+        return toMinDtoWithCanReady(tournament, participant);
     }
 
     @Transactional(readOnly = true)
@@ -283,9 +295,20 @@ public class TournamentService {
     @Transactional(readOnly = true)
     public BracketTournament getTournamentBracketById(Long id) {
         Tournament tournament = tournamentRepository.findById(id).orElseThrow(
-                () -> new ResourceNotFoundException("Match not found"));
+                () -> new ResourceNotFoundException("Torneio nao encontrado!"));
         String tournamentData = tournament.getBracketJson();
-        BracketTournament bracketTournament = jsonConverter.converterToBracketDto(tournamentData);
+        BracketTournament bracketTournament;
+        try {
+            bracketTournament = (tournamentData == null || tournamentData.isBlank())
+                    ? new BracketTournament()
+                    : jsonConverter.converterToBracketDto(tournamentData);
+        } catch (IllegalStateException e) {
+            throw new TournamentException("O bracket deste torneio esta invalido ou incompleto.");
+        }
+        bracketTournament.setId(tournament.getId());
+        bracketTournament.setName(tournament.getName());
+        bracketTournament.setStatus(tournament.getStatus());
+        bracketTournament.setErrorContext(tournament.getErrorContext());
         return bracketTournament;
     }
 
@@ -492,7 +515,7 @@ public class TournamentService {
         tournament = tournamentRepository.save(tournament);
         log.info("Torneio atualizado. torneoId={}, novoNome={}, novoStartTime={}",
                 tournament.getId(), tournament.getName(), tournament.getStartTime());
-        return new TournamentMinDTO(tournament);
+        return toMinDtoWithCanReady(tournament, user);
     }
 
     @Transactional

@@ -21,6 +21,7 @@ public class TournamentMinDTO {
     private UserDTO creator;
     private UserDTO winnerId;
     private Boolean canReady;
+    private Boolean isParticipant;
     private GameDto game;
     private String errorContext;
     private Long classroomId;
@@ -44,6 +45,7 @@ public class TournamentMinDTO {
         creator = new UserDTO(entity.getCreator());
         winnerId = (entity.getWinner() != null) ? new UserDTO(entity.getWinner()) : null;
         canReady = false;
+        isParticipant = false;
         game = new GameDto(entity.getGame());
         errorContext = entity.getErrorContext();
         classroomId = (entity.getClassroom() != null) ? entity.getClassroom().getId() : null;
@@ -111,6 +113,14 @@ public class TournamentMinDTO {
 
     public void setCanReady(Boolean canReady) {
         this.canReady = canReady;
+    }
+
+    public Boolean getIsParticipant() {
+        return isParticipant;
+    }
+
+    public void setIsParticipant(Boolean isParticipant) {
+        this.isParticipant = isParticipant;
     }
 
     public Long getClassroomId() {
