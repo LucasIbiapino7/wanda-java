@@ -91,7 +91,7 @@ public class JokenpoEngine implements GameEngine {
 
         try {
             int countMatch = 1;
-            while (countMatch <= matches.getMatches()) {
+            while (countMatch <= matches.getMatches() || matches.getPlayer1RoundsVictories().equals(matches.getPlayer2RoundsVictories())) {
 
                 matches.instanceCards();
                 MatchInformationDTO matchInformationDTO = new MatchInformationDTO();
@@ -196,7 +196,7 @@ public class JokenpoEngine implements GameEngine {
 
         // determina o vencedor
         User winner = null;
-        if (matches.getPlayer1RoundsVictories() >= matches.getPlayer2RoundsVictories()) {
+        if (matches.getPlayer1RoundsVictories() > matches.getPlayer2RoundsVictories()) {
             winner = player1;
         } else if (matches.getPlayer2RoundsVictories() > matches.getPlayer1RoundsVictories()) {
             winner = player2;
