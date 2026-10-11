@@ -2,10 +2,6 @@ package com.cosmo.wanda_web.services.utils;
 
 import com.cosmo.wanda_web.dto.bits.MatchDecisionBitsDTO;
 import com.cosmo.wanda_web.dto.bits.PlaysBitsDTO;
-import com.cosmo.wanda_web.utils.BitsCard;
-import com.cosmo.wanda_web.utils.ParametersBits;
-import jakarta.validation.constraints.Null;
-
 import java.util.*;
 
 public class MatchesBits {

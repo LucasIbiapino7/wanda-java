@@ -1,8 +1,6 @@
 package com.cosmo.wanda_web.entities;
 
 import jakarta.persistence.*;
-
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Objects;
 

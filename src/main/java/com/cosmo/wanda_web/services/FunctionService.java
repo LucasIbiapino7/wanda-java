@@ -1,6 +1,5 @@
 package com.cosmo.wanda_web.services;
 
-import com.cosmo.wanda_web.config.SecurityFilter;
 import com.cosmo.wanda_web.dto.function.FeedbackResponseDTO;
 import com.cosmo.wanda_web.dto.function.FunctionRequestDTO;
 import com.cosmo.wanda_web.dto.function.FunctionResponseDto;
