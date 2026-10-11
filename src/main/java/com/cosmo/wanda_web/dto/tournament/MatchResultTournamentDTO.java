@@ -14,6 +14,10 @@ public class MatchResultTournamentDTO {
     private boolean walkover;  // true quando o confronto foi decidido por sorteio
     private String reason;
 
+    private boolean player1Fictitious;
+    private boolean player2Fictitious;
+    private boolean automaticAdvance; // quando há um jogador fake
+
     public MatchResultTournamentDTO() {
     }
 
@@ -129,5 +133,29 @@ public class MatchResultTournamentDTO {
 
     public void setReason(String reason) {
         this.reason = reason;
+    }
+
+    public boolean isPlayer1Fictitious() {
+        return player1Fictitious;
+    }
+
+    public void setPlayer1Fictitious(boolean player1Fictitious) {
+        this.player1Fictitious = player1Fictitious;
+    }
+
+    public boolean isPlayer2Fictitious() {
+        return player2Fictitious;
+    }
+
+    public void setPlayer2Fictitious(boolean player2Fictitious) {
+        this.player2Fictitious = player2Fictitious;
+    }
+
+    public boolean isAutomaticAdvance() {
+        return automaticAdvance;
+    }
+
+    public void setAutomaticAdvance(boolean automaticAdvance) {
+        this.automaticAdvance = automaticAdvance;
     }
 }

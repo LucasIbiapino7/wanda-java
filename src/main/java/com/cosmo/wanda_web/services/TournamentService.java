@@ -355,11 +355,24 @@ public class TournamentService {
 
         Game game = tournament.getGame();
 
-        List<Long> participants = new ArrayList<>(players.keySet());
-        Collections.shuffle(participants);
+        // Pega lista completa e embaralhada
+        List<TournamentParticipantDTO> tournamentParticipants = buildParticipants(tournament);
+
+        // Map de participantes por ID
+        Map<Long, TournamentParticipantDTO> participantsById = 
+            tournamentParticipants.stream()
+            .collect(Collectors.toMap(
+                TournamentParticipantDTO::id,
+                Function.identity()
+            ));
+
+        // Lista dos participantes do torneio
+        List<Long> participants = tournamentParticipants.stream()
+            .map(TournamentParticipantDTO::id)
+            .collect(Collectors.toCollection(ArrayList::new));
 
         BracketTournament bracket = new BracketTournament();
-        int roundNum = participants.size();
+
         int fase = 1;
         List<Long> currentParticipants = participants;
 
@@ -371,6 +384,26 @@ public class TournamentService {
             for (int i = 0; i < currentParticipants.size(); i += 2) {
                 Long player1 = currentParticipants.get(i);
                 Long player2 = currentParticipants.get(i + 1);
+
+                TournamentParticipantDTO participant1 = participantsById.get(player1);
+                TournamentParticipantDTO participant2 = participantsById.get(player2);
+
+                if (participant1.fake() || participant2.fake()){
+                    MatchResultTournamentDTO result = resolveAutomaticAdvance(participant1, participant2);
+
+                    round.getMatches().add(result);
+                    nextRound.add(result.getWinnerId());
+
+                    log.info(
+                        "Avanço automático. torneioId={}, fase={}, player1Id={}, player2Id={}, vencedorId={}",
+                        tournament.getId(), fase, player1, player2, result.getWinnerId()
+                    );
+
+                    // Vai pra próxima partida
+                    continue;
+                }
+
+                // Só partidas com ambos jogadores reais de fato ocorrem
                 User userPlayer1 = players.get(player1);
                 User userPlayer2 = players.get(player2);
 
@@ -454,14 +487,24 @@ public class TournamentService {
             fase++;
         }
 
-        String jsonData = jsonConverter.converterBracket(bracket);
-        tournament.setBracketJson(jsonData);
-        // Vou precisar mudar a lógica aqui! A ideia, é que agora setamos um User no Winner
-        // e não mais apenas o Id
-        log.info("Torneio finalizado. torneoId={}, vencedorId={}",
-                tournament.getId(), currentParticipants.get(0));
-        tournament.setWinner(players.get(currentParticipants.get(0)));
-        playerService.updateWinnerTournament(currentParticipants.get(0));
+        Long winnerId = currentParticipants.get(0);
+        User winner = players.get(winnerId);
+
+        // A regra atual deve garantir que isso não ocorra
+        if (winner == null) {
+            throw new TournamentException(
+                    "Não foi possível determinar um campeão real para o torneio."
+            );
+        }
+
+        tournament.setBracketJson(jsonConverter.converterBracket(bracket));
+        tournament.setWinner(winner);
+
+        log.info("Torneio finalizado. torneioId={}, vencedorId={}",
+                tournament.getId(), winnerId);
+
+        playerService.updateWinnerTournament(winnerId);
+
         tournament.setStatus(TournamentStatus.FINISHED);
         tournamentRepository.save(tournament);
         tournament.getUsers().forEach(participant ->
@@ -546,5 +589,77 @@ public class TournamentService {
         Page<Tournament> result = tournamentRepository.findByClassroomId(classroomId, pageable);
         User user = userService.authenticated();
         return result.map(tournament -> toMinDtoWithCanReady(tournament, user));
+    }
+
+    private List<TournamentParticipantDTO> buildParticipants(Tournament tournament){
+        validateParticipantQuantity(tournament.getMaxParticipants());
+
+        // Cria lista de participantes reais do torneio
+        List<TournamentParticipantDTO> participants = tournament.getUsers()
+            .stream()
+            .map(TournamentParticipantDTO::fromUser)
+            .collect(Collectors.toCollection(ArrayList::new));
+
+        // Validações
+        if (participants.isEmpty()){
+            throw new TournamentException("O torneio precisa de pelo menos um jogador real.");
+        }
+
+        if (participants.size() > tournament.getMaxParticipants()){
+            throw new TournamentException("A quantidade de inscritos ultrapassou a capacidade máxima do torneio.");
+        }
+
+        // Calcula a quantidade de participantes que falta e adiciona na lista como jogadores fakes
+        int missingParticipants = tournament.getMaxParticipants() - participants.size();
+
+        int i;
+        for (i = 1; i <= missingParticipants; i++){
+            participants.add(TournamentParticipantDTO.fake(i));
+        }
+
+        // Realiza o sorteio das chaves
+        Collections.shuffle(participants);
+
+        return participants;
+    }
+
+    // Partidas com jogadores fakes possui resultado imediato
+    private MatchResultTournamentDTO resolveAutomaticAdvance (
+        TournamentParticipantDTO player1,
+        TournamentParticipantDTO player2
+    ){
+        if (!player1.fake() && !player2.fake()){
+            throw new IllegalArgumentException(
+                "Avanço automático exige ao menos um jogador fake."
+            );
+        }
+
+        // Se houver real, ele vence
+        // Se for dois fakes, avança o primeiro
+        TournamentParticipantDTO winner = player1.fake() && !player2.fake()
+            ? player2
+            : player1;
+        
+        String reason = player1.fake() && !player2.fake()
+            ? "O primeiro fictício avança em caso de confronto de fictícios"
+            : "Jogador real avança automaticamente.";
+
+        MatchResultTournamentDTO result = new MatchResultTournamentDTO(
+            player1.id(),
+            player1.name(),
+            player2.id(),
+            player2.name(),
+            null, // Sem partida nem replay
+            winner.id(),
+            winner.name()
+        );
+
+        result.setPlayer1Fictitious(player1.fake());
+        result.setPlayer2Fictitious(player2.fake());
+        result.setAutomaticAdvance(true);
+        result.setWalkover(false);
+        result.setReason(reason);
+
+        return result;
     }
 }
