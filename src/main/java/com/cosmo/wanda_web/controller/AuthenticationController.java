@@ -4,7 +4,6 @@ import com.cosmo.wanda_web.dto.auth.AccessTokenDTO;
 import com.cosmo.wanda_web.dto.auth.AuthenticationDTO;
 import com.cosmo.wanda_web.dto.auth.RegisterDTO;
 import com.cosmo.wanda_web.dto.users.UpdateProfileTypeDto;
-import com.cosmo.wanda_web.dto.users.UserDTO;
 import com.cosmo.wanda_web.dto.users.UserMinDto;
 import com.cosmo.wanda_web.services.UserService;
 import jakarta.validation.Valid;

@@ -1,7 +1,5 @@
 package com.cosmo.wanda_web.dto.python;
 
-import java.util.List;
-
 public class ValidateResponseDTO {
     private Boolean valid;
     private String answer;
