@@ -111,13 +111,36 @@ public class TournamentService {
     }
 
     // Valida quantidade de participantes para início de torneio
-    private void validateTournamentReadyToStart(Tournament tournament) {
-        if (tournament.getCurrentParticipants() < tournament.getMaxParticipants()) {
-            throw new TournamentException("O torneio ainda não possui a quantidade necessária de participantes.");
+    // Esse método fica pra não precisar mudar em todo o código
+    private void validateTournamentReadyToStart(Tournament tournament){
+        validateTournamentReadyToStart(tournament, false);
+    }
+
+    private void validateTournamentReadyToStart(Tournament tournament, boolean incomplete){
+        if (tournament.getStatus() != TournamentStatus.OPEN){
+            throw new TournamentException("Torneio já iniciado ou fechado.");
         }
 
-        validateParticipantQuantity(tournament.getCurrentParticipants());
+        validateParticipantQuantity(tournament.getMaxParticipants());
+
+        int participants = tournament.getUsers().size();
+        int capacity = tournament.getMaxParticipants();
+
+        if (participants == 0){
+            throw new TournamentException("O torneio precisa de pelo menos um jogador real.");
+        }
+
+        if (participants > capacity){
+            throw new TournamentException("A quantidade de participantes excedeu o limite desse torneio.");
+        }
+
+        // Torneio só inicia após confirmação por parte do instrutor
+        if (participants < capacity && !incomplete){
+            throw new TournamentException("Confirme o início do torneio com jogadores fictícios.");
+        }
+
     }
+
 
     private boolean isAdmin(User user) {
         return user.getAuthorities()
@@ -135,8 +158,11 @@ public class TournamentService {
     }
 
     private boolean canUserStartTournament(Tournament tournament, User user) {
+        int participants = tournament.getCurrentParticipants();
+
         return tournament.getStatus() == TournamentStatus.OPEN
-                && tournament.getCurrentParticipants() == tournament.getMaxParticipants()
+                && participants >= 1
+                && participants <= tournament.getMaxParticipants()
                 && canUserManageTournament(tournament, user);
     }
 
@@ -312,31 +338,43 @@ public class TournamentService {
         return bracketTournament;
     }
 
+    // Método run deve iniciar torneio seguindo regras de jogadores fakes
     @Transactional
     public void run(Long id){
-        Tournament tournament = tournamentRepository.findById(id).orElseThrow(
-                () -> new ResourceNotFoundException("Torneio nao encontrado!"));
+        run(id, false);
+    }
+        
+    @Transactional 
+    public void run(Long id, boolean incomplete){
+        Tournament tournament = tournamentRepository.findById(id)
+        .orElseThrow(() -> new ResourceNotFoundException("Torneio não encontrado"));
+        
         User user = userService.authenticated();
+
         if (!canUserManageTournament(tournament, user)){
-            throw new TournamentException("VocÃª nÃ£o tem permissÃ£o para iniciar este torneio");
+            throw new TournamentException("Você não tem permissão para iniciar esse torneio.");
         }
 
-        validateTournamentReadyToStart(tournament);
+        // Validação da quantidade de usuários
+        validateTournamentReadyToStart(tournament, incomplete);
 
-        int changed = tournamentRepository.tryStart(id);
-        if (changed == 0) {
-            throw new TournamentException("Este torneio já foi iniciado ou não está aberto.");
+        int changed = tournamentRepository.tryStart((id));
+
+        if (changed == 0){
+            throw new TournamentException("Este torneio já foi iniciado ou está fechado.");
         }
-        tournament = tournamentRepository.findById(id).orElseThrow(
-                () -> new ResourceNotFoundException("Torneio nao encontrado!"));
+
+        tournament = tournamentRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Torneio não encontrado."));
+
         running(tournament);
     }
-
+    
     @Transactional
     public void startTournament(Long id) {
         Tournament tournament = tournamentRepository.findById(id).orElseThrow(
-                () -> new ResourceNotFoundException("Torneio nao encontrado!"));
-
+            () -> new ResourceNotFoundException("Torneio nao encontrado!"));
+            
         validateTournamentReadyToStart(tournament);
 
         int changed = tournamentRepository.tryStart(id);
