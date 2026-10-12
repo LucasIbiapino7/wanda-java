@@ -19,8 +19,11 @@ public class TournamentController {
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
     @PutMapping("/{id}")
-    public ResponseEntity<Void> run(@PathVariable(name = "id") Long id){
-        tournamentService.run(id);
+    public ResponseEntity<Void> run(
+            @PathVariable(name = "id") Long id,
+            @RequestParam(defaultValue = "false") boolean incomplete
+        ){
+        tournamentService.run(id, incomplete);
         return ResponseEntity.noContent().build();
     }
 
