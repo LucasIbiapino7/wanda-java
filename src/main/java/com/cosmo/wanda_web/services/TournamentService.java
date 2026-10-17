@@ -630,33 +630,63 @@ public class TournamentService {
     }
 
     private List<TournamentParticipantDTO> buildParticipants(Tournament tournament){
-        validateParticipantQuantity(tournament.getMaxParticipants());
+        int capacity = tournament.getMaxParticipants();
+        validateParticipantQuantity(capacity);
 
         // Cria lista de participantes reais do torneio
-        List<TournamentParticipantDTO> participants = tournament.getUsers()
+        List<TournamentParticipantDTO> realParticipants = tournament.getUsers()
             .stream()
             .map(TournamentParticipantDTO::fromUser)
             .collect(Collectors.toCollection(ArrayList::new));
 
         // Validações
-        if (participants.isEmpty()){
+        if (realParticipants.isEmpty()){
             throw new TournamentException("O torneio precisa de pelo menos um jogador real.");
         }
 
-        if (participants.size() > tournament.getMaxParticipants()){
+        if (realParticipants.size() > capacity){
             throw new TournamentException("A quantidade de inscritos ultrapassou a capacidade máxima do torneio.");
         }
 
-        // Calcula a quantidade de participantes que falta e adiciona na lista como jogadores fakes
-        int missingParticipants = tournament.getMaxParticipants() - participants.size();
+        // Sorteia primeiro os jogadores reais
+        Collections.shuffle(realParticipants);
 
-        int i;
-        for (i = 1; i <= missingParticipants; i++){
-            participants.add(TournamentParticipantDTO.fake(i));
+        // Reserva as vagas das chaves onde null é uma vaga não preenchida
+        List<TournamentParticipantDTO> participants =
+            new ArrayList<>(Collections.nCopies(capacity, null));
+
+        int nextReal = 0;
+
+        // Primeiro espalha os reais pela chave; depois preenche os espaços entre eles.
+        // Primeiro coloca-se os reais em chaves opostas até acabar a quantidade
+        for (int step = capacity / 2; step >= 1; step /= 2) {
+            for (int position = 0;
+                position < capacity && nextReal < realParticipants.size();
+                position += step) {
+
+                // Uma posição preenchida na passagem anterior deve ser preservada.
+                if (participants.get(position) == null) {
+                    participants.set(position, realParticipants.get(nextReal));
+                    nextReal++;
+                }
+            }
+
+            if (nextReal == realParticipants.size()) {
+                break;
+            }
         }
 
-        // Realiza o sorteio das chaves
-        Collections.shuffle(participants);
+        // Preenche as posições restantes com fictícios numerados.
+        int fake = 1;
+
+        for (int position = 0; position < capacity; position++) {
+            if (participants.get(position) == null) {
+                participants.set(
+                        position,
+                        TournamentParticipantDTO.fake(fake++)
+                );
+            }
+        }
 
         return participants;
     }
